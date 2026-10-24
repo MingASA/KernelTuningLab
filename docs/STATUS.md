@@ -41,18 +41,22 @@ The original presentation mentions previous RTX 4090/H200 measurements but suppl
 1. On each target GPU, run the same checked-in experiment specs with a small budget, verify tails and dtypes, archive complete environment/driver/compiler versions, and inspect raw distributions.
 2. Collect comparable full or dense-enough tables with the same implementation/version and protocol; isolate software-stack changes before attributing differences to hardware.
 3. Freeze algorithms on train/validation hardware and shapes, then report unseen-GPU/unseen-shape Replay outcomes with seeds, observed coverage, regret and measured search cost.
-4. Add quantized GEMM as a separate implementation with its own legality constraints and correctness baseline, then evaluate L2/L3 against verified expert-library baselines.
+4. Validate the added quantized GEMM, attention and MoE implementations on physical hardware, then evaluate L2/L3 against comparable verified expert-library baselines.
 5. Introduce learned hardware cost models and policy evolution only after preserving the existing split, evidence and budget contracts.
 
 ## Automatic asset integration
 
 The public SDK now separates operator semantics, Kernel implementations and algorithms. Versioned files/modules/entry points, working scaffolds, Kernel-owned finite/conditional spaces, immutable algorithm views, executable static/synthetic/numerical acceptance, scoped correctness claims, complete execution plans and phase-deadline supervision are implemented. V2 configurations drive matching, validation, search and archival without new core registration or glue code. V1 research APIs remain available.
 
-CPU examples include independent GEMM implementations, a two-step workspace pipeline, an additional AXPY operator, conditional spaces, scoped assertions and deliberate failure cases. CPU runs record real CPU measurements; CUDA remains deferred on this host. Continuous domains, distributed/asynchronous execution, a Web UI and the remaining production operators from the proposal are not part of this delivery. See [EXTENDING.md](EXTENDING.md) and [AUTO_INTEGRATION_PLAN.md](AUTO_INTEGRATION_PLAN.md).
+CPU examples include independent GEMM implementations, a two-step workspace pipeline, an additional AXPY operator, conditional spaces, scoped assertions and deliberate failure cases. CPU runs record real CPU measurements; CUDA remains deferred on this host. Continuous domains, distributed/asynchronous execution and a Web UI are not part of this delivery. The proposal operator additions are listed below. See [EXTENDING.md](EXTENDING.md) and [AUTO_INTEGRATION_PLAN.md](AUTO_INTEGRATION_PLAN.md).
 
 The final automatic-integration regression suite passed **196 tests**. Installed-wheel workflows outside the repository and SDK-free `python3 -S` CPU workflows also passed. Evidence is in `artifacts/auto-integration-validation/summary.json`.
 
 ## Proposal operator coverage
 
 All operator families explicitly named in the proposal are registered: W4/W3/W2A16 GEMM, standalone W4/W3/W2 dequantization, attention and MoE grouped GEMM. Each has independent references and real Python/Triton implementations; quantized GEMM also has timed multi-step variants. Production shapes, contextual spaces, workspace budgets, generated-case scopes, resource checks and public optimization references are documented in [PROPOSAL_OPERATORS.md](PROPOSAL_OPERATORS.md). Validation artifacts are under `artifacts/proposal-operators-validation/`. GPU compilation/numerics/performance remain unverified on this host.
+
+## Execution and evidence hardening
+
+Input integrity, output alias checks, timed-output reset and post-measurement correctness invalidate stale or corrupted results. Fixed kernels can receive multiple seeded checks within the validation budget. Replay preserves failed observations and costs, default Transfer excludes unverified labels and incompatible implementations, and candidate streams remain bounded. Output ownership, frozen configuration snapshots, retained attempt metadata, cancellation/worker-exit cleanup and retryable interrupted records strengthen recovery. SQLite rejects unsupported schemas before mutation and indexes dense case split checks. Contracts and remaining production limits are in [HARDENING.md](HARDENING.md); local regression evidence is in `artifacts/hardening-validation/`.
 

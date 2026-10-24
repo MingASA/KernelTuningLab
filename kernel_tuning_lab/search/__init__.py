@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from copy import deepcopy
 from dataclasses import dataclass
 import math
 import random
 from typing import Protocol
 
 from ..datasets import case_id, require_training_records
+from ..measurement_context import source_context_id
 from ..models import HardwareSpec, KernelConfig, MeasurementRecord, OperatorSpec, SearchBudget, ShapeSpec, canonical_json
 from ..space import ConfigSpace
 
@@ -314,6 +316,19 @@ class SurrogateSearch(RandomSearch):
         return sorted(candidates, key=acquisition)[:count]
 
 
+def _transfer_operator_identity(operator: OperatorSpec) -> tuple:
+    """Do not rank a new implementation with another kernel's knob labels.
+
+    Asset content fingerprints distinguish changed source under a reused
+    version. Legacy operators without them retain an explicit semantic match.
+    Shapes and hardware are intentionally absent: those are transfer targets.
+    """
+    fingerprints = {name: operator.metadata.get(name)
+                    for name in ("operator_asset_fingerprint", "kernel_asset_fingerprint")}
+    return (operator.name, operator.kind, operator.dtype, operator.implementation,
+            operator.version, canonical_json(operator.parameters), canonical_json(fingerprints))
+
+
 class TransferSearch(RandomSearch):
     """Rank source-case winners; all source observations must be training data."""
 
@@ -322,12 +337,12 @@ class TransferSearch(RandomSearch):
     def __init__(self, seed: int = 0, training_records=(), candidate_pool_size: int = 512,
                  exhaustive_threshold: int = 4096):
         super().__init__(seed, candidate_pool_size=candidate_pool_size, exhaustive_threshold=exhaustive_threshold)
-        self.training_records = require_training_records(training_records)
+        self.training_records = deepcopy(require_training_records(training_records))
         self._training_case_ids = {r.case_id for r in self.training_records}
-        grouped: dict[str, list[MeasurementRecord]] = {}
+        grouped: dict[tuple[str, str], list[MeasurementRecord]] = {}
         for record in self.training_records:
-            if record.successful:
-                grouped.setdefault(record.case_id, []).append(record)
+            if record.correctness_verified and record.metadata.get("terminated_by_parent") is not True:
+                grouped.setdefault((record.case_id, source_context_id(record)), []).append(record)
         self._source_cases = []
         for rows in grouped.values():
             source = rows[0]
@@ -335,7 +350,8 @@ class TransferSearch(RandomSearch):
             observations = tuple((r.config.id, r.median_ms / baseline) for r in rows)
             self._source_cases.append((source.hardware, source.operator, source.shape, observations))
         self._rank_cache = {}
-        self._source_configs = {record.config.id: record.config for record in self.training_records if record.successful}
+        self._source_configs = {record.config.id: record.config for record in self.training_records
+                                if record.correctness_verified and record.metadata.get("terminated_by_parent") is not True}
 
     def suggest(self, hardware, operator, shape, space, history, budget, batch_size=1):
         target = case_id(hardware, operator, shape)
@@ -345,7 +361,7 @@ class TransferSearch(RandomSearch):
         if target not in self._rank_cache:
             scores: dict[str, list[tuple[float, float]]] = {}
             for source_hw, source_op, source_shape, observations in self._source_cases:
-                if (source_op.kind, source_op.dtype, source_op.implementation) != (operator.kind, operator.dtype, operator.implementation):
+                if _transfer_operator_identity(source_op) != _transfer_operator_identity(operator):
                     continue
                 shape_distance = sum(abs(math.log(source_shape.get(key) / shape.get(key))) for key in shape.dims)
                 sm_distance = abs(math.log(max(1, source_hw.sm_count) / max(1, hardware.sm_count)))

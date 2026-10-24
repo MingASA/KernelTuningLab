@@ -18,6 +18,8 @@ ktlab run --spec my_kernel/experiment.json --output artifacts/my-kernel-run
 
 正确性声明可按版本、内容和范围跳过重复数值核对；声明来源与平台实测核对分开保存，默认 verified Replay/L3/报告不使用声明性能。父进程执行阶段硬超时。缺 CUDA 为 `deferred`，不会冒充 GPU 验收成功。
 
+底层可靠性检查覆盖输入完整性、重复调用及计时后输出；失败样本不会作为成功性能。执行配置先冻结为快照，输出目录互斥，重跑保留 `attempts/` 历史；被终止的候选可恢复重试。证据等级、预算和生产使用边界见 [HARDENING.md](docs/HARDENING.md)。
+
 ```bash
 ktlab assets list
 ktlab run --spec examples/extensions/cpu_gemm.json --output artifacts/extensions/cpu
@@ -76,7 +78,7 @@ ktlab scale-demo --output artifacts/scale
 | Softmax | M/N | FP16/BF16/FP32 | 最后一维、稳定减最大值、任意行长需由 BLOCK_SIZE 覆盖 |
 | LayerNorm | M/N | FP16/BF16/FP32 | 最后一维、非仿射、显式 eps、FP32 统计 |
 
-GEMM 只搜索 BLOCK_M/N/K、num_warps、num_stages；归约算子使用独立的 BLOCK_SIZE 空间。四个适配器均提供独立 JIT 计时、Torch 正确性验证和 CUDA Event 热态采样。未实现 TMA/cluster/split-K。
+上述四个 v1 适配器中，GEMM 搜索 BLOCK_M/N/K、num_warps、num_stages；归约算子使用独立的 BLOCK_SIZE 空间。它们提供独立 JIT 计时、Torch 正确性验证和 CUDA Event 热态采样。新增资产中的 Split-K、TMA 和完整流程计时见 [PROPOSAL_OPERATORS.md](docs/PROPOSAL_OPERATORS.md)。
 
 后续在目标 CUDA 机器上一次检查全部算子与支持的精度：
 

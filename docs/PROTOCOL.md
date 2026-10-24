@@ -8,6 +8,10 @@ The operator provides seeded inputs, independent references, tolerances and boun
 
 Preflight, acceptance and each research trial have separate hard process deadlines. Acceptance has a whole-experiment configuration allowance and records only its sampled coverage. V2 research `max_evaluations` limits revealed candidate observations, including failures and cache hits; physical executions and cache reuse are reported separately. V1 direct Runner admission limits below remain unchanged.
 
+Asset inputs are read-only and outputs must not alias their mutable storage. Input integrity is checked outside timing, and outputs are reset before individual timed calls to prevent reuse of stale results. The final actual timed output is rechecked without another invocation; a failed post-check invalidates that measurement's samples. Validation may sample multiple input seeds for the same configuration, including fixed kernels, within the same whole-experiment attempt budget. See [HARDENING.md](HARDENING.md) for precise scope and evidence limits.
+
+The supervisor freezes the parsed experiment before worker launch, holds an exclusive OS output lock, preserves previous attempt metadata in `attempts/`, and cleans up its worker process group on termination or exit. The cumulative journal retains interrupted candidates as diagnostics while completed-cache lookup skips them so they can be retried. SIGINT/SIGTERM cancellations use exit codes 130/143 and are distinguished from hard timeouts (124).
+
 Version/content/scope-bound submitter declarations can skip numerical comparisons, while output structure and finite values are still checked. Such observations remain `declared` with `correctness_verified=false`. Direct comparison records `verified` plus CPU/GPU evidence. Default verified reports, Replay and L3 exclude declared observations. Persisted matching correctness counterexamples revoke affected declarations and are restored from the journal before the next acceptance pass.
 
 ## Dataset and protocol identity
@@ -36,6 +40,8 @@ GPU correctness references use FP32 Torch operations and cast to the output dtyp
 `benchmark` collection mode uses one budget shared across all shapes, visited in round-robin order. `benchmark --searcher ...` runs adaptive tuning independently for each shape, and applies the stated budget **per shape**, as recorded in `tuning.json` and CLI output. Resume retains compatible observations but each invocation sets its own allowance for additional physical measurements.
 
 Offline Replay consumes one logical evaluation per revealed/failed/missing request. It separately records known source measurement cost, unknown-cost coverage and actual CPU replay wall time. A source wall-time cost is not imputed from kernel latency or treated as a real new physical measurement. Time-bounded replay uses CPU elapsed plus known source cost and reports missing cost explicitly. Configurations with missing source data generate a `missing` trace, never a fabricated measurement record.
+
+An explicitly failed correctness check remains an observed failure even though its `correctness_verified` flag is false. Only unverified successes and incomplete parent-terminated attempts are excluded from the default completed Replay oracle; failure costs must not become missing data. Search algorithms receive read-only spaces and bounded batches. Transfer training uses verified labels from compatible implementations/parameters/content and normalizes each source measurement protocol separately.
 
 ## Isolation and seeds
 

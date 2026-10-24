@@ -5,12 +5,14 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import asdict, dataclass
+from itertools import islice
 import math
 import statistics
 import time
 from typing import Iterable
 
 from .datasets import require_training_records, validate_split_isolation
+from .measurement_context import source_context as _source_context, source_context_id
 from .models import KernelConfig, MeasurementRecord, SearchBudget, canonical_json, stable_id
 from .search import SEARCHER_NAMES, SearchHistory, Searcher, make_searcher
 from .space import ConfigSpace
@@ -92,24 +94,6 @@ def _source_cost(record: MeasurementRecord | None) -> float | None:
     return None
 
 
-def _source_context(record: MeasurementRecord) -> dict:
-    """Input distribution seeds and experiment IDs may differ within a protocol."""
-    manifest = record.metadata.get("source_manifest", {})
-    source_identity = None
-    if record.provenance == "imported":
-        source_identity = (record.metadata.get("source_file_sha256")
-                           or (manifest.get("git_blob_sha") if isinstance(manifest, dict) else None)
-                           or record.metadata.get("source_url"))
-    return {"provenance": record.provenance, "measurement_mode": record.measurement_mode,
-            "protocol": record.metadata.get("protocol", {}), "environment": record.environment,
-            "warmup": record.warmup, "repetitions": record.repetitions, "source_identity": source_identity}
-
-
-def source_context_id(record: MeasurementRecord) -> str:
-    """Identity of compatible provenance, environment, and measurement protocol."""
-    return stable_id(_source_context(record))
-
-
 def _require_compatible_contexts(records: tuple[MeasurementRecord, ...]) -> str:
     contexts = {canonical_json(_source_context(record)): _source_context(record) for record in records}
     if len(contexts) > 1:
@@ -128,7 +112,15 @@ class _ReplayOracle:
         self.__table: dict[str, MeasurementRecord] = {}
         # Duplicate measurements select by stable record ID, never by latency.
         for record in sorted(records, key=lambda r: r.id):
-            if record.metadata.get("correctness_verified") is False or (record.successful and not record.correctness_verified):
+            # Unverified *successes* cannot form a performance oracle. A failed
+            # correctness check is still a real observed failure with a cost;
+            # filtering its false correctness flag would turn it into missing
+            # data and understate the observed coverage and measurement cost.
+            if record.successful and not record.correctness_verified:
+                continue
+            # Interrupted work is durable failure evidence, not a completed
+            # source observation with which to simulate a research evaluation.
+            if record.metadata.get("terminated_by_parent") is True:
                 continue
             self.__table.setdefault(record.config.id, deepcopy(record))
         valid = [r for key, r in self.__table.items() if key in legal_ids and r.successful]
@@ -203,14 +195,23 @@ def run_replay(
     best_latency = None
     best_config = None
     stop_reason = "evaluation_budget"
+    algorithm_space = space.read_only() if callable(getattr(space, "read_only", None)) else space
     # Suggestions are delivered serially by default: each gets a fresh history.
     while not budget.exhausted(len(raw_trace), time.perf_counter() - started + known_cost):
         elapsed = time.perf_counter() - started + known_cost
         history = SearchHistory(tuple(deepcopy(observed)), frozenset(attempted))
         remaining = budget.remaining(len(raw_trace), elapsed)
         try:
-            proposals = list(searcher.suggest(deepcopy(hardware), deepcopy(operator), deepcopy(shape),
-                                             space, history, remaining, batch_size=1))
+            # Consume at most one item beyond the requested bound. In
+            # particular, do not materialize a plugin's unbounded generator.
+            before_space = getattr(space, "fingerprint", None)
+            proposals = list(islice(iter(searcher.suggest(
+                deepcopy(hardware), deepcopy(operator), deepcopy(shape),
+                algorithm_space, history, remaining, batch_size=1)), 2))
+            if len(proposals) > 1:
+                raise ValueError("searcher exceeded requested batch_size=1")
+            if getattr(space, "fingerprint", None) != before_space:
+                raise ValueError("searcher modified the authoritative configuration space")
         except Exception as exc:
             stop_reason = f"searcher_error:{type(exc).__name__}:{exc}"
             break

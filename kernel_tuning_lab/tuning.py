@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+from itertools import islice
 import time
 
 from .datasets import case_id
@@ -73,12 +74,19 @@ def tune(runner, hardware: HardwareSpec, operator: OperatorSpec, shape: ShapeSpe
     cache_hits = 0
     best = None
     stop_reason = "evaluation_budget"
+    algorithm_space = space.read_only() if callable(getattr(space, "read_only", None)) else space
     while not budget.exhausted(evaluations, time.perf_counter() - started):
         elapsed = time.perf_counter() - started
         history = SearchHistory(tuple(deepcopy(records)), frozenset(attempted))
         try:
-            proposals = list(searcher.suggest(deepcopy(hardware), deepcopy(operator), deepcopy(shape),
-                                             space, history, budget.remaining(evaluations, elapsed), batch_size=1))
+            before_space = getattr(space, "fingerprint", None)
+            proposals = list(islice(iter(searcher.suggest(
+                deepcopy(hardware), deepcopy(operator), deepcopy(shape), algorithm_space,
+                history, budget.remaining(evaluations, elapsed), batch_size=1)), 2))
+            if len(proposals) > 1:
+                raise ValueError("searcher exceeded requested batch_size=1")
+            if getattr(space, "fingerprint", None) != before_space:
+                raise ValueError("searcher modified the authoritative configuration space")
         except Exception as exc:
             stop_reason = f"searcher_error:{type(exc).__name__}:{exc}"
             break
@@ -104,7 +112,7 @@ def tune(runner, hardware: HardwareSpec, operator: OperatorSpec, shape: ShapeSpe
         cache_hits += int(cached)
         evaluations += int(not cached)
         records.append(deepcopy(record))
-        if record.successful and valid.valid and (best is None or record.median_ms < best.median_ms):
+        if record.correctness_verified and valid.valid and (best is None or record.median_ms < best.median_ms):
             best = deepcopy(record)
     elapsed = time.perf_counter() - started
     if budget.max_wall_time_s is not None and elapsed >= budget.max_wall_time_s:

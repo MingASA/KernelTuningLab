@@ -31,9 +31,22 @@ class ExperimentStore:
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(str(self.path), timeout=30)
-        self.connection.execute("PRAGMA journal_mode=WAL")
-        self.connection.execute("PRAGMA foreign_keys=ON")
-        self.connection.executescript("""
+        try:
+            # Inspect an existing database before executing *any* schema or
+            # journal-mode mutation. executescript commits its statements even
+            # if a later version check raises, so a post-hoc check can corrupt
+            # a journal from a newer release or modify an unrelated database.
+            existing_tables = {row[0] for row in self.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
+            if existing_tables:
+                if "schema_info" not in existing_tables:
+                    raise ValueError(f"not a Kernel Tuning Lab journal: {self.path}")
+                versions = self.connection.execute("SELECT version FROM schema_info").fetchall()
+                if versions != [(1,)]:
+                    raise ValueError(f"unsupported database schema: {versions}")
+            self.connection.execute("PRAGMA journal_mode=WAL")
+            self.connection.execute("PRAGMA foreign_keys=ON")
+            self.connection.executescript("""
             CREATE TABLE IF NOT EXISTS schema_info (version INTEGER PRIMARY KEY);
             INSERT OR IGNORE INTO schema_info VALUES (1);
             CREATE TABLE IF NOT EXISTS hardware (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
@@ -56,12 +69,13 @@ class ExperimentStore:
             );
             CREATE INDEX IF NOT EXISTS measurement_cache ON measurements(cache_key);
             CREATE INDEX IF NOT EXISTS measurement_case ON measurements(hardware_id, operator_id, shape_id);
+            CREATE INDEX IF NOT EXISTS measurement_case_split ON measurements(hardware_id, operator_id, shape_id, experiment_id, split);
             CREATE INDEX IF NOT EXISTS measurement_split ON measurements(split, provenance);
-        """)
-        versions = self.connection.execute("SELECT version FROM schema_info").fetchall()
-        if versions != [(1,)]:
-            raise ValueError(f"unsupported database schema: {versions}")
-        self.connection.commit()
+            """)
+            self.connection.commit()
+        except BaseException:
+            self.connection.close()
+            raise
 
     def __enter__(self) -> ExperimentStore:
         return self
@@ -86,9 +100,13 @@ class ExperimentStore:
                                  ("shapes", shape_id, data["shape"]),
                                  ("configs", config_id, data["config"])):
             self.connection.execute(f"INSERT OR IGNORE INTO {table}(id,payload) VALUES (?,?)", (key, canonical_json(spec)))
+        # Probe the two other split keys directly. A split<> predicate scans
+        # every existing configuration in this case on *each* insert, turning
+        # dense campaigns into quadratic work even when no conflict exists.
+        other_splits = tuple(split for split in ("train", "validation", "test") if split != record.split)
         conflict = self.connection.execute(
-            "SELECT split FROM measurements WHERE hardware_id=? AND operator_id=? AND shape_id=? AND experiment_id=? AND split<>? LIMIT 1",
-            (hardware_id, operator_id, shape_id, record.experiment_id, record.split),
+            "SELECT split FROM measurements WHERE hardware_id=? AND operator_id=? AND shape_id=? AND experiment_id=? AND split IN (?,?) LIMIT 1",
+            (hardware_id, operator_id, shape_id, record.experiment_id, *other_splits),
         ).fetchone()
         if conflict:
             raise ValueError(f"case already belongs to split {conflict[0]!r} in this experiment")
@@ -124,8 +142,16 @@ class ExperimentStore:
             yield MeasurementRecord.from_dict(json.loads(row[0]))
 
     def get_cached(self, cache_key: str) -> MeasurementRecord | None:
-        row = self.connection.execute("SELECT payload FROM measurements WHERE cache_key=? ORDER BY rowid DESC LIMIT 1", (cache_key,)).fetchone()
-        return MeasurementRecord.from_dict(json.loads(row[0])) if row else None
+        # A parent-terminated attempt remains in the append-only journal for
+        # diagnosis, but it did not complete a measurement. It must not poison
+        # resume forever or obscure an earlier completed observation.
+        for row in self.connection.execute(
+            "SELECT payload FROM measurements WHERE cache_key=? ORDER BY rowid DESC", (cache_key,)
+        ):
+            record = MeasurementRecord.from_dict(json.loads(row[0]))
+            if record.metadata.get("terminated_by_parent") is not True:
+                return record
+        return None
 
     def export_jsonl(self, path: str | Path) -> int:
         target = Path(path)

@@ -1,0 +1,149 @@
+{
+  "baseline": {
+    "command": ".venv/bin/python -m pytest -q",
+    "returncode": 0,
+    "result": "245 passed",
+    "log": "baseline-pytest.log"
+  },
+  "final": {
+    "command": ".venv/bin/python -m pytest -q",
+    "returncode": 0,
+    "result": "288 passed in 33.72s",
+    "log": "final-pytest.log"
+  },
+  "targeted_legacy": {
+    "command": ".venv/bin/python -m pytest -q tests/test_core.py tests/test_replay_policy.py tests/test_tuning.py tests/test_asset_contracts.py tests/test_asset_workflow.py tests/test_asset_scaffolding.py",
+    "returncode": 0,
+    "result": "66 passed"
+  },
+  "cpu_proposal_suite": {
+    "command": ".venv/bin/python -m kernel_tuning_lab proposal-suite --runtime python --variants --max-evaluations 4 --output artifacts/hardening-validation/proposal-suite",
+    "returncode": 0,
+    "status": "passed",
+    "families": 8,
+    "operators": [
+      "attention@1.0.0",
+      "dequantize_w2@1.0.0",
+      "dequantize_w3@1.0.0",
+      "dequantize_w4@1.0.0",
+      "moe_grouped_gemm@1.0.0",
+      "w2a16_gemm@1.0.0",
+      "w3a16_gemm@1.0.0",
+      "w4a16_gemm@1.0.0"
+    ],
+    "cases": 17,
+    "evaluations": 216,
+    "observations": 432,
+    "validation_evaluations": 136,
+    "physical_gpu_validated": false,
+    "log": "proposal-suite.log",
+    "suite_returncode": 0,
+    "case_status_counts": {
+      "passed": 17
+    },
+    "manifest_status": "generated",
+    "suite_summary": "proposal-suite/suite_summary.json"
+  },
+  "cpu_gemm_resume": {
+    "command": "run examples/extensions/cpu_gemm.json twice to artifacts/hardening-validation/cpu-gemm-resume",
+    "returncodes": [
+      0,
+      0
+    ],
+    "status": "passed",
+    "trials": 8,
+    "second_run_evaluations": 0,
+    "second_run_cache_hits": 24,
+    "archived_attempts": 1,
+    "logs": [
+      "cpu-gemm-first.log",
+      "cpu-gemm-second.log"
+    ]
+  },
+  "gpu_deferred_check": {
+    "command": ".venv/bin/python -m kernel_tuning_lab proposal-suite --runtime cuda --operators attention@1.0.0 --check-only --output artifacts/hardening-validation/cuda-deferred",
+    "returncode": 3,
+    "manifest_status": "generated",
+    "runs": {
+      "runs/attention-cuda-bfloat16-smoke-default-48f17963/run_summary.json": "deferred",
+      "runs/attention-cuda-float16-smoke-default-96516df2/run_summary.json": "deferred"
+    },
+    "physical_gpu_validated": false,
+    "log": "cuda-deferred.log",
+    "status": "deferred",
+    "suite_returncode": 3,
+    "cases": 2,
+    "case_status_counts": {
+      "deferred": 2
+    },
+    "evaluations": 0,
+    "observations": 0,
+    "validation_evaluations": 0,
+    "suite_summary": "cuda-deferred/suite_summary.json"
+  },
+  "sqlite_scale": {
+    "command": ".venv/bin/python artifacts/hardening-validation/run_sqlite_scale.py",
+    "returncode": 0,
+    "records_requested": 5000,
+    "added": 5000,
+    "exported": 5000,
+    "imported": {
+      "read": 5000,
+      "added": 5000,
+      "duplicates": 0
+    },
+    "reimported": {
+      "read": 5000,
+      "added": 0,
+      "duplicates": 5000
+    },
+    "target_records": 5000,
+    "seconds": {
+      "insert": 1.0587785000000167,
+      "export": 0.39378159500006404,
+      "import_and_deduplicate": 2.4062673779999386
+    },
+    "provenance": "mock",
+    "gpu_claim": false,
+    "log": "sqlite-scale.log"
+  },
+  "wheel_smoke": {
+    "build_returncode": 0,
+    "install_and_new_module_import_returncode": 0,
+    "outside_checkout_cpu_check_returncode": 0,
+    "wheel_sha256": "5248f97a5a7d84c5b9f73f6b6fa3500e2b2ee57ba1d41709b672ebf327198334",
+    "logs": [
+      "wheel-build.log",
+      "wheel-install.log",
+      "wheel-cpu-check.log"
+    ]
+  },
+  "source_sha256": {
+    "kernel_tuning_lab/acceptance.py": "5e062a076e81765b256140e9add83f0151c2c74392a81032f94f3b88f5d704ef",
+    "kernel_tuning_lab/asset_experiments.py": "69534aa3aaab6959c39cfe27225ce35ae6c687dcf90559897a2207ad98430e59",
+    "kernel_tuning_lab/asset_runner.py": "b6114651a917d2825e04670ffdb9a91ba4eb79cccd9fed15c942675906dbd6bf",
+    "kernel_tuning_lab/asset_space.py": "cb1a20db7873fe7be1f140d2186fbfb583cbe9c0dd77480de1ec59772bff8ca0",
+    "kernel_tuning_lab/asset_validation.py": "683d51e1be09f9596bfb6ce21acef53f985902e34b1da6ef6bd5bfd584ed908c",
+    "kernel_tuning_lab/claims.py": "d80e445cc247e1d2aa12bb4ada59b18d77587eee13d46428dee04e2e0901d1ad",
+    "kernel_tuning_lab/kernel_runtime.py": "443a95cb2348f7bb821056d9f567d6b9ed4eec95c562928fcba225faab51f2dd",
+    "kernel_tuning_lab/models.py": "851c00a4cfa342cf44824fb4ad8b10adf8ac471dfaa3e783419d243b03014b2f",
+    "kernel_tuning_lab/proposal_suite.py": "ac10c6358987606827168d345bb26870cd624fdfbb32645df5548d571fc7afe5",
+    "kernel_tuning_lab/replay.py": "af6c4fbdd9594b6697bc0262f801c62d3b9ee16fb2403f9fdcf07aff25f57f67",
+    "kernel_tuning_lab/runner.py": "64329378933a93c12e5a7f99abb8c671a94413c7269325e5b5d0cefcf90952ef",
+    "kernel_tuning_lab/search/__init__.py": "0f34d7c1e20bd95c72713b9e32bfb042fc655ddfeea4d1ce327626218ab4aa85",
+    "kernel_tuning_lab/storage.py": "172bfe51ecbb7e16dd55d25c81306c9f4f9821f67186013459e72fb7863dd42b",
+    "kernel_tuning_lab/tuning.py": "8429bc8f503d0f8c1e9d1cb24ee8bfd442116074a02cba168dc68ab53f8774b2",
+    "kernel_tuning_lab/measurement_context.py": "ad1f904286827a6d7ff56d2761490c607388488ecd66ee6152ecc9a41ffcd051",
+    "kernel_tuning_lab/run_lifecycle.py": "365ded944c61163804e1ec3a34857f1cef0ce301db7813b299900d8befad80e9"
+  },
+  "test_sha256": {
+    "tests/test_experiment_lifecycle.py": "dc16cba9dc988d3fff882b06ba0eec1bad3380c8dded60d9f8282818c7ed87b5",
+    "tests/test_replay_cache_hardening.py": "007065e8ba7afc312dd0e2afb786df1427913fef67699a9b606435e0f320586f",
+    "tests/test_runtime_measurement_hardening.py": "df8e26e5c611368ba223f0a50a0d9469988d36ab912034099b2e6c5353bd633a",
+    "tests/test_validation_seed_contracts.py": "1054458bcfd629aa1213e830ff704c6f0c2c2ee9ed6d4355833a4f132887d9c2"
+  },
+  "limits": [
+    "CPU Python checks only; CUDA execution unavailable/deferred.",
+    "SQLite timings are local journal operation costs, not GPU performance."
+  ]
+}

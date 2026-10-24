@@ -232,6 +232,21 @@ class SpaceView:
     def __setattr__(self, name, value):
         raise AttributeError("search algorithms receive a read-only space")
 
+    def __deepcopy__(self, memo):
+        # ConfigSpace caches this facade, creating a space/view reference cycle.
+        # A copied policy must bind to its copied space, not retain a view onto
+        # the original experiment. deepcopy's memo resolves either copy order.
+        existing = memo.get(id(self))
+        if existing is not None:
+            return existing
+        copied_space = deepcopy(self.__space, memo)
+        existing = memo.get(id(self))
+        if existing is not None:
+            return existing
+        copied = SpaceView(copied_space)
+        memo[id(self)] = copied
+        return copied
+
     @property
     def domains(self):
         return MappingProxyType(deepcopy(self.__space.domains))

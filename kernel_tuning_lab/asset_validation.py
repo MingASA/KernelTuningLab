@@ -16,15 +16,25 @@ from .models import MeasurementRecord, RecordStatus, canonical_json
 from .runner import BenchmarkRunner
 
 
-def _sample_seed(case: AssetCase, budget: ValidationBudget, round_index: int) -> int:
+def _validation_seeds(case: AssetCase, budget: ValidationBudget) -> tuple[int, ...]:
     seeds = [budget.seed]
-    for value in case.operator_definition.metadata.get("validation_seeds", ()):
-        if isinstance(value, int) and not isinstance(value, bool) and value >= 0 and value not in {0, budget.seed}:
+    declared = case.operator_definition.metadata.get("validation_seeds", ())
+    if not isinstance(declared, (tuple, list)):
+        raise ValueError("operator validation_seeds must be a finite list of nonnegative integers")
+    for value in declared:
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError("operator validation_seeds must be nonnegative integers")
+        if value not in seeds:
             seeds.append(value)
+    return tuple(seeds)
+
+
+def _sample_seed(case: AssetCase, budget: ValidationBudget, round_index: int) -> int:
+    seeds = _validation_seeds(case, budget)
     offset = 0
     if case.validation_only and len(seeds) > 1:
         shapes = list(case.operator_definition.validation_shapes)
-        index = next((i for i, shape in enumerate(shapes) if shape.id == case.shape.id), 0)
+        index = next((i for i, shape in enumerate(shapes) if shape.id == case.shape.id), int(case.shape.id[:8], 16))
         offset = 1 + index % (len(seeds) - 1)
     return seeds[(round_index + offset) % len(seeds)]
 
@@ -50,7 +60,8 @@ def validate_cases(cases: list[AssetCase], budget: ValidationBudget, *, store,
                  "shape": dict(case.shape.dims), "dtype": case.operator.dtype,
                  "validation_only": case.validation_only,
                  "status": "deferred" if case.unavailable_reason else "pending",
-                 "reason": case.unavailable_reason, "samples": 0, "record_ids": []} for case in cases]
+                 "reason": case.unavailable_reason, "samples": 0, "record_ids": [],
+                 "selected_seeds": [], "attempted_config_seed_pairs": []} for case in cases]
     report = {"schema_version": 1, "status": "partial", "reason": "validation_in_progress",
               "budget": {**asdict(budget), "used_configs": 0, "remaining_configs": budget.max_configs},
               "checks": {"attempted": 0, "verified": 0, "declared": 0, "failed": 0},
@@ -108,7 +119,23 @@ def validate_cases(cases: list[AssetCase], budget: ValidationBudget, *, store,
                                         count=budget.max_configs, max_inspected=512)
             pool = probe.pop("configs")
             context["space_probe"] = probe
-            pools[index] = pool
+            seeds = _validation_seeds(case, budget)
+            # First cover distinct configurations, then spend spare allowance
+            # on new input seeds even when a fixed Kernel has only one config.
+            samples, seen = [], set()
+            for offset in range(len(seeds)):
+                for config_index, config in enumerate(pool):
+                    seed = _sample_seed(case, budget, config_index + offset)
+                    identity = (config.id, seed)
+                    if identity not in seen:
+                        seen.add(identity)
+                        samples.append((config, seed))
+                    if len(samples) >= budget.max_configs:
+                        break
+                if len(samples) >= budget.max_configs:
+                    break
+            pools[index] = samples
+            context["planned_input_seeds"] = sorted({seed for _, seed in samples})
             if not pool:
                 if probe.get("exhaustive"):
                     context.update(status="failed", reason="the effective space contains no legal configuration")
@@ -137,13 +164,15 @@ def validate_cases(cases: list[AssetCase], budget: ValidationBudget, *, store,
                 budget_stopped = True
                 break
             context = contexts[index]
-            config = pool[round_index]
-            seed = _sample_seed(case, budget, round_index)
+            config, seed = pool[round_index]
             attempt = {"case_id": case.id, "kernel": case.kernel.ref, "operator": case.operator_definition.ref,
                        "shape": dict(case.shape.dims), "dtype": case.operator.dtype,
                        "config": dict(config.params), "seed": seed, "validation_only": case.validation_only}
             emit({**attempt, "operation": "evaluate"})
             used += 1
+            if seed not in context["selected_seeds"]:
+                context["selected_seeds"].append(seed)
+            context["attempted_config_seed_pairs"].append({"config_id": config.id, "seed": seed})
             report["checks"]["attempted"] += 1
             save()
             runner = BenchmarkRunner(case.adapter, store, warmup=0, repetitions=2, seed=seed,

@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, fields
 from datetime import datetime, timezone
 import math
+from types import MappingProxyType
 from typing import Any, Mapping
 
 from .models import canonical_json, stable_id
@@ -17,6 +18,22 @@ from .space import ValidationResult
 
 _REQUIRED_SCOPE = {"runtimes", "dtypes", "architectures", "shapes", "configs", "parameters"}
 _OPTIONAL_SCOPE = {"environment", "hardware_names", "seeds"}
+
+
+def _scope_json(value):
+    if isinstance(value, Mapping):
+        return {key: _scope_json(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_scope_json(item) for item in value]
+    return value
+
+
+def _freeze_scope(value):
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze_scope(item) for key, item in value.items()})
+    if isinstance(value, (tuple, list)):
+        return tuple(_freeze_scope(item) for item in value)
+    return value
 
 
 def _timestamp(value: str) -> datetime:
@@ -57,7 +74,8 @@ class CorrectnessClaim:
         unknown = self.scope.keys() - _REQUIRED_SCOPE - _OPTIONAL_SCOPE
         if missing or unknown:
             raise ValueError(f"claim scope missing={sorted(missing)}, unknown={sorted(unknown)}")
-        canonical_json(dict(self.scope))
+        canonical_json(_scope_json(self.scope))
+        object.__setattr__(self, "scope", _freeze_scope(self.scope))
         for name in ("created_at", "expires_at"):
             if getattr(self, name) is not None:
                 _timestamp(getattr(self, name))
@@ -70,7 +88,7 @@ class CorrectnessClaim:
 
     def to_dict(self) -> dict[str, Any]:
         value = {entry.name: getattr(self, entry.name) for entry in fields(self)}
-        value["scope"] = dict(self.scope)
+        value["scope"] = _scope_json(self.scope)
         return value
 
     @classmethod
@@ -105,7 +123,7 @@ def _matches(value: Any, declaration: Any) -> bool:
         return ("min" not in declaration or value >= declaration["min"]) and ("max" not in declaration or value <= declaration["max"])
     choices = declaration if isinstance(declaration, (list, tuple)) else (declaration,)
     # JSON distinguishes booleans from integers, unlike Python equality.
-    return any(canonical_json(value) == canonical_json(item) for item in choices)
+    return any(canonical_json(_scope_json(value)) == canonical_json(_scope_json(item)) for item in choices)
 
 
 def _mapping_matches(values: Mapping[str, Any], declaration: Any) -> bool:

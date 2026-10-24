@@ -8,6 +8,7 @@ import re
 
 from .asset_experiments import AlgorithmSelection, AssetExperiment, KernelSelection, ValidationBudget
 from .models import SearchBudget, ShapeSpec, stable_id
+from .run_lifecycle import OutputDirectoryBusyError, OutputLease
 
 
 def _save(path, value):
@@ -107,8 +108,18 @@ def build_suite(output_dir: str | Path, *, runtime: str = "python", scale: str =
 
 def run_suite(output_dir: str | Path, *, write_only: bool = False, check_only: bool = False,
               strict: bool = True, **options) -> dict:
-    from .asset_runner import execute_asset_experiment
+    """Run the operator matrix with exclusive ownership of its suite metadata."""
     output = Path(output_dir).resolve()
+    try:
+        with OutputLease(output):
+            return _run_suite_owned(output, write_only=write_only, check_only=check_only, strict=strict, **options)
+    except OutputDirectoryBusyError as exc:
+        return {"status": "failed", "exit_code": 2, "physical_gpu_validated": False,
+                "error": {"type": type(exc).__name__, "message": str(exc)}, "output": str(output)}
+
+
+def _run_suite_owned(output: Path, *, write_only: bool, check_only: bool, strict: bool, **options) -> dict:
+    from .asset_runner import execute_asset_experiment
     # Revoke any old approval before generation, including generation failures.
     _save(output / "suite_summary.json", {"status": "running", "physical_gpu_validated": False})
     try:
@@ -130,14 +141,22 @@ def run_suite(output_dir: str | Path, *, write_only: bool = False, check_only: b
             failed_configurations = sum(trial.get("failed_measurements", 0) for trial in trials)
         except (OSError, ValueError, TypeError):
             pass
-        status = "failed" if strict and failed_configurations else result["status"]
+        status = ("failed" if strict and failed_configurations and result["status"] != "interrupted"
+                  else result["status"])
         cases.append({**job, "status": status, "run": result,
                       "strict_failed_configurations": failed_configurations if strict else 0})
         _save(output / "suite_progress.json", {"status": "running", "cases": cases})
-    failed = any(case["status"] in {"failed", "timeout"} for case in cases)
-    pending = any(case["status"] == "deferred" for case in cases)
-    status = "generated" if write_only else "failed" if failed else "deferred" if pending else "passed"
-    summary = {"status": status, "exit_code": 2 if failed else 3 if pending else 0, "runtime": manifest["runtime"],
+        if result["status"] == "interrupted":
+            # Cancellation ends the matrix, with every omitted job explicit.
+            cases.extend({**remaining, "status": "not_run", "reason": "suite interrupted"}
+                         for remaining in manifest["cases"][len(cases):])
+            break
+    interrupted = next((case for case in cases if case["status"] == "interrupted"), None)
+    failed = any(case["status"] not in {"passed", "deferred", "partial", "generated", "interrupted", "not_run"} for case in cases)
+    pending = any(case["status"] in {"deferred", "partial"} for case in cases)
+    status = "generated" if write_only else "interrupted" if interrupted else "failed" if failed else "deferred" if pending else "passed"
+    exit_code = interrupted["run"].get("exit_code", 130) if interrupted else 2 if failed else 3 if pending else 0
+    summary = {"status": status, "exit_code": exit_code, "runtime": manifest["runtime"],
                "scale": manifest["scale"], "hardware": manifest["hardware"], "strict": strict,
                "operators": manifest["operators"], "cases": cases,
                "physical_gpu_validated": not write_only and manifest["runtime"] == "cuda" and status == "passed"
@@ -151,9 +170,9 @@ def run_suite(output_dir: str | Path, *, write_only: bool = False, check_only: b
     lines = ["# Proposal operator suite", "", f"Status: **{status}**; runtime: **{manifest['runtime']}**; scale: **{manifest['scale']}**", "",
              "| Operator / case | Dtype | Status | Run report |", "| --- | --- | --- | --- |"]
     for case in cases:
-        relative = (Path(case["spec"]).relative_to(output) if write_only else
+        relative = (Path(case["spec"]).relative_to(output) if write_only or case["status"] == "not_run" else
                     Path(case["output"]).relative_to(output) / "report.md")
-        label = "spec" if write_only else "report"
+        label = "spec" if write_only or case["status"] == "not_run" else "report"
         lines.append(f"| {case['name']} | {case['dtype']} | {case['status']} | [{label}]({relative.as_posix()}) |")
     lines += ["", summary["notice"], ""]
     (output / "suite_report.md").write_text("\n".join(lines), encoding="utf-8")

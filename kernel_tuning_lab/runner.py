@@ -18,8 +18,11 @@ from .storage import ExperimentStore
 class BenchmarkRunner:
     def __init__(self, adapter: KernelAdapter, store: ExperimentStore | None = None, warmup: int = 2, repetitions: int = 7,
                  seed: int = 0, experiment_id: str = "default", failure_log_path: str | Path | None = None):
-        if warmup < 0 or repetitions < 1:
-            raise ValueError("warmup must be nonnegative and repetitions positive")
+        if (isinstance(warmup, bool) or not isinstance(warmup, int) or warmup < 0
+                or isinstance(repetitions, bool) or not isinstance(repetitions, int) or repetitions < 1):
+            raise ValueError("warmup must be a nonnegative integer and repetitions a positive integer")
+        if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+            raise ValueError("seed must be a nonnegative integer")
         self.adapter = adapter
         self.store = store
         self.warmup = warmup
@@ -87,9 +90,11 @@ class BenchmarkRunner:
                 phase = "correctness"
                 correct, details = self.adapter.check_correctness(compiled)
                 metadata["correctness"] = details
-                if details.get("status") in {"verified", "declared"}:
+                if details.get("status") in {"verified", "declared", "failed"}:
                     metadata["correctness_verified"] = correct and details["status"] == "verified"
                 if not correct:
+                    details.update(status="failed", verified_on_cpu=False, verified_on_gpu=False, oracle_eligible=False)
+                    metadata["correctness_verified"] = False
                     status, reason = RecordStatus.CORRECTNESS_ERROR, "kernel output does not match correctness baseline"
                 else:
                     phase = "warmup"
@@ -100,12 +105,28 @@ class BenchmarkRunner:
                         raise ValueError("backend returned a different number of samples than requested")
                     if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0 for v in samples):
                         raise ValueError("backend runtime samples must be finite positive numbers")
+                    post_check = getattr(self.adapter, "check_after_measurement", None)
+                    if post_check is not None:
+                        phase = "correctness"
+                        final_correct, final_details = post_check(compiled)
+                        details["post_measurement"] = final_details
+                        if not final_correct:
+                            details.update(initial_status=details.get("status"), status="failed",
+                                           correctness_origin=final_details.get("correctness_origin", "platform_reference"),
+                                           verified_on_cpu=False, verified_on_gpu=False, oracle_eligible=False)
+                            metadata["correctness_verified"] = False
+                            status, reason = RecordStatus.CORRECTNESS_ERROR, "post-measurement output or input integrity check failed"
+                            samples = ()
         except Exception as exc:
             status = (RecordStatus.COMPILE_ERROR if phase == "compile" else
                       RecordStatus.CORRECTNESS_ERROR if phase == "correctness" else RecordStatus.RUNTIME_ERROR)
             reason = f"{phase}: {type(exc).__name__}: {exc}"
             metadata["traceback"] = traceback.format_exc(limit=8)
             samples = ()
+            if phase == "correctness":
+                details = metadata.setdefault("correctness", {})
+                details.update(status="failed", verified_on_cpu=False, verified_on_gpu=False, oracle_eligible=False)
+                metadata["correctness_verified"] = False
         elapsed = time.perf_counter() - started
         record = replace(initial, status=status, compile_time_ms=compile_ms, runtime_samples_ms=samples,
                          wall_time_s=elapsed, failure_reason=reason, metadata=metadata)

@@ -26,6 +26,8 @@ def inspect_signature(callback, *arguments, **keywords):
 
 
 def create_searcher(definition, options: dict[str, Any], seed: int):
+    if "seed" in options:
+        raise ContractError("algorithm options cannot override the experiment seed; set the top-level seed")
     arguments = {"seed": seed, **options}
     try:
         inspect.signature(definition.factory).bind(**arguments)

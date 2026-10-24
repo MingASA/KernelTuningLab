@@ -158,14 +158,15 @@ class MeasurementRecord:
         top-level convenience flag. Physical GPU verification remains a separate
         field in the correctness evidence (Mock and CPU are not GPU evidence).
         """
-        if not self.successful or self.metadata.get("correctness_verified") is False:
+        if (not self.successful or self.metadata.get("correctness_verified") is False
+                or self.metadata.get("correctness_origin") in {"submitter_claim", "submitter_declared", "unknown", "unverified"}):
             return False
         evidence = self.metadata.get("correctness", {})
         if not isinstance(evidence, dict):
             return False
-        return (evidence.get("status") not in {"declared", "failed", "unknown"}
+        return (evidence.get("status") not in {"declared", "failed", "unknown", "unverified", "not_run"}
                 and evidence.get("comparison_performed") is not False
-                and evidence.get("correctness_origin") not in {"submitter_claim", "submitter_declared"})
+                and evidence.get("correctness_origin") not in {"submitter_claim", "submitter_declared", "unknown", "unverified"})
 
     @property
     def median_ms(self) -> float | None:
@@ -244,7 +245,9 @@ class SearchBudget:
     def __post_init__(self) -> None:
         if not isinstance(self.max_evaluations, int) or isinstance(self.max_evaluations, bool) or self.max_evaluations < 0:
             raise ValueError("max_evaluations must be a nonnegative integer")
-        if self.max_wall_time_s is not None and (not math.isfinite(self.max_wall_time_s) or self.max_wall_time_s < 0):
+        if self.max_wall_time_s is not None and (isinstance(self.max_wall_time_s, bool)
+                or not isinstance(self.max_wall_time_s, (int, float))
+                or not math.isfinite(self.max_wall_time_s) or self.max_wall_time_s < 0):
             raise ValueError("max_wall_time_s must be finite and nonnegative")
 
     def exhausted(self, evaluations: int, elapsed_s: float) -> bool:

@@ -3,17 +3,33 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from .models import SearchBudget, ShapeSpec
+from .models import SearchBudget, ShapeSpec, canonical_json
 
 
 def _keys(value: Mapping, allowed: set[str], label: str) -> None:
+    if not isinstance(value, Mapping) or any(not isinstance(key, str) for key in value):
+        raise ValueError(f"{label} must be an object with string keys")
     unknown = set(value) - allowed
     if unknown:
         raise ValueError(f"unknown {label} fields: {', '.join(sorted(unknown))}")
+
+
+def _json_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON field: {key!r}")
+        result[key] = value
+    return result
+
+
+def _json_constant(value):
+    raise ValueError(f"nonfinite JSON value is not allowed: {value}")
 
 
 @dataclass(frozen=True)
@@ -29,6 +45,10 @@ class KernelSelection:
         for name, values in self.space.items():
             if not isinstance(name, str) or not name or not isinstance(values, (tuple, list)) or not values:
                 raise ValueError("space restrictions require named, nonempty finite value lists")
+            identities = [canonical_json(value) for value in values]
+            if len(set(identities)) != len(identities):
+                raise ValueError(f"space restriction {name!r} must contain distinct values")
+        object.__setattr__(self, "space", {name: tuple(deepcopy(values)) for name, values in self.space.items()})
 
 
 @dataclass(frozen=True)
@@ -43,6 +63,8 @@ class AlgorithmSelection:
             raise ValueError("algorithm options must be a mapping with string keys")
         if "seed" in self.options:
             raise ValueError("set the experiment seed instead of overriding algorithm.options.seed")
+        canonical_json(self.options)
+        object.__setattr__(self, "options", deepcopy(self.options))
 
 
 @dataclass(frozen=True)
@@ -89,20 +111,31 @@ class AssetExperiment:
     workspace_memory_limit_bytes: int = 256 * 1024**2
 
     def __post_init__(self):
-        if self.schema_version != 2:
+        if type(self.schema_version) is not int or self.schema_version != 2:
             raise ValueError("asset experiments require schema_version=2; v1 remains supported by benchmark")
         if not isinstance(self.name, str) or not self.name.strip() or not isinstance(self.operator, str) or not self.operator:
             raise ValueError("experiment name and operator reference are required")
+        for key, expected in (("kernels", KernelSelection), ("algorithms", AlgorithmSelection), ("shapes", ShapeSpec)):
+            values = getattr(self, key)
+            if not isinstance(values, (tuple, list)) or any(not isinstance(value, expected) for value in values):
+                raise ValueError(f"{key} must be a sequence of {expected.__name__} values")
         if not self.kernels or not self.algorithms or not self.shapes:
             raise ValueError("select at least one kernel, algorithm and shape")
         if len({s.id for s in self.shapes}) != len(self.shapes):
             raise ValueError("experiment shapes must be distinct")
         if len({k.asset for k in self.kernels}) != len(self.kernels) or len({a.asset for a in self.algorithms}) != len(self.algorithms):
             raise ValueError("kernel/algorithm asset selections must be distinct")
-        if any(not isinstance(p, str) or not p for p in self.plugins):
+        if not isinstance(self.plugins, (tuple, list)) or any(not isinstance(p, str) or not p for p in self.plugins):
             raise ValueError("plugins must be explicit nonempty file/module references")
         if not isinstance(self.dtype, str) or not self.dtype or not isinstance(self.parameters, dict):
             raise ValueError("dtype and operator parameter mapping are required")
+        if any(not isinstance(key, str) for key in self.parameters):
+            raise ValueError("operator parameters must have string keys")
+        if self.hardware is not None and (not isinstance(self.hardware, str) or not self.hardware.strip()):
+            raise ValueError("hardware must be a nonempty profile name or null")
+        if not isinstance(self.budget, SearchBudget) or not isinstance(self.validation, ValidationBudget):
+            raise ValueError("budget and validation must be SearchBudget and ValidationBudget values")
+        canonical_json(self.parameters)
         for key, minimum in (("seed", 0), ("warmup", 0), ("repetitions", 1)):
             value = getattr(self, key)
             if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
@@ -117,6 +150,13 @@ class AssetExperiment:
             raise ValueError("preflight requires a finite hard wall deadline")
         if self.budget.max_wall_time_s is None:
             raise ValueError("asset searches require a finite wall deadline")
+        # Frozen dataclasses alone do not detach nested lists/dicts supplied by
+        # callers. A parsed experiment is an independent reproducible snapshot.
+        object.__setattr__(self, "kernels", tuple(KernelSelection(value.asset, value.space) for value in self.kernels))
+        object.__setattr__(self, "algorithms", tuple(AlgorithmSelection(value.asset, value.options) for value in self.algorithms))
+        object.__setattr__(self, "shapes", tuple(ShapeSpec(deepcopy(value.dims)) for value in self.shapes))
+        object.__setattr__(self, "plugins", tuple(self.plugins))
+        object.__setattr__(self, "parameters", deepcopy(self.parameters))
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -157,10 +197,15 @@ class AssetExperiment:
         if not isinstance(plugins, (list, tuple)):
             raise ValueError("plugins must be a list")
         raw["plugins"] = tuple(plugins)
-        raw["budget"] = SearchBudget(**{"max_evaluations": 8, "max_wall_time_s": 30.0, **raw.get("budget", {})})
-        raw["validation"] = ValidationBudget(**raw.get("validation", {}))
+        budget = raw.get("budget", {})
+        validation = raw.get("validation", {})
+        _keys(budget, {"max_evaluations", "max_wall_time_s"}, "budget")
+        _keys(validation, set(ValidationBudget.__dataclass_fields__), "validation")
+        raw["budget"] = SearchBudget(**{"max_evaluations": 8, "max_wall_time_s": 30.0, **budget})
+        raw["validation"] = ValidationBudget(**validation)
         return cls(**raw)
 
     @classmethod
     def load(cls, path: str | Path) -> AssetExperiment:
-        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
+        return cls.from_dict(json.loads(Path(path).read_text(encoding="utf-8"),
+                                        object_pairs_hook=_json_pairs, parse_constant=_json_constant))

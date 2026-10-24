@@ -19,6 +19,8 @@ import traceback
 from .asset_experiments import AssetExperiment
 from .models import HardwareSpec, MeasurementRecord, OperatorSpec, RecordStatus, ShapeSpec, stable_id
 from .storage import ExperimentStore
+from .run_lifecycle import (OutputDirectoryBusyError, OutputLease, WorkerInterrupted,
+                            archive_previous_attempt, supervised_worker)
 
 
 def _write(path: Path, value) -> None:
@@ -44,14 +46,14 @@ def _plugin_reference(reference: str, directory: Path) -> str:
     return reference
 
 
-def _archives(output: Path) -> None:
-    """Clear current-run approval markers without deleting measurement journals."""
+def _archives(output: Path, metadata: dict | None = None) -> None:
+    """Retain the previous attempt, then revoke current approval markers."""
     output.mkdir(parents=True, exist_ok=True)
-    for name in ("run_summary.json", "preflight.json", "acceptance.json", "assets.lock.json",
-                 "phase.json", "interrupted_attempt.json", "validation_report.json", "validation_records.jsonl",
-                 "validation_failures.jsonl", "interrupted_record_error.json"):
-        (output / name).unlink(missing_ok=True)
-    _write(output / "run_summary.json", {"status": "running", "physical_gpu_validated": False})
+    previous = archive_previous_attempt(output)
+    metadata = {**(metadata or {}), "previous_attempt": str(previous) if previous else None}
+    _write(output / "run_metadata.json", metadata)
+    _write(output / "run_summary.json", {"status": "running", "run_id": metadata.get("run_id"),
+                                        "physical_gpu_validated": False})
     _write(output / "trials.json", [])
 
 
@@ -84,6 +86,7 @@ def _report(output: Path, summary: dict, trials: list) -> None:
 
 def _save_failure(output: Path, status: str, error: dict, *, phase: str, exit_code: int) -> dict:
     summary = {"status": status, "phase": phase, "error": error,
+               "run_id": _read(output / "run_metadata.json", {}).get("run_id"),
                "exit_code": exit_code, "physical_gpu_validated": False,
                "output": str(output.resolve()), "worker_log": str((output / "worker.log").resolve())}
     for name in ("preflight.json", "acceptance.json"):
@@ -102,8 +105,8 @@ def _save_failure(output: Path, status: str, error: dict, *, phase: str, exit_co
     return summary
 
 
-def _interrupt_measurement(output: Path, progress: dict, reason: str) -> None:
-    _write(output / "interrupted_attempt.json", {"status": "timeout", "progress": progress, "reason": reason})
+def _interrupt_measurement(output: Path, progress: dict, reason: str, *, status: str = "timeout") -> None:
+    _write(output / "interrupted_attempt.json", {"status": status, "progress": progress, "reason": reason})
     raw = progress.get("attempt_record")
     if not isinstance(raw, dict):
         return
@@ -115,7 +118,8 @@ def _interrupt_measurement(output: Path, progress: dict, reason: str) -> None:
             return
         row = replace(row, status=RecordStatus.RUNTIME_ERROR, runtime_samples_ms=(), failure_reason=reason,
                       wall_time_s=max(0.0, time.monotonic() - progress.get("attempt_started_monotonic", time.monotonic())),
-                      metadata={**row.metadata, "terminated_by_parent": True, "timeout_phase": progress.get("phase")})
+                      metadata={**row.metadata, "terminated_by_parent": True, "termination_kind": status,
+                                "timeout_phase": progress.get("phase") if status == "timeout" else None})
         with ExperimentStore(output / "measurements.sqlite") as store:
             store.add(row)
             store.export_jsonl(output / "measurements.jsonl")
@@ -132,54 +136,94 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
     Killing a worker does not promise that an unresponsive GPU driver is reset.
     """
     output, source = Path(output_dir).resolve(), Path(spec_path).resolve()
-    _archives(output)
+    try:
+        with OutputLease(output) as lease:
+            return _execute_owned(source, output, check_only=check_only, plugins=plugins, lease=lease)
+    except OutputDirectoryBusyError as exc:
+        # A rejected concurrent caller must not overwrite the owner's progress,
+        # worker log, approval marker, or archived experiment.
+        return {"status": "failed", "exit_code": 2, "phase": "output_ownership", "error": _error(exc),
+                "physical_gpu_validated": False, "output": str(output)}
+
+
+def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tuple[str, ...], lease) -> dict:
+    # Parse before moving the old metadata: the user may resume using the
+    # archived experiment.json from this very output directory.
     try:
         spec = AssetExperiment.load(source)
     except Exception as exc:
+        _archives(output, lease.metadata)
         return _save_failure(output, "failed", _error(exc), phase="configuration", exit_code=2)
-    command = [sys.executable, "-m", "kernel_tuning_lab.asset_runner", "--worker", "--spec", str(source),
-               "--output", str(output)]
+    references = tuple(dict.fromkeys([
+        *(_plugin_reference(plugin, source.parent) for plugin in spec.plugins),
+        *(_plugin_reference(plugin, Path.cwd()) for plugin in plugins),
+    ]))
+    _archives(output, lease.metadata)
+    spec.save(output / "source_experiment.json")
+    spec = replace(spec, plugins=references)
+    snapshot = output / "experiment.json"
+    spec.save(snapshot)
+    _write(output / "experiment_origin.json", {"source": str(source), "plugin_base_directory": str(source.parent)})
+    command = [sys.executable, "-m", "kernel_tuning_lab.asset_runner", "--worker", "--spec", str(snapshot),
+               "--origin", str(source), "--output", str(output)]
     if check_only:
         command.append("--check-only")
-    for plugin in plugins:
-        command.extend(("--plugin", str(Path(plugin).resolve()) if Path(plugin).is_file() else plugin))
     started = time.monotonic()
     combinations = len(spec.kernels) * len(spec.algorithms) * len(spec.shapes)
-    total_limit = spec.preflight_seconds + spec.validation.max_wall_time_s
+    total_limit = 2 * spec.preflight_seconds + spec.validation.max_wall_time_s
     if not check_only:
         total_limit += combinations * spec.budget.max_wall_time_s
     # Startup/atomic result writes have a small bounded allowance outside phases.
     total_limit += 5.0
     with (output / "worker.log").open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=os.name == "posix")
-        while process.poll() is None:
-            now = time.monotonic()
+        try:
+            process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=os.name == "posix",
+                                       **lease.subprocess_options)
+        except OSError as exc:
+            return _save_failure(output, "failed", _error(exc), phase="worker_startup", exit_code=2)
+        timeout = None
+        try:
+            with supervised_worker(process):
+                while process.poll() is None:
+                    now = time.monotonic()
+                    progress = _read(output / "phase.json", {})
+                    phase = progress.get("phase", "preflight")
+                    phase_start = progress.get("started_monotonic", started)
+                    limit = (spec.validation.max_wall_time_s if phase == "validation" else
+                             spec.budget.max_wall_time_s if phase == "search" else spec.preflight_seconds)
+                    if now - phase_start >= limit or now - started >= total_limit:
+                        timeout = progress, phase, limit
+                        break
+                    try:
+                        process.wait(timeout=0.025)
+                    except subprocess.TimeoutExpired:
+                        pass
+        except (WorkerInterrupted, KeyboardInterrupt) as exc:
             progress = _read(output / "phase.json", {})
-            phase = progress.get("phase", "preflight")
-            phase_start = progress.get("started_monotonic", started)
-            limit = (spec.validation.max_wall_time_s if phase == "validation" else
-                     spec.budget.max_wall_time_s if phase == "search" else spec.preflight_seconds)
-            if now - phase_start >= limit or now - started >= total_limit:
-                try:
-                    if os.name == "posix":
-                        os.killpg(process.pid, signal.SIGKILL)
-                    else:
-                        process.kill()
-                except ProcessLookupError:
-                    pass
-                process.wait(timeout=5)
-                reason = f"{phase} exceeded hard wall deadline ({limit:g}s)"
-                _interrupt_measurement(output, progress, reason)
-                return _save_failure(output, "timeout", {"type": "HardTimeout", "message": reason,
-                                                          "limit_s": limit}, phase=phase, exit_code=124)
-            try:
-                process.wait(timeout=0.025)
-            except subprocess.TimeoutExpired:
-                pass
+            signum = getattr(exc, "signum", signal.SIGINT)
+            reason = f"experiment interrupted by signal {signum}"
+            _interrupt_measurement(output, progress, reason, status="interrupted")
+            return _save_failure(output, "interrupted", {"type": "Interrupted", "message": reason},
+                                 phase=progress.get("phase", "worker"), exit_code=128 + signum)
+        if timeout is not None:
+            progress, phase, limit = timeout
+            reason = f"{phase} exceeded hard wall deadline ({limit:g}s)"
+            _interrupt_measurement(output, progress, reason)
+            return _save_failure(output, "timeout", {"type": "HardTimeout", "message": reason,
+                                                      "limit_s": limit}, phase=phase, exit_code=124)
     result = _read(output / "run_summary.json", {})
-    if result.get("status") == "running" or not result:
+    if not isinstance(result, dict) or result.get("status") == "running" or not result:
+        progress = _read(output / "phase.json", {})
+        reason = f"worker exited {process.returncode} before completing result archival"
+        _interrupt_measurement(output, progress, reason, status="worker_exit")
         return _save_failure(output, "failed", {"type": "WorkerExit", "message": f"worker exited {process.returncode}"},
-                             phase="worker", exit_code=2)
+                             phase=progress.get("phase", "worker"), exit_code=2)
+    if result.get("exit_code") != process.returncode:
+        progress = _read(output / "phase.json", {})
+        reason = f"worker exit {process.returncode} disagrees with archived exit {result.get('exit_code')}"
+        _interrupt_measurement(output, progress, reason, status="worker_exit")
+        return _save_failure(output, "failed", {"type": "WorkerExit", "message":
+                             reason}, phase=progress.get("phase", "worker"), exit_code=2)
     return result
 
 
@@ -344,7 +388,7 @@ def _prepare_cases(spec, catalog, output, mark):
     return cases, algorithms, preflight
 
 
-def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str, ...]) -> dict:
+def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str, ...], origin: Path | None = None) -> dict:
     # All plugin imports, discovery and acceptance run after the parent's timer starts.
     phase = {"phase": "preflight", "started_monotonic": time.monotonic()}
     _write(output / "phase.json", phase)
@@ -370,11 +414,13 @@ def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str,
     from .plugins import discover_entry_points, load_plugin
 
     spec = AssetExperiment.load(spec_path)
-    spec.save(output / "source_experiment.json")
+    if origin is None:
+        spec.save(output / "source_experiment.json")
     references = tuple(dict.fromkeys(_plugin_reference(plugin, spec_path.parent) for plugin in (*spec.plugins, *plugins)))
     spec = replace(spec, plugins=references)
     spec.save(output / "experiment.json")
-    _write(output / "experiment_origin.json", {"source": str(spec_path), "plugin_base_directory": str(spec_path.parent)})
+    if origin is None:
+        _write(output / "experiment_origin.json", {"source": str(spec_path), "plugin_base_directory": str(spec_path.parent)})
     catalog = AssetCatalog()
     register_builtin_search_algorithms(catalog)
     register_builtin_assets(catalog)
@@ -425,9 +471,9 @@ def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str,
                     _write(output / "trials.json", trials)
                     if trial.get("status") == "failed":
                         break
+        begin("archiving")
         store.export_jsonl(output / "measurements.jsonl")
         counts = store.summary()
-    begin("archiving")
     failed = preflight["status"] == "failed" or acceptance["status"] == "failed" or any(t.get("status") == "failed" for t in trials)
     deferred = any(case.unavailable_reason for case in cases) or acceptance["status"] in {"deferred", "partial"}
     status = "failed" if failed else "deferred" if deferred else "passed"
@@ -435,6 +481,7 @@ def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str,
     gpu_verified_cases = {sample.get("case_id") for sample in acceptance.get("samples", ())
                           if sample.get("status") == "passed" and sample.get("correctness", {}).get("verified_on_gpu") is True}
     summary = {"status": status, "exit_code": 2 if failed else 3 if deferred else 0,
+               "run_id": _read(output / "run_metadata.json", {}).get("run_id"),
                "experiment": spec.name, "check_only": check_only, "preflight_status": preflight["status"],
                "acceptance_status": acceptance["status"], "trials": len(trials),
                "evaluations": sum(t.get("evaluations", 0) for t in trials),
@@ -443,7 +490,8 @@ def _worker(spec_path: Path, output: Path, check_only: bool, plugins: tuple[str,
                "validation_evaluations": acceptance.get("budget", {}).get("used_configs", 0),
                "physical_gpu_validated": not failed and not deferred and bool(cuda_cases) and cuda_cases <= gpu_verified_cases,
                "correctness_evidence": acceptance.get("checks", {}),
-               "installed_entry_points": list(discovered), "store": counts, "output": str(output),
+               "installed_entry_points": list(discovered), "store": counts, "store_scope": "cumulative_journal",
+               "output": str(output),
                "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."}
     _write(output / "run_summary.json", summary)
     _report(output, summary, trials)
@@ -455,11 +503,12 @@ def main(argv=None) -> int:
     parser.add_argument("--worker", action="store_true", required=True)
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--origin", type=Path)
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--plugin", action="append", default=[])
     args = parser.parse_args(argv)
     try:
-        result = _worker(args.spec, args.output, args.check_only, tuple(args.plugin))
+        result = _worker(args.spec, args.output, args.check_only, tuple(args.plugin), origin=args.origin)
     except Exception as exc:
         traceback.print_exc()
         progress = _read(args.output / "phase.json", {})

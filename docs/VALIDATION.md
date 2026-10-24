@@ -2,6 +2,16 @@
 
 The final execution pass was delegated to a Luna experiment agent. Full output is stored in files rather than embedded in research discussions. No CUDA runtime or GPU was available; no physical GPU result is claimed.
 
+## Latest execution and evidence hardening
+
+Luna ran the final source and regression additions: **288 tests passed in 33.72s**, up from a baseline of 245. The additional cases exercise stale timed outputs, input mutation/aliasing, post-measurement failures, declared evidence, fixed-configuration multiple-seed validation, failed Replay observations, Transfer isolation, bounded proposals, schema-safe SQLite opening, interrupted cache recovery, output ownership, cancellation and frozen experiment snapshots.
+
+The CPU proposal matrix completed **17 semantic cases across 8 operator families**, with 216 new research evaluations, 432 revealed observations and 136 validation attempts. Repeating the two-kernel/two-algorithm CPU GEMM example completed 8 trials with **0 new research evaluations and 24 cache hits** on the second run, retaining the previous attempt metadata. These are real CPU execution checks, not GPU performance results.
+
+A bounded synthetic SQLite exercise inserted, exported and imported exactly 5,000 records; reimport added zero and counted 5,000 duplicates. Local operation costs were approximately 1.06s for insertion, 0.39s for export and 2.41s for import plus duplicate import. They measure journal operations on this host, not GPU kernel throughput. A rebuilt wheel imported the new lifecycle/context modules and completed a CPU asset check from outside the checkout.
+
+The CUDA attention matrix returned exit code 3 with both requested dtypes **deferred**, and no GPU evaluations. The machine-readable commands, return codes, artifact references and source/test hashes are in `artifacts/hardening-validation/summary.json`. Detailed contracts and remaining boundaries are in [HARDENING.md](HARDENING.md).
+
 ## Initial v0.1 checks
 
 | Check | Observed result | Evidence |

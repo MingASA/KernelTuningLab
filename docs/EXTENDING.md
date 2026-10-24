@@ -183,7 +183,7 @@ ktlab check --spec examples/extensions/failure_capabilities.json --output artifa
 ktlab run --spec examples/extensions/gpu_gemm.json --output artifacts/extensions/5060ti
 ```
 
-退出码：0 通过；2 拒绝或执行失败；3 待设备验证或验收覆盖不足；124 硬超时。CPU 示例在没有第三方 SDK 的 Python 环境也可执行。GPU 示例选择 5060 Ti 16GB；在 H200/H800/4090 上修改硬件选择后重新验证和搜索。
+退出码：0 通过；2 拒绝或执行失败；3 待设备验证或验收覆盖不足；124 硬超时；130/143 为 SIGINT/SIGTERM 中断。CPU 示例在没有第三方 SDK 的 Python 环境也可执行。GPU 示例选择 5060 Ti 16GB；在 H200/H800/4090 上修改硬件选择后重新验证和搜索。
 
 ## 10. 结果入口
 
@@ -197,8 +197,9 @@ ktlab run --spec examples/extensions/gpu_gemm.json --output artifacts/extensions
 | `trials.json`, `trials/` | 各组合的推荐、已验证推荐、预算、缓存、停止原因和失败事件 |
 | `measurements.sqlite`, `measurements.jsonl` | 包含历史的完整测量日志，断点缓存继续保留 |
 | `run_summary.json`, `worker.log` | 本轮状态、阶段统计及工作进程输出 |
+| `run_metadata.json`, `attempts/` | 本轮运行 ID、上一轮位置及保留的历史验收/日志/配置 |
 | `report.md` | 当前组合、延迟、证据等级和归档链接的简明报告 |
 | `counterexamples.json` | 从历史日志恢复并使声明失效的实际正确性反例 |
-| `interrupted_attempt.json` | 超时阶段及最后一个正在执行的候选 |
+| `interrupted_attempt.json` | 超时、中断或 worker 崩溃阶段及最后一个正在执行的候选 |
 
-重跑先撤销旧的本轮完成标记与验收快照，再执行新的检查，保留历史测量日志。源文件发生变更后须使用对应版本重新验收；将 5060 Ti 的 CPU/GPU 结果上传到 Hopper 不会替代目标服务器复验。
+重跑先将旧的验收快照和日志保留到 `attempts/`，撤销本轮完成标记，再执行新检查；累计测量日志保留。输出目录由 OS 锁保护，同目录并发调用被拒绝。配置在父进程冻结，重复 JSON 键及非有限值被拒绝；被终止候选不作为完成缓存，重跑可重新测试。执行时默认输入只读、输出无输入别名；计时结束后还会核对实际输出。详细行为见 [HARDENING.md](HARDENING.md)。源文件发生变更后须使用对应版本重新验收；将 5060 Ti 的 CPU/GPU 结果上传到 Hopper 不会替代目标服务器复验。
