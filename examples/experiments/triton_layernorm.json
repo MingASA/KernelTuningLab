@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "name": "triton-layernorm-float16-smoke-v1",
+  "backend": "triton_layernorm",
+  "operator": {
+    "name": "layernorm",
+    "kind": "layernorm",
+    "implementation": "triton_layernorm",
+    "dtype": "float16",
+    "parameters": {
+      "axis": -1,
+      "eps": 1e-05,
+      "affine": false
+    },
+    "correctness_baseline": "torch.nn.functional.layer_norm(float32, affine=False)",
+    "version": "1",
+    "metadata": {}
+  },
+  "shapes": [
+    {
+      "dims": {
+        "M": 7,
+        "N": 193
+      }
+    },
+    {
+      "dims": {
+        "M": 33,
+        "N": 1025
+      }
+    }
+  ],
+  "domains": {
+    "BLOCK_SIZE": [
+      2048
+    ],
+    "num_warps": [
+      4,
+      8
+    ],
+    "num_stages": [
+      1,
+      2
+    ]
+  },
+  "hardware": null,
+  "budget": {
+    "max_evaluations": 8,
+    "max_wall_time_s": 120.0
+  },
+  "seed": 0,
+  "warmup": 2,
+  "repetitions": 7,
+  "split": "train"
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "name": "reject-undeclared-kernel-domain",
+  "plugins": ["cpu_kernels.py"],
+  "operator": "gemm@1.0.0",
+  "kernels": [{"asset": "demo/gemm@1.0.0", "space": {"tile_size": [3]}}],
+  "algorithms": ["random@1.0.0"],
+  "dtype": "float32",
+  "shapes": [{"M": 2, "N": 3, "K": 5}]
+}

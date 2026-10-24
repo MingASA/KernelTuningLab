@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "name": "mixed-conditional-space",
+  "plugins": ["conditional_kernel.py", "search_algorithm.py"],
+  "operator": "gemm@1.0.0",
+  "kernels": ["demo/conditional_gemm@1.0.0"],
+  "algorithms": ["random@1.0.0", "demo/reverse@1.0.0"],
+  "dtype": "float32",
+  "shapes": [{"M": 2, "N": 3, "K": 5}],
+  "budget": {"max_evaluations": 4, "max_wall_time_s": 10},
+  "validation": {"max_configs": 6, "max_cases": 2, "max_wall_time_s": 15},
+  "warmup": 1,
+  "repetitions": 3
+}

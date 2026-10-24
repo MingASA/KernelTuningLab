@@ -1,0 +1,75 @@
+{
+  "name": "NVIDIA GeForce RTX 5060 Ti 16GB",
+  "architecture": "sm_120",
+  "sm_count": 36,
+  "smem_per_block": 101376,
+  "registers_per_sm": 65536,
+  "compute_tflops": null,
+  "bandwidth_gbps": 448.0,
+  "l2_bytes": null,
+  "memory_bytes": 16000000000,
+  "warp_size": 32,
+  "max_threads_per_block": 1024,
+  "features": [
+    "tensor_cores",
+    "fp16",
+    "bfloat16",
+    "fp8"
+  ],
+  "metadata": {
+    "profile_name": "rtx5060ti-16gb",
+    "variant": "desktop RTX 5060 Ti 16GB",
+    "specification_only": true,
+    "source_kind": "vendor_documentation",
+    "source": "NVIDIA specifications; not a physical device probe",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/",
+      "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/",
+      "https://developer.nvidia.com/cuda/gpus",
+      "https://docs.nvidia.com/cuda/blackwell-tuning-guide/index.html",
+      "https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf"
+    ],
+    "verified_date": "2026-10-22",
+    "vendor_nominal_memory_gb": 16,
+    "unknown_fields": [
+      "compute_tflops",
+      "l2_bytes"
+    ],
+    "probe_required_before_measurement": true,
+    "compute_precision": "FP16 Tensor Core dense",
+    "compute_kind": "theoretical_peak_not_measured",
+    "structured_sparsity": false,
+    "units": {
+      "compute_tflops": "10^12 floating point operations/s; FMA counts as two",
+      "bandwidth_gbps": "10^9 bytes/s (GB/s), not gigabits/s",
+      "memory_bytes": "nominal vendor GB converted with 10^9 bytes/GB; not CUDA usable bytes",
+      "smem_per_block": "bytes; architectural opt-in maximum, not default static allocation",
+      "l2_bytes": "bytes; architectural cache KB/MB normalized as KiB/MiB",
+      "registers_per_sm": "count of 32-bit registers"
+    },
+    "runtime_note": "Use the physical probe for hardware identity, capacities, and experiment records.",
+    "role": "single-card correctness validation before Hopper deployment",
+    "memory_type": "GDDR7",
+    "memory_bus_bits": 128,
+    "cuda_cores": 4608,
+    "sm_count_basis": "derived: 4608 vendor CUDA cores / 128 cores per RTX Blackwell SM = 36; physical probe remains authoritative",
+    "compute_precision_note": "AI TOPS headline is not dense FP16 with FP32 accumulation; no conversion is assumed",
+    "accumulator_precision": "unknown theoretical FP16/FP32-accumulation peak",
+    "runtime_baseline": {
+      "torch": ">=2.7",
+      "torch_cuda_runtime": ">=12.8",
+      "triton": ">=3.3"
+    },
+    "field_sources": {
+      "memory_bytes": "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5060-family/",
+      "architecture": "https://developer.nvidia.com/cuda/gpus",
+      "bandwidth_gbps": "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/",
+      "sm_count": [
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/",
+        "https://images.nvidia.com/aem-dam/Solutions/geforce/blackwell/nvidia-rtx-blackwell-gpu-architecture.pdf"
+      ],
+      "smem_per_block": "https://docs.nvidia.com/cuda/blackwell-tuning-guide/index.html",
+      "registers_per_sm": "https://docs.nvidia.com/cuda/blackwell-tuning-guide/index.html"
+    }
+  }
+}

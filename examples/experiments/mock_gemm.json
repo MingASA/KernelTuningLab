@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "name": "mock-gemm-float16-smoke-v1",
+  "backend": "mock",
+  "operator": {
+    "name": "gemm",
+    "kind": "gemm",
+    "implementation": "mock_gemm",
+    "dtype": "float16",
+    "parameters": {},
+    "correctness_baseline": "synthetic_correctness_flag",
+    "version": "1",
+    "metadata": {}
+  },
+  "shapes": [
+    {
+      "dims": {
+        "M": 64,
+        "N": 128,
+        "K": 96
+      }
+    },
+    {
+      "dims": {
+        "M": 127,
+        "N": 129,
+        "K": 65
+      }
+    }
+  ],
+  "domains": {
+    "BLOCK_M": [
+      16,
+      32,
+      64
+    ],
+    "BLOCK_N": [
+      32,
+      64
+    ],
+    "BLOCK_K": [
+      32
+    ],
+    "num_warps": [
+      4,
+      8
+    ],
+    "num_stages": [
+      2,
+      3
+    ]
+  },
+  "hardware": {
+    "name": "MOCK-compute-rich",
+    "architecture": "mock_v1",
+    "sm_count": 80,
+    "smem_per_block": 65536,
+    "registers_per_sm": 65536,
+    "compute_tflops": 120,
+    "bandwidth_gbps": 800,
+    "l2_bytes": 33554432,
+    "memory_bytes": null,
+    "warp_size": 32,
+    "max_threads_per_block": 1024,
+    "features": [
+      "synthetic"
+    ],
+    "metadata": {
+      "fictional": true
+    }
+  },
+  "budget": {
+    "max_evaluations": 8,
+    "max_wall_time_s": 120.0
+  },
+  "seed": 0,
+  "warmup": 2,
+  "repetitions": 7,
+  "split": "train"
+}

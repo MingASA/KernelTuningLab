@@ -1,0 +1,67 @@
+{
+  "name": "NVIDIA H800 SXM5 80GB",
+  "architecture": "sm_90",
+  "sm_count": 0,
+  "smem_per_block": 232448,
+  "registers_per_sm": 65536,
+  "compute_tflops": null,
+  "bandwidth_gbps": null,
+  "l2_bytes": null,
+  "memory_bytes": 80000000000,
+  "warp_size": 32,
+  "max_threads_per_block": 1024,
+  "features": [
+    "tensor_cores",
+    "fp16",
+    "bfloat16",
+    "fp8",
+    "tma",
+    "thread_block_clusters"
+  ],
+  "metadata": {
+    "profile_name": "h800-sxm",
+    "variant": "SXM5",
+    "specification_only": true,
+    "source_kind": "vendor_documentation",
+    "source": "NVIDIA specifications; not a physical device probe",
+    "sources": [
+      "https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper-h800.html",
+      "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html",
+      "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html"
+    ],
+    "verified_date": "2026-10-22",
+    "vendor_nominal_memory_gb": 80,
+    "unknown_fields": [
+      "sm_count",
+      "compute_tflops",
+      "bandwidth_gbps",
+      "l2_bytes"
+    ],
+    "probe_required_before_measurement": true,
+    "compute_precision": "FP16 Tensor Core dense",
+    "compute_kind": "theoretical_peak_not_measured",
+    "structured_sparsity": false,
+    "units": {
+      "compute_tflops": "10^12 floating point operations/s; FMA counts as two",
+      "bandwidth_gbps": "10^9 bytes/s (GB/s), not gigabits/s",
+      "memory_bytes": "nominal vendor GB converted with 10^9 bytes/GB; not CUDA usable bytes",
+      "smem_per_block": "bytes; architectural opt-in maximum, not default static allocation",
+      "l2_bytes": "bytes; architectural cache KB/MB normalized as KiB/MiB",
+      "registers_per_sm": "count of 32-bit registers"
+    },
+    "runtime_note": "Use the physical probe for hardware identity, capacities, and experiment records.",
+    "architecture_basis": "inferred sm_90 from NVIDIA's explicit Hopper H800 classification; verify using the device probe",
+    "resource_limits_basis": "Hopper architectural bounds; verify opt-in device limits before execution",
+    "missing_specification_reason": "No primary source confirming these SXM-specific values was retrieved; no H100/PCIe values substituted.",
+    "field_sources": {
+      "memory_bytes": "https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper-h800.html",
+      "variant": "https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper-h800.html",
+      "architecture": [
+        "https://docs.nvidia.com/ai-enterprise/release-8/latest/infra-software/vgpu/reference/hopper-h800.html",
+        "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html"
+      ],
+      "smem_per_block": "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html",
+      "registers_per_sm": "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html"
+    }
+  }
+}

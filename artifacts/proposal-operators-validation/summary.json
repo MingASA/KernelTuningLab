@@ -1,0 +1,94 @@
+{
+  "pytest": {
+    "passed": 245,
+    "duration_s": 21.63,
+    "log": "final-pytest.log"
+  },
+  "cpu_suite": {
+    "status": "passed",
+    "proposal_operators": 8,
+    "cases": 8,
+    "observations": 54,
+    "evaluations": 54,
+    "validation_evaluations": 64,
+    "measurement_records": 118,
+    "record_provenance": {
+      "measured": 118
+    },
+    "record_status": {
+      "success": 118
+    },
+    "physical_gpu_validated": false,
+    "log": "cpu-final.log"
+  },
+  "cuda_suite": {
+    "status": "deferred",
+    "cases": 16,
+    "deferred_cases": 16,
+    "evaluations": 0,
+    "physical_gpu_validated": false,
+    "log": "cuda-final.log"
+  },
+  "static_syntax": {
+    "status": "passed",
+    "python_files": 60,
+    "method": "ast.parse; no GPU compilation",
+    "log": "final-static-ast.log"
+  },
+  "wheel": {
+    "filename": "kernel_tuning_lab-0.1.0-py3-none-any.whl",
+    "size_bytes": 203677,
+    "sha256": "70ce8ba216ff1fe231ed54ef0bfee0b9b4805200781711573eba421ec52693aa",
+    "build_log": "final-wheel-build.log",
+    "install_log": "final-wheel-install.log",
+    "outside_workspace_venv": true,
+    "module_path": "/home/cjy/projects/kernel_tuning_lab/artifacts/proposal-operators-validation/wheel-venv/lib/python3.12/site-packages/kernel_tuning_lab/__init__.py",
+    "discovered_operator_asset_count": 12,
+    "operator_ids": [
+      "attention",
+      "batched_gemm",
+      "dequantize_w2",
+      "dequantize_w3",
+      "dequantize_w4",
+      "gemm",
+      "layernorm",
+      "moe_grouped_gemm",
+      "softmax",
+      "w2a16_gemm",
+      "w3a16_gemm",
+      "w4a16_gemm"
+    ],
+    "proposal_operator_count": 8,
+    "cpu_proposal_suite_status": "passed",
+    "torch_import_available": false,
+    "triton_import_available": false,
+    "external_cpu_suite_status": "passed",
+    "external_cpu_suite_evaluations": 54,
+    "external_cpu_suite_observations": 54,
+    "external_cpu_measurement_records": 118,
+    "external_cpu_record_provenance": [
+      "measured"
+    ],
+    "external_cpu_suite_log": "final-wheel-cpu-run.log"
+  },
+  "production_write_only": {
+    "manifest": "../../examples/proposal/production/suite_manifest.json",
+    "status": "generated",
+    "measurement_files": 0
+  },
+  "source_sha256": {
+    "kernel_tuning_lab/assets.py": "abf058437ec14884d4ef6b7f61a21231ce66c46171f61d7274e062f84684aa42",
+    "kernel_tuning_lab/asset_space.py": "074a2fb6113d544f08760df1ec8e5ec1ac8ffb2caa4eb7f10a64c7ad8efbaee1",
+    "kernel_tuning_lab/asset_runner.py": "bfe9fe4baa54bacd55b2d59e2777f4e819ab8554da40db603728526b1b0ad459",
+    "kernel_tuning_lab/builtin_assets/quantized.py": "230da7e2db350d64612378b22fc491faf772814ec8ea66817e3f6983efe95555",
+    "kernel_tuning_lab/quantization.py": "a6ee371ba7b558bff90b7358de8c78e9eedfd3bde03a8de6edfa219536521b7b",
+    "kernel_tuning_lab/builtin_assets/attention.py": "1a303e9531bd29db158301ec53fa18a00c7dfa0cddc6edbef9d68f1a10b24774",
+    "kernel_tuning_lab/backends/_triton_attention.py": "bfbb5c46e9df83bd0b3e0800e19fe641763045e6e7074dbfac109a17788990da",
+    "kernel_tuning_lab/builtin_assets/moe.py": "01e9a3ae7aee3043c7fb0395fb441ca2a92d1aaaac74ec0a8bd39e7e552bb68d",
+    "kernel_tuning_lab/backends/_triton_moe.py": "74aa5eea167928bd78f643b3b9d3c0d7a08215b6219bba43477be8963e67cb94",
+    "tests/test_quantized_operators.py": "b00fae96ca91a6f23e900a287dd5c17b74b96456408d0d9cb58aec7c93fefda0",
+    "tests/test_attention_moe.py": "63ba9d1818e3ae4536a82f47cfd9bdfbac338c4e091a02add84541baac7520af",
+    "tests/test_proposal_operators.py": "e32c16b529aa362ca3cff6399bd0bc128e0a83f27d0502d5701761583984486a"
+  },
+  "notice": "CPU measured timings and correctness are CPU-only evidence. CUDA suite deferred because no CUDA runtime/device is available; no GPU compilation or performance was measured."
+}

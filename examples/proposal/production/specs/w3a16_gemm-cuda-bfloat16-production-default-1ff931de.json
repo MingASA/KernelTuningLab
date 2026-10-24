@@ -1,0 +1,69 @@
+{
+  "name": "w3a16_gemm-cuda-bfloat16-production-default",
+  "operator": "w3a16_gemm@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/w3a16_gemm@1.0.0",
+      "space": {}
+    },
+    {
+      "asset": "triton_pipeline/w3a16_gemm@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "M": 1,
+        "N": 4096,
+        "K": 4096
+      }
+    },
+    {
+      "dims": {
+        "M": 128,
+        "N": 4096,
+        "K": 4096
+      }
+    },
+    {
+      "dims": {
+        "M": 512,
+        "N": 4096,
+        "K": 11008
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "bfloat16",
+  "parameters": {},
+  "hardware": "5060ti16g",
+  "budget": {
+    "max_evaluations": 4,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 10,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

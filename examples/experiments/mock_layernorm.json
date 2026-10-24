@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "name": "mock-layernorm-float16-smoke-v1",
+  "backend": "mock",
+  "operator": {
+    "name": "layernorm",
+    "kind": "layernorm",
+    "implementation": "mock_layernorm",
+    "dtype": "float16",
+    "parameters": {
+      "axis": -1,
+      "eps": 1e-05,
+      "affine": false
+    },
+    "correctness_baseline": "synthetic_correctness_flag",
+    "version": "1",
+    "metadata": {}
+  },
+  "shapes": [
+    {
+      "dims": {
+        "M": 7,
+        "N": 193
+      }
+    },
+    {
+      "dims": {
+        "M": 33,
+        "N": 1025
+      }
+    }
+  ],
+  "domains": {
+    "BLOCK_SIZE": [
+      2048
+    ],
+    "num_warps": [
+      4,
+      8
+    ],
+    "num_stages": [
+      1,
+      2
+    ]
+  },
+  "hardware": {
+    "name": "MOCK-compute-rich",
+    "architecture": "mock_v1",
+    "sm_count": 80,
+    "smem_per_block": 65536,
+    "registers_per_sm": 65536,
+    "compute_tflops": 120,
+    "bandwidth_gbps": 800,
+    "l2_bytes": 33554432,
+    "memory_bytes": null,
+    "warp_size": 32,
+    "max_threads_per_block": 1024,
+    "features": [
+      "synthetic"
+    ],
+    "metadata": {
+      "fictional": true
+    }
+  },
+  "budget": {
+    "max_evaluations": 8,
+    "max_wall_time_s": 120.0
+  },
+  "seed": 0,
+  "warmup": 2,
+  "repetitions": 7,
+  "split": "train"
+}

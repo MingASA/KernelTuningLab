@@ -1,0 +1,74 @@
+{
+  "name": "attention-cuda-float16-production-default",
+  "operator": "attention@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/attention@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 32,
+        "KVHeads": 8,
+        "SeqQ": 2048,
+        "SeqKV": 2048,
+        "D": 128
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 32,
+        "KVHeads": 8,
+        "SeqQ": 16384,
+        "SeqKV": 16384,
+        "D": 128
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 32,
+        "KVHeads": 8,
+        "SeqQ": 1,
+        "SeqKV": 16384,
+        "D": 128
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "float16",
+  "parameters": {},
+  "hardware": "5060ti16g",
+  "budget": {
+    "max_evaluations": 4,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 8,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

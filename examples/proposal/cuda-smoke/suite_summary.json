@@ -1,0 +1,1046 @@
+{
+  "status": "deferred",
+  "exit_code": 3,
+  "runtime": "cuda",
+  "scale": "smoke",
+  "hardware": null,
+  "strict": true,
+  "operators": [
+    "attention@1.0.0",
+    "dequantize_w2@1.0.0",
+    "dequantize_w3@1.0.0",
+    "dequantize_w4@1.0.0",
+    "moe_grouped_gemm@1.0.0",
+    "w2a16_gemm@1.0.0",
+    "w3a16_gemm@1.0.0",
+    "w4a16_gemm@1.0.0"
+  ],
+  "cases": [
+    {
+      "name": "attention-cuda-float16-smoke-default",
+      "operator": "attention@1.0.0",
+      "family": "attention",
+      "dtype": "float16",
+      "kernels": [
+        "triton/attention@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 2,
+          "SeqQ": 3,
+          "SeqKV": 5,
+          "D": 7
+        },
+        {
+          "Batch": 1,
+          "Heads": 4,
+          "KVHeads": 2,
+          "SeqQ": 5,
+          "SeqKV": 7,
+          "D": 17
+        },
+        {
+          "Batch": 2,
+          "Heads": 4,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 9,
+          "D": 33
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 7,
+          "SeqKV": 3,
+          "D": 5
+        },
+        {
+          "Batch": 1,
+          "Heads": 1,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 1,
+          "D": 1
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 17,
+          "SeqKV": 19,
+          "D": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/attention-cuda-float16-smoke-default-96516df2.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-float16-smoke-default-96516df2",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "attention-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-float16-smoke-default-96516df2/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-float16-smoke-default-96516df2",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "attention-cuda-bfloat16-smoke-default",
+      "operator": "attention@1.0.0",
+      "family": "attention",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/attention@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 2,
+          "SeqQ": 3,
+          "SeqKV": 5,
+          "D": 7
+        },
+        {
+          "Batch": 1,
+          "Heads": 4,
+          "KVHeads": 2,
+          "SeqQ": 5,
+          "SeqKV": 7,
+          "D": 17
+        },
+        {
+          "Batch": 2,
+          "Heads": 4,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 9,
+          "D": 33
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 7,
+          "SeqKV": 3,
+          "D": 5
+        },
+        {
+          "Batch": 1,
+          "Heads": 1,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 1,
+          "D": 1
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 17,
+          "SeqKV": 19,
+          "D": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/attention-cuda-bfloat16-smoke-default-48f17963.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-bfloat16-smoke-default-48f17963",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "attention-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-bfloat16-smoke-default-48f17963/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/attention-cuda-bfloat16-smoke-default-48f17963",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w2-cuda-float16-smoke-default",
+      "operator": "dequantize_w2@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/dequantize_w2@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w2-cuda-float16-smoke-default-4ce1cb08.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-float16-smoke-default-4ce1cb08",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w2-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-float16-smoke-default-4ce1cb08/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-float16-smoke-default-4ce1cb08",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w2-cuda-bfloat16-smoke-default",
+      "operator": "dequantize_w2@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/dequantize_w2@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w2-cuda-bfloat16-smoke-default-9b60c2e1.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-bfloat16-smoke-default-9b60c2e1",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w2-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-bfloat16-smoke-default-9b60c2e1/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w2-cuda-bfloat16-smoke-default-9b60c2e1",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w3-cuda-float16-smoke-default",
+      "operator": "dequantize_w3@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/dequantize_w3@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w3-cuda-float16-smoke-default-c62ce87b.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-float16-smoke-default-c62ce87b",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w3-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-float16-smoke-default-c62ce87b/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-float16-smoke-default-c62ce87b",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w3-cuda-bfloat16-smoke-default",
+      "operator": "dequantize_w3@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/dequantize_w3@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w3-cuda-bfloat16-smoke-default-8c894aab.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-bfloat16-smoke-default-8c894aab",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w3-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-bfloat16-smoke-default-8c894aab/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w3-cuda-bfloat16-smoke-default-8c894aab",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w4-cuda-float16-smoke-default",
+      "operator": "dequantize_w4@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/dequantize_w4@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w4-cuda-float16-smoke-default-4fcaa03c.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-float16-smoke-default-4fcaa03c",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w4-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-float16-smoke-default-4fcaa03c/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-float16-smoke-default-4fcaa03c",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w4-cuda-bfloat16-smoke-default",
+      "operator": "dequantize_w4@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/dequantize_w4@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/dequantize_w4-cuda-bfloat16-smoke-default-7bbc46fc.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-bfloat16-smoke-default-7bbc46fc",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "dequantize_w4-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-bfloat16-smoke-default-7bbc46fc/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/dequantize_w4-cuda-bfloat16-smoke-default-7bbc46fc",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "moe_grouped_gemm-cuda-float16-smoke-default",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "family": "MoEGroupedGEMM",
+      "dtype": "float16",
+      "kernels": [
+        "triton/moe_grouped_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 7,
+          "N": 13,
+          "K": 35,
+          "Groups": 4
+        },
+        {
+          "M": 13,
+          "N": 32,
+          "K": 64,
+          "Groups": 4
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 9,
+          "Groups": 8
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/moe_grouped_gemm-cuda-float16-smoke-default-0c9c1111.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-float16-smoke-default-0c9c1111",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "moe_grouped_gemm-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-float16-smoke-default-0c9c1111/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-float16-smoke-default-0c9c1111",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "moe_grouped_gemm-cuda-bfloat16-smoke-default",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "family": "MoEGroupedGEMM",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/moe_grouped_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 7,
+          "N": 13,
+          "K": 35,
+          "Groups": 4
+        },
+        {
+          "M": 13,
+          "N": 32,
+          "K": 64,
+          "Groups": 4
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 9,
+          "Groups": 8
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/moe_grouped_gemm-cuda-bfloat16-smoke-default-5a43acf3.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-bfloat16-smoke-default-5a43acf3",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "moe_grouped_gemm-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-bfloat16-smoke-default-5a43acf3/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/moe_grouped_gemm-cuda-bfloat16-smoke-default-5a43acf3",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w2a16_gemm-cuda-float16-smoke-default",
+      "operator": "w2a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/w2a16_gemm@1.0.0",
+        "triton_pipeline/w2a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w2a16_gemm-cuda-float16-smoke-default-417baa39.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-float16-smoke-default-417baa39",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w2a16_gemm-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-float16-smoke-default-417baa39/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-float16-smoke-default-417baa39",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w2a16_gemm-cuda-bfloat16-smoke-default",
+      "operator": "w2a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/w2a16_gemm@1.0.0",
+        "triton_pipeline/w2a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w2a16_gemm-cuda-bfloat16-smoke-default-ce41cd00.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-bfloat16-smoke-default-ce41cd00",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w2a16_gemm-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-bfloat16-smoke-default-ce41cd00/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w2a16_gemm-cuda-bfloat16-smoke-default-ce41cd00",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w3a16_gemm-cuda-float16-smoke-default",
+      "operator": "w3a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/w3a16_gemm@1.0.0",
+        "triton_pipeline/w3a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w3a16_gemm-cuda-float16-smoke-default-ddb1edaa.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-float16-smoke-default-ddb1edaa",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w3a16_gemm-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-float16-smoke-default-ddb1edaa/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-float16-smoke-default-ddb1edaa",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w3a16_gemm-cuda-bfloat16-smoke-default",
+      "operator": "w3a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/w3a16_gemm@1.0.0",
+        "triton_pipeline/w3a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w3a16_gemm-cuda-bfloat16-smoke-default-19d48d29.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-bfloat16-smoke-default-19d48d29",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w3a16_gemm-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-bfloat16-smoke-default-19d48d29/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w3a16_gemm-cuda-bfloat16-smoke-default-19d48d29",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w4a16_gemm-cuda-float16-smoke-default",
+      "operator": "w4a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float16",
+      "kernels": [
+        "triton/w4a16_gemm@1.0.0",
+        "triton_pipeline/w4a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w4a16_gemm-cuda-float16-smoke-default-9906b4aa.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-float16-smoke-default-9906b4aa",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w4a16_gemm-cuda-float16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-float16-smoke-default-9906b4aa/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-float16-smoke-default-9906b4aa",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w4a16_gemm-cuda-bfloat16-smoke-default",
+      "operator": "w4a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "bfloat16",
+      "kernels": [
+        "triton/w4a16_gemm@1.0.0",
+        "triton_pipeline/w4a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/specs/w4a16_gemm-cuda-bfloat16-smoke-default-271afe0d.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-bfloat16-smoke-default-271afe0d",
+      "status": "deferred",
+      "run": {
+        "status": "deferred",
+        "exit_code": 3,
+        "experiment": "w4a16_gemm-cuda-bfloat16-smoke-default",
+        "check_only": false,
+        "preflight_status": "deferred",
+        "acceptance_status": "deferred",
+        "trials": 0,
+        "evaluations": 0,
+        "observations": 0,
+        "cache_hits": 0,
+        "validation_evaluations": 0,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 0,
+          "verified": 0,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-bfloat16-smoke-default-271afe0d/measurements.sqlite",
+          "total": 0,
+          "groups": []
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/runs/w4a16_gemm-cuda-bfloat16-smoke-default-271afe0d",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    }
+  ],
+  "physical_gpu_validated": false,
+  "observations": 0,
+  "evaluations": 0,
+  "validation_evaluations": 0,
+  "manifest": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cuda-smoke/suite_manifest.json",
+  "notice": "CPU results verify the Python contracts, not GPU kernels. CUDA compilation and performance require the physical device."
+}

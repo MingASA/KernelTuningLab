@@ -1,0 +1,38 @@
+{
+  "name": "heuristic_policy",
+  "version": "0.1.0-11136dfb9b19",
+  "source_sha256": "d1e471ebdd5d14e65fd921a65df1a61dc92152e9c1425439de2202404916f718",
+  "source_file": "/home/cjy/projects/kernel_tuning_lab/kernel_tuning_lab/policies/__init__.py",
+  "specification": {
+    "algorithm": "heuristic",
+    "seed": 7,
+    "space": "inferred_from_observed_domains",
+    "domains": {
+      "BLOCK_SIZE": [
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048
+      ],
+      "num_warps": [
+        4,
+        8
+      ],
+      "num_stages": [
+        1,
+        2
+      ]
+    },
+    "candidate_pool_size": 512,
+    "exhaustive_threshold": 4096,
+    "training_record_ids": []
+  },
+  "training_case_ids": [],
+  "metadata": {
+    "frozen_before_test": true,
+    "source": "non_llm_baseline"
+  },
+  "artifact_id": "e9cdab043a6e1bc0d807962b"
+}

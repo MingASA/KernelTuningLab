@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "name": "reject-wrong-kernel-output",
+  "plugins": ["failures.py"],
+  "operator": "gemm@1.0.0",
+  "kernels": ["demo/wrong_gemm@1.0.0"],
+  "algorithms": ["random@1.0.0"],
+  "dtype": "float32",
+  "shapes": [{"M": 2, "N": 3, "K": 5}],
+  "budget": {"max_evaluations": 2, "max_wall_time_s": 10},
+  "validation": {"max_configs": 4, "max_cases": 2, "max_wall_time_s": 10}
+}

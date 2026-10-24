@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "name": "custom-operator-with-shared-platform-services",
+  "plugins": ["cpu_kernels.py", "search_algorithm.py"],
+  "operator": "demo/axpy@1.0.0",
+  "kernels": ["demo/axpy_kernel@1.0.0"],
+  "algorithms": ["random@1.0.0", "demo/reverse@1.0.0"],
+  "dtype": "float32",
+  "parameters": {"alpha": 1.5},
+  "shapes": [{"N": 13}, {"N": 31}],
+  "budget": {"max_evaluations": 3, "max_wall_time_s": 10},
+  "validation": {"max_configs": 8, "max_cases": 2, "max_wall_time_s": 15},
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 3
+}

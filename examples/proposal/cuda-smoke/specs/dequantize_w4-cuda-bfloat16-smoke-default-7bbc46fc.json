@@ -1,0 +1,62 @@
+{
+  "name": "dequantize_w4-cuda-bfloat16-smoke-default",
+  "operator": "dequantize_w4@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/dequantize_w4@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "K": 35,
+        "N": 5
+      }
+    },
+    {
+      "dims": {
+        "K": 1,
+        "N": 1
+      }
+    },
+    {
+      "dims": {
+        "K": 65,
+        "N": 7
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "bfloat16",
+  "parameters": {},
+  "hardware": null,
+  "budget": {
+    "max_evaluations": 1,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 8,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

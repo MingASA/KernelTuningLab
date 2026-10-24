@@ -1,0 +1,56 @@
+{
+  "name": "dequantize_w2-cuda-float16-production-default",
+  "operator": "dequantize_w2@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/dequantize_w2@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "K": 4096,
+        "N": 4096
+      }
+    },
+    {
+      "dims": {
+        "K": 11008,
+        "N": 4096
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "float16",
+  "parameters": {},
+  "hardware": "5060ti16g",
+  "budget": {
+    "max_evaluations": 4,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 8,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

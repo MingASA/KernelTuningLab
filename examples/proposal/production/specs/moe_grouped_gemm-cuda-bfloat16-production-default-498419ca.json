@@ -1,0 +1,60 @@
+{
+  "name": "moe_grouped_gemm-cuda-bfloat16-production-default",
+  "operator": "moe_grouped_gemm@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/moe_grouped_gemm@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "M": 4096,
+        "N": 4096,
+        "K": 4096,
+        "Groups": 8
+      }
+    },
+    {
+      "dims": {
+        "M": 128,
+        "N": 14336,
+        "K": 4096,
+        "Groups": 8
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "bfloat16",
+  "parameters": {},
+  "hardware": "5060ti16g",
+  "budget": {
+    "max_evaluations": 4,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 8,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

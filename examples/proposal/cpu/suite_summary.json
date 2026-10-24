@@ -1,0 +1,581 @@
+{
+  "status": "passed",
+  "exit_code": 0,
+  "runtime": "python",
+  "scale": "smoke",
+  "hardware": null,
+  "strict": true,
+  "operators": [
+    "attention@1.0.0",
+    "dequantize_w2@1.0.0",
+    "dequantize_w3@1.0.0",
+    "dequantize_w4@1.0.0",
+    "moe_grouped_gemm@1.0.0",
+    "w2a16_gemm@1.0.0",
+    "w3a16_gemm@1.0.0",
+    "w4a16_gemm@1.0.0"
+  ],
+  "cases": [
+    {
+      "name": "attention-python-float32-smoke-default",
+      "operator": "attention@1.0.0",
+      "family": "attention",
+      "dtype": "float32",
+      "kernels": [
+        "python/attention@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 2,
+          "SeqQ": 3,
+          "SeqKV": 5,
+          "D": 7
+        },
+        {
+          "Batch": 1,
+          "Heads": 4,
+          "KVHeads": 2,
+          "SeqQ": 5,
+          "SeqKV": 7,
+          "D": 17
+        },
+        {
+          "Batch": 2,
+          "Heads": 4,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 9,
+          "D": 33
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 7,
+          "SeqKV": 3,
+          "D": 5
+        },
+        {
+          "Batch": 1,
+          "Heads": 1,
+          "KVHeads": 1,
+          "SeqQ": 1,
+          "SeqKV": 1,
+          "D": 1
+        },
+        {
+          "Batch": 1,
+          "Heads": 2,
+          "KVHeads": 1,
+          "SeqQ": 17,
+          "SeqKV": 19,
+          "D": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/attention-python-float32-smoke-default-e00cb98d.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/attention-python-float32-smoke-default-e00cb98d",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "attention-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 12,
+        "evaluations": 12,
+        "observations": 12,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/attention-python-float32-smoke-default-e00cb98d/measurements.sqlite",
+          "total": 20,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 20
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/attention-python-float32-smoke-default-e00cb98d",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w2-python-float32-smoke-default",
+      "operator": "dequantize_w2@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/dequantize_w2@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/dequantize_w2-python-float32-smoke-default-5670c367.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w2-python-float32-smoke-default-5670c367",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "dequantize_w2-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w2-python-float32-smoke-default-5670c367/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w2-python-float32-smoke-default-5670c367",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w3-python-float32-smoke-default",
+      "operator": "dequantize_w3@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/dequantize_w3@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/dequantize_w3-python-float32-smoke-default-6c6dc83c.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w3-python-float32-smoke-default-6c6dc83c",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "dequantize_w3-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w3-python-float32-smoke-default-6c6dc83c/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w3-python-float32-smoke-default-6c6dc83c",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "dequantize_w4-python-float32-smoke-default",
+      "operator": "dequantize_w4@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/dequantize_w4@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "K": 35,
+          "N": 5
+        },
+        {
+          "K": 1,
+          "N": 1
+        },
+        {
+          "K": 65,
+          "N": 7
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/dequantize_w4-python-float32-smoke-default-05f8f022.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w4-python-float32-smoke-default-05f8f022",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "dequantize_w4-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w4-python-float32-smoke-default-05f8f022/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/dequantize_w4-python-float32-smoke-default-05f8f022",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "moe_grouped_gemm-python-float32-smoke-default",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "family": "MoEGroupedGEMM",
+      "dtype": "float32",
+      "kernels": [
+        "python/moe_grouped_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 7,
+          "N": 13,
+          "K": 35,
+          "Groups": 4
+        },
+        {
+          "M": 13,
+          "N": 32,
+          "K": 64,
+          "Groups": 4
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 9,
+          "Groups": 8
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/moe_grouped_gemm-python-float32-smoke-default-28d846e0.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/moe_grouped_gemm-python-float32-smoke-default-28d846e0",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "moe_grouped_gemm-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/moe_grouped_gemm-python-float32-smoke-default-28d846e0/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/moe_grouped_gemm-python-float32-smoke-default-28d846e0",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w2a16_gemm-python-float32-smoke-default",
+      "operator": "w2a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/w2a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/w2a16_gemm-python-float32-smoke-default-06117f0c.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w2a16_gemm-python-float32-smoke-default-06117f0c",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "w2a16_gemm-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w2a16_gemm-python-float32-smoke-default-06117f0c/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w2a16_gemm-python-float32-smoke-default-06117f0c",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w3a16_gemm-python-float32-smoke-default",
+      "operator": "w3a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/w3a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/w3a16_gemm-python-float32-smoke-default-deac515d.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w3a16_gemm-python-float32-smoke-default-deac515d",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "w3a16_gemm-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w3a16_gemm-python-float32-smoke-default-deac515d/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w3a16_gemm-python-float32-smoke-default-deac515d",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    },
+    {
+      "name": "w4a16_gemm-python-float32-smoke-default",
+      "operator": "w4a16_gemm@1.0.0",
+      "family": "quantized",
+      "dtype": "float32",
+      "kernels": [
+        "python/w4a16_gemm@1.0.0"
+      ],
+      "excluded_kernels": [],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 35
+        },
+        {
+          "M": 1,
+          "N": 1,
+          "K": 1
+        },
+        {
+          "M": 2,
+          "N": 7,
+          "K": 65
+        }
+      ],
+      "parameters": {},
+      "spec": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/specs/w4a16_gemm-python-float32-smoke-default-86196b6b.json",
+      "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w4a16_gemm-python-float32-smoke-default-86196b6b",
+      "status": "passed",
+      "run": {
+        "status": "passed",
+        "exit_code": 0,
+        "experiment": "w4a16_gemm-python-float32-smoke-default",
+        "check_only": false,
+        "preflight_status": "passed",
+        "acceptance_status": "passed",
+        "trials": 6,
+        "evaluations": 6,
+        "observations": 6,
+        "cache_hits": 0,
+        "validation_evaluations": 8,
+        "physical_gpu_validated": false,
+        "correctness_evidence": {
+          "attempted": 8,
+          "verified": 8,
+          "declared": 0,
+          "failed": 0
+        },
+        "installed_entry_points": [],
+        "store": {
+          "path": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w4a16_gemm-python-float32-smoke-default-86196b6b/measurements.sqlite",
+          "total": 14,
+          "groups": [
+            {
+              "provenance": "measured",
+              "status": "success",
+              "count": 14
+            }
+          ]
+        },
+        "output": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/runs/w4a16_gemm-python-float32-smoke-default-86196b6b",
+        "notice": "Acceptance is limited to recorded samples/claims. CPU evidence is not GPU validation; submitter claims are not platform verification."
+      },
+      "strict_failed_configurations": 0
+    }
+  ],
+  "physical_gpu_validated": false,
+  "observations": 54,
+  "evaluations": 54,
+  "validation_evaluations": 64,
+  "manifest": "/home/cjy/projects/kernel_tuning_lab/examples/proposal/cpu/suite_manifest.json",
+  "notice": "CPU results verify the Python contracts, not GPU kernels. CUDA compilation and performance require the physical device."
+}

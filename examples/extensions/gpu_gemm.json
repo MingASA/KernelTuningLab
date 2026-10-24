@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "name": "blackwell-registered-triton-gemm",
+  "operator": "gemm@1.0.0",
+  "kernels": [{"asset": "triton/gemm@1.0.0", "space": {"BLOCK_M": [16, 32], "BLOCK_N": [32, 64], "BLOCK_K": [32], "num_stages": [2]}}],
+  "algorithms": ["random@1.0.0", "grid@1.0.0"],
+  "dtype": "float16",
+  "hardware": "5060ti16g",
+  "shapes": [{"M": 64, "N": 128, "K": 96}, {"M": 127, "N": 129, "K": 65}],
+  "budget": {"max_evaluations": 8, "max_wall_time_s": 60},
+  "validation": {"max_configs": 8, "max_cases": 2, "max_wall_time_s": 60},
+  "seed": 7,
+  "warmup": 2,
+  "repetitions": 7
+}

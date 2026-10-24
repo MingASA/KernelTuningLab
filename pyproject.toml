@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kernel-tuning-lab"
+version = "0.1.0"
+description = "Reproducible hardware-aware kernel tuning and variant selection research"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.7"]
+gpu = ["torch>=2.2", "triton>=3.0; platform_system == 'Linux'"]
+gpu-blackwell = ["torch>=2.7", "triton>=3.3; platform_system == 'Linux'"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+ktlab = "kernel_tuning_lab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["kernel_tuning_lab*"]
+
+[tool.setuptools.package-data]
+kernel_tuning_lab = ["adapters/data/*.json", "adapters/data/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

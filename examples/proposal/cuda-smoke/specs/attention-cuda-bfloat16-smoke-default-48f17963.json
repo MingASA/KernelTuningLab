@@ -1,0 +1,104 @@
+{
+  "name": "attention-cuda-bfloat16-smoke-default",
+  "operator": "attention@1.0.0",
+  "kernels": [
+    {
+      "asset": "triton/attention@1.0.0",
+      "space": {}
+    }
+  ],
+  "algorithms": [
+    {
+      "asset": "random@1.0.0",
+      "options": {}
+    },
+    {
+      "asset": "grid@1.0.0",
+      "options": {}
+    }
+  ],
+  "shapes": [
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 2,
+        "KVHeads": 2,
+        "SeqQ": 3,
+        "SeqKV": 5,
+        "D": 7
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 4,
+        "KVHeads": 2,
+        "SeqQ": 5,
+        "SeqKV": 7,
+        "D": 17
+      }
+    },
+    {
+      "dims": {
+        "Batch": 2,
+        "Heads": 4,
+        "KVHeads": 1,
+        "SeqQ": 1,
+        "SeqKV": 9,
+        "D": 33
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 2,
+        "KVHeads": 1,
+        "SeqQ": 7,
+        "SeqKV": 3,
+        "D": 5
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 1,
+        "KVHeads": 1,
+        "SeqQ": 1,
+        "SeqKV": 1,
+        "D": 1
+      }
+    },
+    {
+      "dims": {
+        "Batch": 1,
+        "Heads": 2,
+        "KVHeads": 1,
+        "SeqQ": 17,
+        "SeqKV": 19,
+        "D": 65
+      }
+    }
+  ],
+  "plugins": [],
+  "dtype": "bfloat16",
+  "parameters": {},
+  "hardware": null,
+  "budget": {
+    "max_evaluations": 1,
+    "max_wall_time_s": 120
+  },
+  "validation": {
+    "max_configs": 8,
+    "max_cases": 2,
+    "max_wall_time_s": 120,
+    "seed": 17,
+    "trust_claims": false
+  },
+  "preflight_seconds": 60,
+  "seed": 7,
+  "warmup": 1,
+  "repetitions": 5,
+  "split": "train",
+  "schema_version": 2,
+  "workspace_memory_limit_bytes": 268435456
+}

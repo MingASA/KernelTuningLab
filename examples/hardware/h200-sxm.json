@@ -1,0 +1,63 @@
+{
+  "name": "NVIDIA H200 SXM",
+  "architecture": "sm_90",
+  "sm_count": 132,
+  "smem_per_block": 232448,
+  "registers_per_sm": 65536,
+  "compute_tflops": 989.5,
+  "bandwidth_gbps": 4800.0,
+  "l2_bytes": 52428800,
+  "memory_bytes": 141000000000,
+  "warp_size": 32,
+  "max_threads_per_block": 1024,
+  "features": [
+    "tensor_cores",
+    "fp16",
+    "bfloat16",
+    "fp8",
+    "tma",
+    "thread_block_clusters"
+  ],
+  "metadata": {
+    "profile_name": "h200-sxm",
+    "variant": "SXM",
+    "specification_only": true,
+    "source_kind": "vendor_documentation",
+    "source": "NVIDIA specifications; not a physical device probe",
+    "sources": [
+      "https://www.nvidia.com/en-us/data-center/h200/",
+      "https://developer-blogs.nvidia.com/wp-content/uploads/2024/08/CUDA-Programming-and-Optimization.pdf",
+      "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html",
+      "https://developer.nvidia.com/cuda/gpus",
+      "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html"
+    ],
+    "verified_date": "2026-10-22",
+    "vendor_nominal_memory_gb": 141,
+    "unknown_fields": [],
+    "probe_required_before_measurement": true,
+    "compute_precision": "FP16 Tensor Core dense",
+    "compute_kind": "theoretical_peak_not_measured",
+    "structured_sparsity": false,
+    "units": {
+      "compute_tflops": "10^12 floating point operations/s; FMA counts as two",
+      "bandwidth_gbps": "10^9 bytes/s (GB/s), not gigabits/s",
+      "memory_bytes": "nominal vendor GB converted with 10^9 bytes/GB; not CUDA usable bytes",
+      "smem_per_block": "bytes; architectural opt-in maximum, not default static allocation",
+      "l2_bytes": "bytes; architectural cache KB/MB normalized as KiB/MiB",
+      "registers_per_sm": "count of 32-bit registers"
+    },
+    "runtime_note": "Use the physical probe for hardware identity, capacities, and experiment records.",
+    "compute_derivation": "1979 vendor FP16 sparse TFLOPS / 2 = 989.5 dense TFLOPS; rounded source values",
+    "accumulator_precision": "vendor product table does not separately specify accumulation mode",
+    "field_sources": {
+      "memory_bytes": "https://www.nvidia.com/en-us/data-center/h200/",
+      "bandwidth_gbps": "https://www.nvidia.com/en-us/data-center/h200/",
+      "compute_tflops": "https://www.nvidia.com/en-us/data-center/h200/",
+      "sm_count": "https://developer-blogs.nvidia.com/wp-content/uploads/2024/08/CUDA-Programming-and-Optimization.pdf",
+      "l2_bytes": "https://developer-blogs.nvidia.com/wp-content/uploads/2024/08/CUDA-Programming-and-Optimization.pdf",
+      "smem_per_block": "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html",
+      "registers_per_sm": "https://docs.nvidia.com/cuda/hopper-tuning-guide/index.html",
+      "architecture": "https://developer.nvidia.com/cuda/gpus"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "name": "reject-illegal-algorithm-proposals",
+  "plugins": ["failures.py"],
+  "operator": "gemm@1.0.0",
+  "kernels": ["python/gemm@1.0.0"],
+  "algorithms": ["demo/illegal@1.0.0"],
+  "dtype": "float32",
+  "shapes": [{"M": 2, "N": 3, "K": 5}],
+  "budget": {"max_evaluations": 2, "max_wall_time_s": 10}
+}

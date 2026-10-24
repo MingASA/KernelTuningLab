@@ -1,0 +1,61 @@
+{
+  "name": "NVIDIA GeForce RTX 4090",
+  "architecture": "sm_89",
+  "sm_count": 128,
+  "smem_per_block": 101376,
+  "registers_per_sm": 65536,
+  "compute_tflops": 165.2,
+  "bandwidth_gbps": 1008.0,
+  "l2_bytes": 75497472,
+  "memory_bytes": 24000000000,
+  "warp_size": 32,
+  "max_threads_per_block": 1024,
+  "features": [
+    "tensor_cores",
+    "fp16",
+    "bfloat16",
+    "fp8"
+  ],
+  "metadata": {
+    "profile_name": "rtx4090",
+    "variant": "desktop RTX 4090",
+    "specification_only": true,
+    "source_kind": "vendor_documentation",
+    "source": "NVIDIA specifications; not a physical device probe",
+    "sources": [
+      "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "https://docs.nvidia.com/cuda/ada-tuning-guide/index.html",
+      "https://developer.nvidia.com/cuda/gpus",
+      "https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html"
+    ],
+    "verified_date": "2026-10-22",
+    "vendor_nominal_memory_gb": 24,
+    "unknown_fields": [],
+    "probe_required_before_measurement": true,
+    "compute_precision": "FP16 Tensor Core dense",
+    "compute_kind": "theoretical_peak_not_measured",
+    "structured_sparsity": false,
+    "units": {
+      "compute_tflops": "10^12 floating point operations/s; FMA counts as two",
+      "bandwidth_gbps": "10^9 bytes/s (GB/s), not gigabits/s",
+      "memory_bytes": "nominal vendor GB converted with 10^9 bytes/GB; not CUDA usable bytes",
+      "smem_per_block": "bytes; architectural opt-in maximum, not default static allocation",
+      "l2_bytes": "bytes; architectural cache KB/MB normalized as KiB/MiB",
+      "registers_per_sm": "count of 32-bit registers"
+    },
+    "runtime_note": "Use the physical probe for hardware identity, capacities, and experiment records.",
+    "accumulator_precision": "float32",
+    "fp16_accumulate_fp16_dense_tflops": 330.3,
+    "compute_derivation": "Ada whitepaper v2.02 Table 2: FP16 Tensor with FP32 accumulate, first (non-sparse) value 165.2",
+    "field_sources": {
+      "sm_count": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "memory_bytes": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "compute_tflops": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "bandwidth_gbps": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "l2_bytes": "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+      "smem_per_block": "https://docs.nvidia.com/cuda/ada-tuning-guide/index.html",
+      "registers_per_sm": "https://docs.nvidia.com/cuda/ada-tuning-guide/index.html",
+      "architecture": "https://developer.nvidia.com/cuda/gpus"
+    }
+  }
+}
