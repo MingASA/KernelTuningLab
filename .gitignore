@@ -35,4 +35,5 @@ examples/results/*.json
 *.Zone.Identifier
 *.sqlite-wal
 *.sqlite-shm
+*:Zone.Identifier
 
