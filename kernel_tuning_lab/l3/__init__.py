@@ -1,4 +1,7 @@
-"""L3 finite variant selection and observed shape dispatch."""
+"""L3 finite config-budget selection and observed Shape dispatch.
+
+No constraint on physical compiled specializations or binary size is implied.
+"""
 
 from .dispatcher import ShapeDispatcher, UnknownShapeError
 from .matrix import MissingMeasurementError, PerformanceMatrix

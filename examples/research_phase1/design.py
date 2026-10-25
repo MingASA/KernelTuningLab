@@ -71,12 +71,17 @@ def generate(directory):
         value=spec("t1-anchor-"+phase+"-v1",[case(SHAPES[i]) for i in (0,4,8)],count=2,
             algorithms=[{"asset":"phase1/cohort@1.0.0","options":{"configs":anchors}}])
         (directory/('anchor-'+phase+'.json')).write_text(json.dumps(value,indent=2)+'\n')
-    quant={"BLOCK_M":[16,64],"BLOCK_N":[64],"BLOCK_K":[32],"num_warps":[4],"num_stages":[2],"GROUP_M":[1,8],"SPLIT_K":[1,2,4]}
+    # Match T1's M/N/group coordinates where possible; Split-K is an additional
+    # real quantized-GEMM parameter, never merge the two implementation spaces.
+    quant={"BLOCK_M":[32,128],"BLOCK_N":[128],"BLOCK_K":[32],"num_warps":[4],"num_stages":[2],"GROUP_M":[1,8],"SPLIT_K":[1,2,4]}
     value=spec("w4-phase1-v1",[{"name":"w4","operator":"w4a16_gemm@1.0.0","parameters":{"group_size":32},
         "kernels":[{"asset":"triton/w4a16_gemm@1.0.0","space":quant},
             {"asset":"triton_pipeline/w4a16_gemm@1.0.0","space":{**quant,"DEQUANT_BLOCK_SIZE":[512]}}],
         "shapes":[{"M":m,"N":n,"K":2048} for m,n in [(1,2048),(128,2048),(512,1024)]]}],count=12,seeds=(7,19))
     (directory/'w4.json').write_text(json.dumps(value,indent=2)+'\n')
+    value=spec('t1-online-check-v1',[case(SHAPES[i]) for i in (6,8)],count=8,seeds=(7,),
+        algorithms=['random@1.0.0','heuristic@1.0.0','surrogate@1.0.0'])
+    (directory/'online.json').write_text(json.dumps(value,indent=2)+'\n')
     (directory / "shape-design.json").write_text(json.dumps({"schema_version":1,"candidate_space":SPACE,
         "cases":[{"name":name,"split":split,"shape":dict(zip(("M","N","K"),dims)),"hypothesis":reason,
             "fp16_inputs_output_bytes":2*(dims[0]*dims[2]+dims[2]*dims[1]+dims[0]*dims[1])} for name,split,dims,reason in SHAPES]},indent=2)+'\n')

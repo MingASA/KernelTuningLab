@@ -161,7 +161,9 @@ seed=7 的 Random/Heuristic 候选集合对称差为 24，Random/Surrogate 为 2
 
 相同 spec 的数据库快照恢复后，48 个研究观测全部缓存命中、新研究测量为 0；三种策略的完整候选/record ID 序列与原运行一致。12 次新的验收单列。编译与失败的原始成本保留在记录中；缓存 trial 的墙钟不重复计入历史编译成本。
 
-## 真实 L3：限定完整矩阵与变体预算
+## 真实 L3：限定完整矩阵与配置预算
+
+后续定义校正：本节历史 API 中的“变体”实际是配置字典，未统计 Shape constexpr 导致的物理编译特化或代码体积。K 属于 Config Budget；更大矩阵及实际编译身份统计见 [RESEARCH_PHASE1.md](RESEARCH_PHASE1.md)。下列原始实测数值不变。
 
 使用同一 GEMM 实现、FP16、Graph 512-call、warmup=10、31 samples，采集 **3 Shape × 12 Config × 3 seed = 108 条研究测量**，另有 36 次验收。Shape 按 M 排序为 (1,2048,1024)、(257,769,513)、(512,512,512)，权重为 0.4/0.3/0.3。矩阵每格聚合 93 个原始 runtime samples 的中位数，去重 record IDs，覆盖率为 100%。
 
@@ -173,7 +175,7 @@ seed=7 的 Random/Heuristic 候选集合对称差为 24，Random/Surrogate 为 2
 
 ![实测有限 L3 矩阵](figures/5060ti-l3.svg)
 
-K=4 时只需 3 个变体便达到此表的逐 Shape 参考，符合“至多 K”。dispatcher 在真实硬件/operator/config space 下完成有限 Shape 分派和合法性检查。SQLite → JSONL → SQLite → JSONL 的完整 record ID 集合一致。
+K=4 时只需 3 个配置便达到此表的逐 Shape 参考，符合“至多 K”。dispatcher 在真实硬件/operator/config space 下完成有限 Shape 分派和合法性检查。SQLite → JSONL → SQLite → JSONL 的完整 record ID 集合一致。
 
 此 exact 只针对声明的 12 个候选，不是平台全部 GEMM 空间的全局最优，也不是对新 Shape 的泛化能力。缺失格子在平台中保持 None，不能分派到无成功观测的配置；其他 Shape 拒绝。不同 measurement scope、批次、软件/源码或正确性协议会被矩阵构建器拒绝；没有用稀疏观测填充预测值。
 

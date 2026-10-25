@@ -132,8 +132,17 @@ def describe(matrix, records, labels):
         "max_relative_loss":max(rows[i][j]/baselines[i]-1 for i in range(len(rows))),
         "shapes_within_5pct":sum(rows[i][j]<=baselines[i]*1.05 for i in range(len(rows))),
         "shapes_within_10pct":sum(rows[i][j]<=baselines[i]*1.1 for i in range(len(rows)))} for j,config in enumerate(configs)]
+    rho=[[correlation(a,b) for b in rows] for a in rows]
+    clusters=[(i,) for i in range(len(rows))];merges=[]
+    while len(clusters)>1:
+        _,a,b=min((st.mean(1-(rho[i][j] or 0) for i in left for j in right),a,b)
+            for a,left in enumerate(clusters) for b,right in enumerate(clusters) if a<b)
+        left,right=clusters[a],clusters[b]
+        distance=st.mean(1-(rho[i][j] or 0) for i in left for j in right)
+        merged=tuple(sorted(left+right));merges.append({"shapes":[labels[i] for i in merged],"average_rank_distance":distance})
+        clusters=[c for n,c in enumerate(clusters) if n not in (a,b)]+[merged]
     return {"aggregation":matrix.metadata["aggregation"],"sensitivity":sensitivity,"top_overlap":overlaps,
-        "spearman":[[correlation(a,b) for b in rows] for a in rows],"config_coverage":coverage,
+        "spearman":rho,"descriptive_average_linkage":merges,"config_coverage":coverage,
         "relative_loss":[[value/baselines[i]-1 for value in row] for i,row in enumerate(rows)],
         "repeat_cv":cv,"best_by_shape":[{"name":name,"shape":dict(shape.dims),"latency_ms":min(row),
             "config":dict(configs[min(range(len(row)),key=lambda j:row[j])].params),
@@ -305,8 +314,17 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
         "environment":{k:v for k,v in records[0].environment.items() if k not in {"platform"}},
         "sources":[r.id for r in records]}
     write(output/"coverage.json",coverage)
-    with ExperimentStore(output/"dataset.sqlite") as store:
-        store.add_many(records);store.export_jsonl(output/"dataset.jsonl")
+    dataset_id=hashlib.sha256(canonical_json(sorted(r.id for r in records)).encode()).hexdigest()
+    dataset=output/"datasets"/dataset_id
+    with ExperimentStore(dataset/"measurements.sqlite") as store:
+        store.add_many(records)
+        if {r.id for r in store.iter_records()}!={r.id for r in records}:
+            raise ValueError("dataset version contains unrelated records")
+        store.export_jsonl(dataset/"measurements.jsonl")
+    write(output/"dataset-manifest.json",{"schema_version":1,"dataset_id":dataset_id,"records":len(records),
+        "sqlite":(dataset/"measurements.sqlite").relative_to(output).as_posix(),
+        "jsonl":(dataset/"measurements.jsonl").relative_to(output).as_posix(),
+        "selection":"only current v2 observed IDs; validation excluded; original records unmodified"})
     write(output/"matrix.json",matrix.to_dict())
     if missing or not matrix.complete: raise ValueError("incomplete physical repetitions; preserved coverage, raw export and partial matrix; no complete-matrix analysis asserted")
     structure=describe(matrix,records,labels);write(output/"structure.json",structure)

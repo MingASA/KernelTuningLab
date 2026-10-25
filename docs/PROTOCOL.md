@@ -42,6 +42,15 @@ incompatible implementations or timing scopes. See [RESEARCH_WORKFLOW.md](RESEAR
 
 ## Dataset and protocol identity
 
+L3's existing K constraint is a **config dictionary budget**. Selection serialization
+now labels `budget_kind=config_count` and `config_count`; `variant_count` remains
+a legacy alias. It does not constrain physical compiler specializations or binary
+bytes. Actual Triton compiler cache keys and cubin/PTX hashes/sizes, when available,
+are stored per compiled execution step. Shape/stride constexpr parameters can
+produce different binaries for the same config, and a multi-step plan may contain
+several compiled kernels. Unknown identities stay unknown. See
+[RESEARCH_PHASE1.md](RESEARCH_PHASE1.md) for retention-policy-specific counts.
+
 ### Explicit v2 CUDA Graph timing
 
 V2 specifications accept `timing_mode="cuda_graph"` and `cuda_graph_batch_size=128`

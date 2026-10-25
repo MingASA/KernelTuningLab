@@ -46,11 +46,11 @@
           "asset": "triton/w4a16_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
-              16,
-              64
+              32,
+              128
             ],
             "BLOCK_N": [
-              64
+              128
             ],
             "BLOCK_K": [
               32
@@ -76,11 +76,11 @@
           "asset": "triton_pipeline/w4a16_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
-              16,
-              64
+              32,
+              128
             ],
             "BLOCK_N": [
-              64
+              128
             ],
             "BLOCK_K": [
               32
