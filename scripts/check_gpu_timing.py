@@ -81,11 +81,12 @@ def run(output, rounds=5, graph_batch_size=128):
             graph = triton.testing.do_bench_cudagraph(compiled.launch, rep=20, return_mode="all")
             torch_graph = triton.testing.do_bench_cudagraph(
                 lambda: torch.mm(prepared.a, prepared.b, out=prepared.c), rep=20, return_mode="all")
+            assert torch.allclose(prepared.c, prepared.reference, atol=adapter.atol, rtol=adapter.rtol)
             case["rounds"].append({"round": index, "v1_event_ms": adapter.measure(compiled, 50),
                 "independent_event_ms": independent, "event_batch_per_call_ms": batch,
                 "v2_full_flow_ms": asset.measure(asset_compiled, 50),
                 "v2_graph_ms": graph_asset.measure(graph_compiled, 50),
-                "triton_graph_ms": graph, "torch_mm_graph_ms": torch_graph})
+                "triton_graph_ms": graph, "torch_mm_graph_ms": torch_graph, "torch_baseline_correct": True})
             assert asset.check_after_measurement(asset_compiled)[0]
             assert graph_asset.check_after_measurement(graph_compiled)[0]
             assert adapter.check_correctness(compiled)[0]

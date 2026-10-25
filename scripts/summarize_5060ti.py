@@ -39,7 +39,7 @@ def main(root, output):
         groups[r.operator.kind, r.operator.dtype].append(r)
     for (operator, dtype), rows in sorted(groups.items()):
         summary["coverage"].append({"operator": operator, "dtype": dtype,
-            "physical_records": len(rows), "statuses": dict(Counter(r.status.value for r in rows)),
+            "journal_records": len(rows), "statuses": dict(Counter(r.status.value for r in rows)),
             "shapes": list({r.shape.id: r.shape.dims for r in rows}.values()),
             "configs": len({r.config.id for r in rows}), "input_seeds": sorted({r.seed for r in rows}),
             "implementations": sorted({r.operator.implementation for r in rows}),
@@ -107,8 +107,11 @@ def main(root, output):
             imported.export_jsonl(exchange / "imported.jsonl")
         assert {r.id for r in records(exchange / "imported.jsonl")} == {r.id for r in l3_rows}
         summary["l3"]["roundtrip_identical_record_ids"] = True
-    timing = root / "timing-control-graph" / "timing.json"
+    timing = root / "timing-control-graph-1024" / "timing.json"
+    if not timing.is_file():
+        timing = root / "timing-control-graph" / "timing.json"
     if timing.is_file():
+        summary["timing_graph_batch_size"] = read(timing).get("cuda_graph_batch_size", 128)
         summary["timing"] = []
         for c in read(timing)["cases"]:
             stats = {}
