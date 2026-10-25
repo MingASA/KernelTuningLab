@@ -82,6 +82,15 @@ def generate(directory):
     value=spec('t1-online-check-v1',[case(SHAPES[i]) for i in (6,8)],count=8,seeds=(7,),
         algorithms=['random@1.0.0','heuristic@1.0.0','surrogate@1.0.0'])
     (directory/'online.json').write_text(json.dumps(value,indent=2)+'\n')
+    # Independent middle-tile quality check. Keep it separate from the complete
+    # 64-config factorial so missing cells are never silently filled or pooled.
+    expert_space={**SPACE,'BLOCK_M':[32,64,128],'BLOCK_N':[32,64,128]}
+    experts=[configs()[0]]+[
+        {'BLOCK_M':bm,'BLOCK_N':bn,'BLOCK_K':bk,'num_warps':warps,'num_stages':stages,'GROUP_M':group}
+        for bm,bn,bk,warps,stages,group in [(64,64,32,4,3,8),(64,128,64,4,3,8),(128,64,64,4,3,8),(64,64,64,8,2,1)]]
+    value=spec('t1-middle-tile-check-v1',[case(SHAPES[i],space=expert_space) for i in (0,2,5,8)],count=5,
+        algorithms=[{'asset':'phase1/cohort@1.0.0','options':{'configs':experts}}])
+    (directory/'expert-probe.json').write_text(json.dumps(value,indent=2)+'\n')
     (directory / "shape-design.json").write_text(json.dumps({"schema_version":1,"candidate_space":SPACE,
         "cases":[{"name":name,"split":split,"shape":dict(zip(("M","N","K"),dims)),"hypothesis":reason,
             "fp16_inputs_output_bytes":2*(dims[0]*dims[2]+dims[2]*dims[1]+dims[0]*dims[1])} for name,split,dims,reason in SHAPES]},indent=2)+'\n')

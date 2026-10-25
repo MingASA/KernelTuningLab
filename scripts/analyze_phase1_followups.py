@@ -122,7 +122,7 @@ def online_check(primary_directory,online_directory):
 def main(root,output):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     result={'protocol':'supplemental analyses are stored separately from the primary full matrix','studies':{}}
-    for label in ('correctness','pilot','matrix','library','anchor-before','anchor-after','bf16','simple','w4','online','group-probe'):
+    for label in ('correctness','pilot','matrix','library','anchor-before','anchor-after','bf16','simple','w4','online','expert-probe'):
         path=root/label/'summary.json'
         if path.is_file():
             summary=core.read_json(path)

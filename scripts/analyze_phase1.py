@@ -266,6 +266,9 @@ def replay_study(records,space):
             "mean_source_cost_s":st.mean(r["known_measurement_cost_s"] for r in rows)})
     return {"protocol":"separate original measurement replicate per replay; whole-Shape train/validation/test split fixed before collection",
         "training_shapes":[name for name,split,_,_ in design.SHAPES if split=="train"],
+        "training_records":sum(r.split=="train" for r in records),
+        "training_source_wall_s":sum(r.wall_time_s for r in records if r.split=="train"),
+        "prior_cost_notice":"Transfer assumes the already collected compatible training labels; target budgets exclude that historical acquisition cost. Deterministic methods do not gain independent evidence from repeated RNG seeds.",
         "new_gpu_measurements":0,"results":results,"aggregates":aggregates}
 
 
@@ -274,6 +277,7 @@ def joint_study(matrix,records):
     labels=[name for name,_,_,_ in design.SHAPES]; train=[i for i,s in enumerate(design.SHAPES) if s[1]=="train"]
     target=[i for i,s in enumerate(design.SHAPES) if s[1]=="test"]
     source=matrix.latencies_ms; n=len(matrix.configs); count=len(target)
+    source_cost={(r.shape.id,r.config.id):r.wall_time_s for r in records}
     # Frozen before looking at target labels: normalize source Shape costs.
     prior=sorted(range(n),key=lambda j:st.mean(source[i][j]/min(source[i]) for i in train))
     results=[]
@@ -310,9 +314,34 @@ def joint_study(matrix,records):
                 results.append({"seed":seed,"budget":budget,"method":method,"revealed_cells":len(seen),"k":2,
                     "selected_config_ids":[matrix.configs[j].id for j in selected],"mean_shape_regret":st.mean(losses),
                     "max_shape_regret":max(losses),"acquired_cell_ids":[[labels[target[i]],matrix.configs[j].id] for i,j in sorted(seen)]})
+                known=[source_cost[matrix.workload.shapes[target[i]].id,matrix.configs[j].id] for i,j in seen
+                       if (matrix.workload.shapes[target[i]].id,matrix.configs[j].id) in source_cost]
+                results[-1].update(known_source_wall_s=sum(known),source_cost_coverage=len(known)/len(seen),new_gpu_measurements=0)
     return {"kind":"offline simulated acquisition over real measured finite matrix; no new GPU execution",
         "target_shapes":[labels[i] for i in target],"training_shapes":[labels[i] for i in train],"results":results,
         "notice":"Equal upper allowances, actual reveals reported. Independent L2 reserves up to 16 completion cells. Common panels can spend more cells exploring configs shared by all target Shapes. Prior uses training Shapes only; all target measurements are charged."}
+
+
+def freeze_training_prior(directory,output):
+    from datetime import datetime,timezone
+    manifest=read_json(Path(directory)/'research_manifest.json')
+    if any(j['status']!='not_run' for j in manifest['jobs'] if j['experiment']['split']=='test'):
+        raise ValueError('test execution has begun; refuse retrospective pre-test prior freeze')
+    records=tuple(r for r in current_records(directory) if r.split=='train')
+    configs=tuple(KernelConfig(c) for c in design.configs())
+    shapes=tuple(ShapeSpec(dict(zip(('M','N','K'),dims))) for _,split,dims,_ in design.SHAPES if split=='train')
+    matrix=PerformanceMatrix.from_records(WorkloadDistribution(shapes,tuple([1]*len(shapes))),configs,records)
+    if not matrix.complete or len(records)!=len(shapes)*len(configs)*3: raise ValueError('training repetitions incomplete')
+    scores=[st.mean(row[j]/min(row) for row in matrix.latencies_ms) for j in range(len(configs))]
+    result={'schema_version':1,'kind':'training-only constant config prior','created_utc':datetime.now(timezone.utc).isoformat(),
+        'collection_commit':manifest.get('git_commit'),'collection_run_id':manifest.get('run_id'),
+        'test_not_started':True,'training_records':len(records),'training_source_wall_s':sum(r.wall_time_s for r in records),
+        'source_record_ids_sha256':hashlib.sha256(canonical_json(sorted(r.id for r in records)).encode()).hexdigest(),
+        'ranking':[{'config':dict(configs[j].params),'config_id':configs[j].id,'training_mean_relative_loss':scores[j]-1}
+            for j in sorted(range(len(configs)),key=lambda j:(scores[j],configs[j].id))],
+        'notice':'Whole-Shape train labels only; no target observations or new GPU execution. Historical acquisition cost is not free.'}
+    write(Path(output)/'training-prior.json',result)
+    print(json.dumps({k:v for k,v in result.items() if k!='ranking'},indent=2))
 
 
 def analyze(directory,output,library=None,simple=None,skip_replay=False):
@@ -360,7 +389,17 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
                 for name in ("greedy","local_swap","exact")}
         _line_chart(figures/("l3-"+weight+".svg"),"Config-budget K vs loss",weight+"; 10 Shapes / 64 configs, finite observed reference",series,
             "Maximum distinct config dictionaries","Weighted latency loss (%)",render_png=False)
-    joint=joint_study(matrix,records);write(output/"joint.json",joint)
+    joint_runs=[]
+    for seed in (7,19,31):
+        source=[r for r in records if r.seed==seed]
+        measured=PerformanceMatrix.from_records(matrix.workload,configs,source)
+        run=joint_study(measured,source)
+        for row in run["results"]: row["measurement_seed"]=seed
+        joint_runs.append(run)
+    joint={**joint_runs[0],"results":[row for run in joint_runs for row in run["results"]],
+        "measurement_replicates":[7,19,31],"observation_unit":"one original 31-sample source record; simulations are separate across physical replicates",
+        "training_prior_notice":"Historical source Shape acquisition cost is excluded from target budget; source labels are real but not free cold-start data."}
+    write(output/"joint.json",joint)
     joint_series={name:[(budget,100*st.mean(r["mean_shape_regret"] for r in joint["results"] if r["method"]==name and r["budget"]==budget))
         for budget in (32,64,128)] for name in ("independent_l2_then_l3","random_common_panel","training_prior_common_panel")}
     _line_chart(figures/"joint.svg","Offline L2-L3 acquisition experiment","Real measured labels, private target reveal budget; 4 test Shapes, K=2",joint_series,
@@ -387,6 +426,18 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
                 baselines.append({"shape":labels[i],"baseline":tag,"latency_ms":value,"t1_best_ms":min(matrix.latencies_ms[i]),
                     "t1_over_baseline_latency":min(matrix.latencies_ms[i])/value,"baseline_configs":len(cells),
                     "notice":"same contiguous dtype/semantic, preallocated output, Graph protocol; independently collected inputs share generator seeds. Library internal dispatch is opaque."})
+                if tag=='simple':
+                    matched=[]
+                    for j,config in enumerate(configs):
+                        if config.params['GROUP_M']!=1: continue
+                        original=KernelConfig({k:v for k,v in config.params.items() if k!='GROUP_M'})
+                        if original.id in cells:
+                            matched.append({'config':dict(original.params),'t1_ms':matrix.latencies_ms[i][j],
+                                'simple_ms':st.median(cells[original.id])})
+                    baselines[-1].update(matched_config_comparisons=matched,
+                        matched_t1_best_ms=min(r['t1_ms'] for r in matched) if matched else None,
+                        matched_simple_best_ms=min(r['simple_ms'] for r in matched) if matched else None,
+                        matched_notice='Same six tile/warp/stage candidates, T1 GROUP_M=1. Full 64-config T1 best has a larger tuning allowance and is reported separately.')
     write(output/"baselines.json",baselines)
     summary={"status":"passed","records":len(records),"shapes":len(shapes),"configs":len(configs),"repetitions_per_cell":3,
         "matrix_complete":matrix.complete,"replay_trials":len(replay["results"]) if replay else 0,"joint_trials":len(joint["results"]),
@@ -406,4 +457,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--matrix",required=True);parser.add_argument("--output",required=True)
     parser.add_argument("--library");parser.add_argument("--simple");parser.add_argument("--skip-replay",action="store_true")
-    args=parser.parse_args();analyze(args.matrix,args.output,args.library,args.simple,args.skip_replay)
+    parser.add_argument('--freeze-training-prior',action='store_true',help='freeze complete train-only prior before any test job starts')
+    args=parser.parse_args()
+    if args.freeze_training_prior: freeze_training_prior(args.matrix,args.output)
+    else: analyze(args.matrix,args.output,args.library,args.simple,args.skip_replay)
