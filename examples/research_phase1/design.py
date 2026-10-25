@@ -1,0 +1,72 @@
+"""Frozen, outcome-independent experiment design; regenerates checked-in JSON."""
+import itertools
+import json
+from pathlib import Path
+
+SPACE = {"BLOCK_M": [32, 128], "BLOCK_N": [32, 128], "BLOCK_K": [32, 64],
+         "num_warps": [4, 8], "num_stages": [2, 3], "GROUP_M": [1, 8]}
+# Whole Shape cases, never configuration-level train/test splits.
+SHAPES = [
+    ("decode-l2", "train", (1, 2048, 2048), "8 MiB B within 32 MiB L2; very low arithmetic intensity"),
+    ("small-tokens", "train", (16, 4096, 2048), "16 MiB B; more reuse with still sparse M tiles"),
+    ("balanced-medium", "train", (512, 1024, 1024), "Tensor Core throughput and CTA occupancy"),
+    ("tall", "train", (2048, 512, 1024), "many M tiles, grouped ordering and rectangular reuse"),
+    ("decode-beyond-l2", "validation", (1, 8192, 4096), "64 MiB B exceeds L2; memory-sensitive decode"),
+    ("irregular", "validation", (257, 769, 513), "tails in all axes, last partial program group"),
+    ("few-tokens-wide", "test", (8, 8192, 2048), "32 MiB B at L2 boundary, wide output and small M"),
+    ("prefill", "test", (128, 2048, 2048), "transition from memory traffic to reuse"),
+    ("compute-large", "test", (1024, 2048, 2048), "compute-heavy multi-wave workload"),
+    ("wide-k-small", "test", (512, 4096, 512), "wide N / small K; loop overhead and group ordering"),
+]
+
+
+def configs():
+    return [dict(zip(SPACE, values)) for values in itertools.product(*SPACE.values())]
+
+
+def spec(name, cases, *, count, seeds=(7, 19, 31), algorithms=None, dtypes=("float16",)):
+    return {"schema_version": 1, "kind": "research", "name": name, "plugins": ["cohort.py"],
+        "algorithms": algorithms or ["phase1/cohort@1.0.0"], "dtypes": list(dtypes), "seeds": list(seeds),
+        "budgets": [{"max_evaluations": count, "max_wall_time_s": 180}],
+        "defaults": {"warmup": 10, "repetitions": 31, "timing_mode": "cuda_graph", "cuda_graph_batch_size": 512,
+            "preflight_seconds": 60, "validation": {"max_configs": 4, "max_cases": 0, "max_wall_time_s": 90, "trust_claims": False}},
+        "cases": cases}
+
+
+def case(entry, kernel="triton/t1_gemm@1.0.0", space=SPACE):
+    name, split, dims, _ = entry
+    return {"name": name, "split": split, "operator": "gemm@1.0.0",
+            "kernels": [{"asset": kernel, "space": space}], "shapes": [dict(zip(("M", "N", "K"), dims))]}
+
+
+def generate(directory):
+    directory = Path(directory)
+    # Factor-spanning, predetermined pilot: include minimum/maximum resources.
+    chosen = [configs()[i] for i in (0, 3, 5, 10, 17, 22, 29, 34, 41, 47, 58, 63)]
+    selected = [SHAPES[i] for i in (0, 2, 4, 5)]
+    outputs = {
+        "pilot.json": spec("t1-pilot-v1", [case(s) for s in selected], count=12, seeds=(7, 19),
+                           algorithms=[{"asset": "phase1/cohort@1.0.0", "options": {"configs": chosen}}]),
+        "matrix.json": spec("t1-matrix-v1", [case(s) for s in SHAPES], count=64),
+        "bf16.json": spec("t1-bf16-check-v1", [case(SHAPES[i]) for i in (0, 2, 5, 8)], count=12,
+                          seeds=(7, 19), dtypes=("bfloat16",),
+                          algorithms=[{"asset": "phase1/cohort@1.0.0", "options": {"configs": chosen}}]),
+        "library.json": spec("t1-library-v1", [case(s, "torch/mm@1.0.0", {}) for s in SHAPES], count=1),
+        "simple.json": spec("t1-simple-control-v1", [case(s, "triton/gemm@1.0.0",
+                {k: v for k, v in SPACE.items() if k != "GROUP_M"}) for s in SHAPES], count=8,
+                algorithms=[{"asset": "phase1/cohort@1.0.0", "options": {"configs": [
+                    {k:v for k,v in c.items() if k!='GROUP_M'} for c in chosen[::2]]}}]),
+        "correctness.json": spec("t1-boundaries-v1", [{"name": name, "operator": "gemm@1.0.0",
+            "kernels": [{"asset": "triton/t1_gemm@1.0.0", "space": SPACE}],
+            "shapes": [dict(zip(("M", "N", "K"), dims)) for dims in [(1,1,1),(15,17,31),(33,129,65),(513,71,129)]]}
+            for name in ["tails"]], count=12, seeds=(7, 19), dtypes=("float16","bfloat16"),
+            algorithms=[{"asset":"phase1/cohort@1.0.0","options":{"configs":chosen}}])}
+    for filename, value in outputs.items():
+        (directory / filename).write_text(json.dumps(value,indent=2)+'\n')
+    (directory / "shape-design.json").write_text(json.dumps({"schema_version":1,"candidate_space":SPACE,
+        "cases":[{"name":name,"split":split,"shape":dict(zip(("M","N","K"),dims)),"hypothesis":reason,
+            "fp16_inputs_output_bytes":2*(dims[0]*dims[2]+dims[2]*dims[1]+dims[0]*dims[1])} for name,split,dims,reason in SHAPES]},indent=2)+'\n')
+
+
+if __name__ == "__main__":
+    generate(Path(__file__).parent)

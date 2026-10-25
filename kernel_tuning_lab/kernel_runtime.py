@@ -115,6 +115,18 @@ class ExecutionContext:
         warps = getattr(metadata, "num_warps", None)
         self.metadata.setdefault("execution_resources", {})[name] = {
             "shared_memory_bytes": shared, "registers_per_thread": registers, "num_warps": warps}
+        # Real compiled specializations are separate from config dictionaries.
+        # Keep only artifact hashes/sizes, never assume one config = one binary.
+        resources = self.metadata["execution_resources"][name]
+        compiled_hash = getattr(compiled, "hash", None)
+        resources["compiler_cache_identity"] = compiled_hash if isinstance(compiled_hash, str) else None
+        artifacts = {}
+        for kind, payload in getattr(compiled, "asm", {}).items():
+            if kind not in {"cubin", "ptx", "sass"} or not isinstance(payload, (str, bytes)):
+                continue
+            blob = payload.encode("utf-8") if isinstance(payload, str) else payload
+            artifacts[kind] = {"sha256": hashlib.sha256(blob).hexdigest(), "bytes": len(blob)}
+        resources["artifacts"] = artifacts
         if shared is not None and self.hardware.smem_per_block and shared > self.hardware.smem_per_block:
             raise RuntimeError(f"{name} compiled shared memory {shared} exceeds {self.hardware.smem_per_block} bytes")
         if warps is not None and warps * self.hardware.warp_size > self.hardware.max_threads_per_block:

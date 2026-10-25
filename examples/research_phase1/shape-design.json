@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "candidate_space": {
+    "BLOCK_M": [
+      32,
+      128
+    ],
+    "BLOCK_N": [
+      32,
+      128
+    ],
+    "BLOCK_K": [
+      32,
+      64
+    ],
+    "num_warps": [
+      4,
+      8
+    ],
+    "num_stages": [
+      2,
+      3
+    ],
+    "GROUP_M": [
+      1,
+      8
+    ]
+  },
+  "cases": [
+    {
+      "name": "decode-l2",
+      "split": "train",
+      "shape": {
+        "M": 1,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "8 MiB B within 32 MiB L2; very low arithmetic intensity",
+      "fp16_inputs_output_bytes": 8396800
+    },
+    {
+      "name": "small-tokens",
+      "split": "train",
+      "shape": {
+        "M": 16,
+        "N": 4096,
+        "K": 2048
+      },
+      "hypothesis": "16 MiB B; more reuse with still sparse M tiles",
+      "fp16_inputs_output_bytes": 16973824
+    },
+    {
+      "name": "balanced-medium",
+      "split": "train",
+      "shape": {
+        "M": 512,
+        "N": 1024,
+        "K": 1024
+      },
+      "hypothesis": "Tensor Core throughput and CTA occupancy",
+      "fp16_inputs_output_bytes": 4194304
+    },
+    {
+      "name": "tall",
+      "split": "train",
+      "shape": {
+        "M": 2048,
+        "N": 512,
+        "K": 1024
+      },
+      "hypothesis": "many M tiles, grouped ordering and rectangular reuse",
+      "fp16_inputs_output_bytes": 7340032
+    },
+    {
+      "name": "decode-beyond-l2",
+      "split": "validation",
+      "shape": {
+        "M": 1,
+        "N": 8192,
+        "K": 4096
+      },
+      "hypothesis": "64 MiB B exceeds L2; memory-sensitive decode",
+      "fp16_inputs_output_bytes": 67133440
+    },
+    {
+      "name": "irregular",
+      "split": "validation",
+      "shape": {
+        "M": 257,
+        "N": 769,
+        "K": 513
+      },
+      "hypothesis": "tails in all axes, last partial program group",
+      "fp16_inputs_output_bytes": 1447942
+    },
+    {
+      "name": "few-tokens-wide",
+      "split": "test",
+      "shape": {
+        "M": 8,
+        "N": 8192,
+        "K": 2048
+      },
+      "hypothesis": "32 MiB B at L2 boundary, wide output and small M",
+      "fp16_inputs_output_bytes": 33718272
+    },
+    {
+      "name": "prefill",
+      "split": "test",
+      "shape": {
+        "M": 128,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "transition from memory traffic to reuse",
+      "fp16_inputs_output_bytes": 9437184
+    },
+    {
+      "name": "compute-large",
+      "split": "test",
+      "shape": {
+        "M": 1024,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "compute-heavy multi-wave workload",
+      "fp16_inputs_output_bytes": 16777216
+    },
+    {
+      "name": "wide-k-small",
+      "split": "test",
+      "shape": {
+        "M": 512,
+        "N": 4096,
+        "K": 512
+      },
+      "hypothesis": "wide N / small K; loop overhead and group ordering",
+      "fp16_inputs_output_bytes": 8912896
+    }
+  ]
+}
