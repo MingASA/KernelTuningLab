@@ -61,11 +61,32 @@ def generate(directory):
             "shapes": [dict(zip(("M", "N", "K"), dims)) for dims in [(1,1,1),(15,17,31),(33,129,65),(513,71,129)]]}
             for name in ["tails"]], count=12, seeds=(7, 19), dtypes=("float16","bfloat16"),
             algorithms=[{"asset":"phase1/cohort@1.0.0","options":{"configs":chosen}}])}
+    # Pilot: beyond-L2 decode averaged 5.3 s/candidate (64 * 5.3 > 180 s).
+    # Preserve sample quality; only increase the explicit admission deadline.
+    outputs["matrix.json"]["budgets"][0]["max_wall_time_s"]=600
     for filename, value in outputs.items():
         (directory / filename).write_text(json.dumps(value,indent=2)+'\n')
+    anchors=[configs()[0], configs()[-1]]
+    for phase in ("before","after"):
+        value=spec("t1-anchor-"+phase+"-v1",[case(SHAPES[i]) for i in (0,4,8)],count=2,
+            algorithms=[{"asset":"phase1/cohort@1.0.0","options":{"configs":anchors}}])
+        (directory/('anchor-'+phase+'.json')).write_text(json.dumps(value,indent=2)+'\n')
+    quant={"BLOCK_M":[16,64],"BLOCK_N":[64],"BLOCK_K":[32],"num_warps":[4],"num_stages":[2],"GROUP_M":[1,8],"SPLIT_K":[1,2,4]}
+    value=spec("w4-phase1-v1",[{"name":"w4","operator":"w4a16_gemm@1.0.0","parameters":{"group_size":32},
+        "kernels":[{"asset":"triton/w4a16_gemm@1.0.0","space":quant},
+            {"asset":"triton_pipeline/w4a16_gemm@1.0.0","space":{**quant,"DEQUANT_BLOCK_SIZE":[512]}}],
+        "shapes":[{"M":m,"N":n,"K":2048} for m,n in [(1,2048),(128,2048),(512,1024)]]}],count=12,seeds=(7,19))
+    (directory/'w4.json').write_text(json.dumps(value,indent=2)+'\n')
     (directory / "shape-design.json").write_text(json.dumps({"schema_version":1,"candidate_space":SPACE,
         "cases":[{"name":name,"split":split,"shape":dict(zip(("M","N","K"),dims)),"hypothesis":reason,
             "fp16_inputs_output_bytes":2*(dims[0]*dims[2]+dims[2]*dims[1]+dims[0]*dims[1])} for name,split,dims,reason in SHAPES]},indent=2)+'\n')
+    cross=directory/'cross-hardware';cross.mkdir(exist_ok=True)
+    for label,profile in [('h20',None),('h200','h200'),('h800','h800'),('4090','4090')]:
+        value=json.loads(json.dumps(outputs['matrix.json']))
+        value['name']='t1-matrix-v1-'+label
+        value['plugins']=['../cohort.py']
+        value['defaults']['hardware']=profile
+        (cross/(label+'.json')).write_text(json.dumps(value,indent=2)+'\n')
 
 
 if __name__ == "__main__":

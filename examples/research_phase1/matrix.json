@@ -19,7 +19,7 @@
   "budgets": [
     {
       "max_evaluations": 64,
-      "max_wall_time_s": 180
+      "max_wall_time_s": 600
     }
   ],
   "defaults": {
