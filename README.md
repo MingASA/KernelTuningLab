@@ -37,7 +37,7 @@ ktlab proposal-suite --runtime cuda --hardware 5060ti16g --output artifacts/prop
 ktlab proposal-suite --runtime cuda --scale production --hardware H200 --write-only --output artifacts/production-specs
 ```
 
-融合量化、分块 Attention、persistent/grouped MoE、Split-K 和实际 TMA 路径保留可调 tile、流水线等参数；接口支持硬件/输入/工作区预算裁剪及参数化验证案例。实现范围、公开优化来源、格式和实验说明见 [PROPOSAL_OPERATORS.md](docs/PROPOSAL_OPERATORS.md)。本机仍没有 GPU 实测证据。
+融合量化、分块 Attention、persistent/grouped MoE、Split-K 和实际 TMA 路径保留可调 tile、流水线等参数；接口支持硬件/输入/工作区预算裁剪及参数化验证案例。RTX 5060 Ti 16GB 已通过十阶段严格 smoke 和八类新增算子的默认 GPU 套件；实测边界、首次失败及修复见 [5060TI_RESULTS.md](docs/5060TI_RESULTS.md)。实现与格式见 [PROPOSAL_OPERATORS.md](docs/PROPOSAL_OPERATORS.md)。
 
 ```bash
 python3 -m venv .venv
@@ -69,7 +69,7 @@ ktlab scale-demo --output artifacts/scale
 .venv/bin/python -m kernel_tuning_lab benchmark --backend triton --operator gemm --hardware H200 --max-evaluations 8 --require-success --output artifacts/gpu-smoke
 ```
 
-支持 **H200 SXM、H800 SXM5、RTX 4090、RTX 5060 Ti 16GB** 的规格配置及实际设备兼容性检查，`--hardware` 接受 `H200`、`H800`、`4090`、`5060ti16g`。5060 Ti 用作上传 Hopper 前的轻量单卡验证机；会拒绝将 8GB 版本识别为 16GB。未核实的字段保留未知，真实执行读取物理设备属性；这些硬件均尚待实机验证。
+支持 **H200 SXM、H800 SXM5、RTX 4090、RTX 5060 Ti 16GB** 的规格配置及实际设备兼容性检查，`--hardware` 接受 `H200`、`H800`、`4090`、`5060ti16g`。5060 Ti 用作上传 Hopper 前的轻量单卡验证机；会拒绝将 8GB 版本识别为 16GB。未核实的字段保留未知，真实执行读取物理设备属性。5060 Ti 已有实测，H200/H800/4090 仍须各自实机验证。
 
 | 算子 | Shape | Dtype | 实现边界 |
 | --- | --- | --- | --- |

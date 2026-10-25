@@ -23,12 +23,27 @@ def main(root, output):
     root, output = Path(root), Path(output)
     output.mkdir(parents=True, exist_ok=True)
     journals = {p: records(p) for p in root.rglob("measurements.jsonl")}
+    assert all(r.provenance == "measured" for rows in journals.values() for r in rows)
     unique = {r.id: r for rows in journals.values() for r in rows if r.provenance == "measured"}
+    assert all(r.correctness_verified and r.metadata.get("correctness", {}).get("verified_on_gpu") is True
+               for r in unique.values() if r.successful)
     summary = {"notice": "Physical observations only. Sample coverage is not whole-space validation. Graph and full-flow latencies remain separate.",
                "records": len(unique), "statuses": dict(Counter(r.status.value for r in unique.values())),
                "measurement_modes": dict(Counter(r.measurement_mode for r in unique.values())),
                "environments": list({json.dumps(r.environment, sort_keys=True): r.environment for r in unique.values()}.values()),
                "suites": {}, "coverage": [], "l2": [], "l3": None, "representative": []}
+    ledger = root / "experiment-ledger.json"
+    if ledger.exists():
+        summary["experiment_ledger"] = read(ledger)
+    smoke = read(root / "baseline" / "core" / "validation_summary.json")
+    summary["core_smoke"] = {key: smoke[key] for key in ("status", "physical_gpu_validated", "hardware", "stages")}
+    summary["runtime_snapshot"] = read(root / "baseline" / "environment" / "final-runtime.json")
+    cache_check = root / "l2-cache-check" / "summary.json"
+    if cache_check.exists():
+        cache = read(cache_check)
+        summary["cache_check"] = {key: cache[key] for key in (
+            "status", "observations", "evaluations", "cache_hits", "validation_evaluations")}
+        summary["cache_check"].update(read(root / "l2-cache-check" / "sequence-check.json"))
     for p in root.glob("*/suite_summary.json"):
         s = read(p)
         summary["suites"][p.parent.name] = {k: s.get(k) for k in (
@@ -142,9 +157,10 @@ def plot(summary, output):
     if summary.get("timing"):
         fig, ax = plt.subplots(figsize=(9, 4))
         keys = ("v1_event_ms", "v2_full_flow_ms", "v2_graph_ms", "triton_graph_ms")
+        labels = ("v1 single Event", "v2 full call", "v2 CUDA Graph", "Triton CUDA Graph")
         for i, key in enumerate(keys):
             ax.bar([j+(i-1.5)*0.18 for j in range(3)],
-                   [c["statistics"][key]["median_us"] for c in summary["timing"]], width=0.18, label=key)
+                   [c["statistics"][key]["median_us"] for c in summary["timing"]], width=0.18, label=labels[i])
         ax.set_xticks(range(3), ["32x64x64", "512x512x512", "1024x1024x1024"])
         ax.set_yscale("log")
         ax.set_ylabel("Median latency (us, log scale)")
@@ -171,8 +187,10 @@ def plot(summary, output):
         fig, ax = plt.subplots(figsize=(9, 3))
         rows = matrix["latencies_ms"]
         image = ax.imshow([[v/min(row) for v in row] for row in rows], aspect="auto")
+        ax.set_xticks(range(len(matrix["configs"])))
+        ax.set_yticks(range(len(rows)), [f"{s['M']}x{s['N']}x{s['K']}" for s in matrix["workload"]["shapes"]])
         ax.set_xlabel("Observed configuration index")
-        ax.set_ylabel("Shape index")
+        ax.set_ylabel("M x N x K")
         ax.set_title("Measured 3 x 12 GEMM matrix: latency / observed row minimum")
         fig.colorbar(image, ax=ax)
         fig.tight_layout()

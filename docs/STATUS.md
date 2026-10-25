@@ -18,7 +18,12 @@
 
 ## Validation boundary
 
-The local host has no CUDA environment or GPU. Actual compilation, numerical behavior and performance of the four Triton operators on **H200, H800, RTX 4090 and RTX 5060 Ti 16GB remain to be verified on those physical machines**. CPU/Mock validation and source-backed specification profiles are not GPU validation. No CUDA packages are required or installed to run CPU paths.
+The 2026-10-25 physical RTX 5060 Ti 16GB WSL run passed the ten-stage strict core
+gate (80 records) and the repaired default proposal suite (16 jobs, 576 research
+observations and 140 acceptance attempts). Actual compilation, numerical behavior
+and timing were exercised. First failures and sampled coverage are retained in
+[5060TI_RESULTS.md](5060TI_RESULTS.md). **H200, H800 and RTX 4090 still require
+independent physical validation.** CPU paths continue to require no CUDA packages.
 
 The original presentation mentions previous RTX 4090/H200 measurements but supplies no raw measurement table in this repository. Those figures were read for project context and are not represented as newly reproduced results.
 
@@ -26,15 +31,15 @@ The original presentation mentions previous RTX 4090/H200 measurements but suppl
 
 - Concrete TileLang/CUTLASS backends; the plugin contract and factory registration exist.
 - Fused affine LayerNorm, strided/broadcast BMM, paged/training attention and automatic GPTQ/AWQ checkpoint layout import.
-- Clusters, warp specialization and arbitrary kernel code generation. Split-K and optional descriptor/TMA paths now exist in the proposal operators; physical validation is pending.
-- Nsight Systems/Compute orchestration, concurrent-device workers, thermal/clock control, CUDA Graph/cold-cache modes and GPU driver fault reset. V2 experiments have process isolation and hard phase deadlines, including compiler calls; direct v1 Runner calls retain admission-only limits.
+- Clusters, warp specialization and arbitrary kernel code generation. Split-K and descriptor/TMA loads are sampled on 5060 Ti; Hopper paths still need physical validation.
+- Nsight Systems/Compute orchestration, concurrent-device workers, thermal/clock control, cold-cache modes and GPU driver fault reset. V2 now has explicit CUDA Graph full-plan timing, process isolation and hard phase deadlines, including compiler calls; direct v1 Runner calls retain admission-only limits.
 - Imputation or active acquisition for incomplete L3 matrices; unknown cells are preserved rather than predicted.
 - Generalization of finite L3 dispatcher to unseen shape ranges and deployment binary-size measurement.
 - Fully sandboxed generated policy execution. Current Python policies are trusted code with validated outputs.
 - Automated LLM policy generation/evolution, paid API integrations or claims that a learned algorithm beats expert libraries.
 - Remaining 25 original active Hub caches were catalogued but not downloaded/imported in this run. T4 export import, archived collections and specialized source adapters are not implemented.
 - Streaming parsing of arbitrarily large source gzip JSON caches; current public importer loads one source file in memory. SQLite JSONL exchange itself is streamed.
-- Physical operator/GPU test matrix, GPU fault isolation and detailed performance validation; CPU regressions cover core objectives, budgets, isolation, scale, source import, CLI and dispatch invariants.
+- Broad cross-GPU and production-scale matrix, GPU fault isolation and isolated clock/cold-cache performance validation; the 5060 Ti sampled matrix is now measured. CPU regressions cover core objectives, budgets, isolation, scale, source import, CLI and dispatch invariants.
 
 ## Next research steps
 
@@ -48,13 +53,13 @@ The original presentation mentions previous RTX 4090/H200 measurements but suppl
 
 The public SDK now separates operator semantics, Kernel implementations and algorithms. Versioned files/modules/entry points, working scaffolds, Kernel-owned finite/conditional spaces, immutable algorithm views, executable static/synthetic/numerical acceptance, scoped correctness claims, complete execution plans and phase-deadline supervision are implemented. V2 configurations drive matching, validation, search and archival without new core registration or glue code. V1 research APIs remain available.
 
-CPU examples include independent GEMM implementations, a two-step workspace pipeline, an additional AXPY operator, conditional spaces, scoped assertions and deliberate failure cases. CPU runs record real CPU measurements; CUDA remains deferred on this host. Continuous domains, distributed/asynchronous execution and a Web UI are not part of this delivery. The proposal operator additions are listed below. See [EXTENDING.md](EXTENDING.md) and [AUTO_INTEGRATION_PLAN.md](AUTO_INTEGRATION_PLAN.md).
+CPU examples include independent GEMM implementations, a two-step workspace pipeline, an additional AXPY operator, conditional spaces, scoped assertions and deliberate failure cases. CPU runs record real CPU measurements; physical 5060 Ti CUDA evidence is now archived separately. Continuous domains, distributed/asynchronous execution and a Web UI are not part of this delivery. The proposal operator additions are listed below. See [EXTENDING.md](EXTENDING.md) and [AUTO_INTEGRATION_PLAN.md](AUTO_INTEGRATION_PLAN.md).
 
 The final automatic-integration regression suite passed **196 tests**. Installed-wheel workflows outside the repository and SDK-free `python3 -S` CPU workflows also passed. Evidence is in `artifacts/auto-integration-validation/summary.json`.
 
 ## Proposal operator coverage
 
-All operator families explicitly named in the proposal are registered: W4/W3/W2A16 GEMM, standalone W4/W3/W2 dequantization, attention and MoE grouped GEMM. Each has independent references and real Python/Triton implementations; quantized GEMM also has timed multi-step variants. Production shapes, contextual spaces, workspace budgets, generated-case scopes, resource checks and public optimization references are documented in [PROPOSAL_OPERATORS.md](PROPOSAL_OPERATORS.md). Validation artifacts are under `artifacts/proposal-operators-validation/`. GPU compilation/numerics/performance remain unverified on this host.
+All operator families explicitly named in the proposal are registered: W4/W3/W2A16 GEMM, standalone W4/W3/W2 dequantization, attention and MoE grouped GEMM. Each has independent references and real Python/Triton implementations; quantized GEMM also has timed multi-step variants. Production shapes, contextual spaces, workspace budgets, generated-case scopes, resource checks and public optimization references are documented in [PROPOSAL_OPERATORS.md](PROPOSAL_OPERATORS.md). Historical CPU artifacts remain under `artifacts/proposal-operators-validation/`; physical 5060 Ti artifacts are under `artifacts/5060ti/`. GPU sampling does not validate all production Shapes or all configurations.
 
 ## Execution and evidence hardening
 

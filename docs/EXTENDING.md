@@ -85,6 +85,12 @@ return ExecutionPlan(
 
 CUDA 计时在完整流程前后同步，以 `perf_counter` 记录端到端延迟，包含声明的主机步骤和 GPU 调用。该模式与旧 Adapter 的单 Kernel CUDA Event 模式分开记录。示例中的 `demo/gemm_pipeline@1.0.0` 实际执行两阶段 split-K 与汇总，重复核对会发现缺少 reset 的状态污染。
 
+默认仍为上述完整调用计时。可捕获的 CUDA 实验可显式设置
+`"timing_mode": "cuda_graph", "cuda_graph_batch_size": 512`，测量包含
+initialize 与所有 GPU steps 的批量 replay，并记录不同 measurement mode。
+Python/host callbacks 不随 replay 重复；capture/准备成本另计，最终实际计时输出仍核对。
+适用边界、缓存身份和极短 kernel 的批次误差见 [PROTOCOL.md](PROTOCOL.md)。
+
 ## 4. 算子公共能力
 
 同类新 Kernel 选择已有算子即可。当前内置 GEMM、Batched GEMM、Softmax 和非仿射 LayerNorm，提供 seed 输入、边界 Shape、常量/offset 验证输入、独立参考和 dtype 容差。
