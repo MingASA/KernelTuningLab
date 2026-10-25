@@ -77,9 +77,14 @@ def main():
     for spec in specs(args.family):
         path = output / "specs" / (spec.name + ".json")
         spec.save(path)
+        def telemetry():
+            return subprocess.run(["nvidia-smi", "--query-gpu=timestamp,name,temperature.gpu,power.draw,clocks.sm,clocks.mem,utilization.gpu,memory.used",
+                "--format=csv,noheader"], capture_output=True, text=True, check=True).stdout.strip()
+        before = None if args.write_only else telemetry()
         result = ({"status": "generated"} if args.write_only else
                   execute_asset_experiment(path, output / "runs" / spec.name))
-        manifest["cases"].append({"name": spec.name, "spec": str(path), "result": result})
+        manifest["cases"].append({"name": spec.name, "spec": str(path), "result": result,
+                                  "telemetry_before": before, "telemetry_after": None if args.write_only else telemetry()})
         (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         print(spec.name, result["status"], flush=True)
         if not args.write_only and result["status"] != "passed":
