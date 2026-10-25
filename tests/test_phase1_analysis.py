@@ -18,6 +18,18 @@ def test_rank_statistics_and_pareto_are_finite_and_do_not_reverse_objective():
     assert analysis.pareto_indices(((1.,2.,3.),(3.,2.,4.)))==[0,1]
 
 
+def test_factorial_effects_separate_interaction_from_scale():
+    import math
+    configs=tuple(KernelConfig(c) for c in analysis.design.configs())
+    def sign(c,k): return 1 if c.params[k]==analysis.design.SPACE[k][1] else -1
+    values=[math.exp(2+.3*sign(c,'BLOCK_M')+.4*sign(c,'BLOCK_M')*sign(c,'num_stages')) for c in configs]
+    effects=analysis.factorial_effects(configs,values,analysis.design.SPACE)
+    by_term={tuple(t['parameters']):t for t in effects['terms']}
+    assert by_term['BLOCK_M',]['log_variance_fraction']==pytest.approx(.36)
+    assert by_term['BLOCK_M','num_stages']['log_variance_fraction']==pytest.approx(.64)
+    assert effects['higher_order_or_noise_fraction']==pytest.approx(0,abs=1e-10)
+
+
 def test_joint_selection_cannot_use_unrevealed_test_label():
     configs=tuple(KernelConfig(c) for c in analysis.design.configs())
     shapes=tuple(ShapeSpec(dict(zip(('M','N','K'),s[2]))) for s in analysis.design.SHAPES)

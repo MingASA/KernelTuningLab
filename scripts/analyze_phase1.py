@@ -10,6 +10,7 @@ import argparse
 import csv
 import hashlib
 import importlib.util
+import itertools
 import json
 import math
 from pathlib import Path
@@ -102,6 +103,21 @@ def require_baseline_compatible(target, baseline):
         if target.metadata["protocol"].get(key)!=baseline.metadata["protocol"].get(key): raise ValueError("baseline protocol mismatch: "+key)
 
 
+def factorial_effects(configs, latencies, domains):
+    """Orthogonal two-level descriptive log-latency effects, no model fitting."""
+    logs=[math.log(v) for v in latencies];average=st.mean(logs)
+    variance=st.mean((v-average)**2 for v in logs)
+    terms=[]
+    for degree in (1,2):
+        for keys in itertools.combinations(domains,degree):
+            coefficient=st.mean(value*math.prod(1 if config.params[key]==domains[key][1] else -1 for key in keys)
+                                for config,value in zip(configs,logs))
+            terms.append({"parameters":list(keys),"coefficient":coefficient,
+                "log_variance_fraction":coefficient**2/variance if variance else None})
+    return {"terms":terms,"higher_order_or_noise_fraction":max(0,1-sum(t["log_variance_fraction"] or 0 for t in terms)),
+        "scope":"balanced 2^6 finite table; descriptive main/two-way interactions, not statistical significance or a predictive fit"}
+
+
 def describe(matrix, records, labels):
     if not matrix.complete: raise ValueError("structural ranking needs complete observed finite matrix; inspect coverage.json")
     rows=matrix.latencies_ms; configs=matrix.configs; baselines=[min(row) for row in rows]
@@ -143,6 +159,7 @@ def describe(matrix, records, labels):
         clusters=[c for n,c in enumerate(clusters) if n not in (a,b)]+[merged]
     return {"aggregation":matrix.metadata["aggregation"],"sensitivity":sensitivity,"top_overlap":overlaps,
         "spearman":rho,"descriptive_average_linkage":merges,"config_coverage":coverage,
+        "factorial_effects":{label:factorial_effects(configs,row,design.SPACE) for label,row in zip(labels,rows)},
         "relative_loss":[[value/baselines[i]-1 for value in row] for i,row in enumerate(rows)],
         "repeat_cv":cv,"best_by_shape":[{"name":name,"shape":dict(shape.dims),"latency_ms":min(row),
             "config":dict(configs[min(range(len(row)),key=lambda j:row[j])].params),
