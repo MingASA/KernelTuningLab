@@ -7,7 +7,8 @@ import math
 import statistics
 from typing import Any, Iterable
 
-from ..models import KernelConfig, MeasurementRecord, WorkloadDistribution
+from ..models import KernelConfig, MeasurementRecord, WorkloadDistribution, stable_id
+from ..measurement_context import source_context
 
 
 class MissingMeasurementError(ValueError):
@@ -120,6 +121,16 @@ class PerformanceMatrix:
         sources = {record.provenance for record in relevant}
         if len(sources) > 1:
             raise ValueError("matrix records mix provenance; select one source explicitly")
+        measurement_contexts = {}
+        for record in relevant:
+            context = source_context(record)
+            # Legal domains can differ by Shape; they do not change timing or
+            # correctness semantics. Keep every other protocol field intact.
+            context["protocol"] = {key: value for key, value in context["protocol"].items()
+                                   if key != "config_space"}
+            measurement_contexts[stable_id(context)] = context
+        if len(measurement_contexts) > 1:
+            raise ValueError("matrix records span incompatible measurement protocols; select one timing/source context")
         samples: dict[tuple[int, int], list[float]] = {}
         excluded_unverified = 0
         for record in relevant:
@@ -137,6 +148,8 @@ class PerformanceMatrix:
             "hardware_id": context[0], "operator_id": context[1],
             "aggregation": "median_of_deduplicated_runtime_samples",
             "record_count": len(relevant), "excluded_unverified_records": excluded_unverified,
+            "measurement_context_id": next(iter(measurement_contexts), None),
+            "measurement_context": next(iter(measurement_contexts.values()), None),
             "splits": sorted({record.split for record in relevant}),
         })
 
