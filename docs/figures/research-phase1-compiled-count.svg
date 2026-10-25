@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Config budgets and compiler specializations</title>
+<desc id="desc">T1 M/N/K are constexpr. Count is not fresh JIT invocations or deployment byte size.</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Config budgets and compiler specializations</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >T1 M/N/K are constexpr. Count is not fresh JIT invocations or deployment byte size.</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >10.8</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >21.6</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >32.4</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >43.2</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >54</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Maximum config dictionary count K</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Count</text>
+<polyline points="100.00,376.11 201.43,312.22 404.29,184.44 810.00,120.56" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="376.11" r="3" fill="#2563eb"><title>retain all Shapes x selected configs: 1, 10</title></circle>
+<circle cx="201.43" cy="312.22" r="3" fill="#2563eb"><title>retain all Shapes x selected configs: 2, 20</title></circle>
+<circle cx="404.29" cy="184.44" r="3" fill="#2563eb"><title>retain all Shapes x selected configs: 4, 40</title></circle>
+<circle cx="810.00" cy="120.56" r="3" fill="#2563eb"><title>retain all Shapes x selected configs: 8, 50</title></circle>
+<g><title>retain all Shapes x selected configs</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >retain all Shapes x selected</text>
+<text x="865.00" y="113.00" font-size="11" fill="#334155" text-anchor="start" >configs</text>
+</g>
+<polyline points="100.00,376.11 201.43,376.11 404.29,376.11 810.00,376.11" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="376.11" r="3" fill="#d97706"><title>retain dispatched pairs only: 1, 10</title></circle>
+<circle cx="201.43" cy="376.11" r="3" fill="#d97706"><title>retain dispatched pairs only: 2, 10</title></circle>
+<circle cx="404.29" cy="376.11" r="3" fill="#d97706"><title>retain dispatched pairs only: 4, 10</title></circle>
+<circle cx="810.00" cy="376.11" r="3" fill="#d97706"><title>retain dispatched pairs only: 8, 10</title></circle>
+<g><title>retain dispatched pairs only</title><line x1="840" x2="858" y1="131" y2="131" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="135.00" font-size="11" fill="#334155" text-anchor="start" >retain dispatched pairs only</text>
+</g>
+<polyline points="100.00,433.61 201.43,427.22 404.29,414.44 810.00,408.06" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="433.61" r="3" fill="#059669"><title>selected config dictionaries: 1, 1</title></circle>
+<circle cx="201.43" cy="427.22" r="3" fill="#059669"><title>selected config dictionaries: 2, 2</title></circle>
+<circle cx="404.29" cy="414.44" r="3" fill="#059669"><title>selected config dictionaries: 4, 4</title></circle>
+<circle cx="810.00" cy="408.06" r="3" fill="#059669"><title>selected config dictionaries: 8, 5</title></circle>
+<g><title>selected config dictionaries</title><line x1="840" x2="858" y1="153" y2="153" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="157.00" font-size="11" fill="#334155" text-anchor="start" >selected config dictionaries</text>
+</g>
+</g></svg>

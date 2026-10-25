@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="342" viewBox="0 0 1080 342" role="img" aria-labelledby="title desc">
+<title id="title">Descriptive parameter importance</title>
+<desc id="desc">Mean fraction of within-Shape log-latency variance, balanced two-level design; interaction terms retained in JSON</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Descriptive parameter importance</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Mean fraction of within-Shape log-latency variance, balanced two-level design; interaction terms retained in JSON</text>
+<g><title>BLOCK_M</title>
+<text x="325.00" y="111.00" font-size="11" fill="#334155" text-anchor="end" >BLOCK_M</text>
+<rect x="335" y="93.0" width="635.000" height="22" rx="3" fill="#2563eb"/>
+<text x="978.00" y="110.00" font-size="11" fill="#334155" text-anchor="start" >46.4</text>
+</g>
+<g><title>BLOCK_N</title>
+<text x="325.00" y="143.00" font-size="11" fill="#334155" text-anchor="end" >BLOCK_N</text>
+<rect x="335" y="125.0" width="202.909" height="22" rx="3" fill="#d97706"/>
+<text x="545.91" y="142.00" font-size="11" fill="#334155" text-anchor="start" >14.8</text>
+</g>
+<g><title>BLOCK_K</title>
+<text x="325.00" y="175.00" font-size="11" fill="#334155" text-anchor="end" >BLOCK_K</text>
+<rect x="335" y="157.0" width="9.410" height="22" rx="3" fill="#059669"/>
+<text x="352.41" y="174.00" font-size="11" fill="#334155" text-anchor="start" >0.688</text>
+</g>
+<g><title>num_warps</title>
+<text x="325.00" y="207.00" font-size="11" fill="#334155" text-anchor="end" >num_warps</text>
+<rect x="335" y="189.0" width="31.817" height="22" rx="3" fill="#dc2626"/>
+<text x="374.82" y="206.00" font-size="11" fill="#334155" text-anchor="start" >2.33</text>
+</g>
+<g><title>num_stages</title>
+<text x="325.00" y="239.00" font-size="11" fill="#334155" text-anchor="end" >num_stages</text>
+<rect x="335" y="221.0" width="22.630" height="22" rx="3" fill="#7c3aed"/>
+<text x="365.63" y="238.00" font-size="11" fill="#334155" text-anchor="start" >1.66</text>
+</g>
+<g><title>GROUP_M</title>
+<text x="325.00" y="271.00" font-size="11" fill="#334155" text-anchor="end" >GROUP_M</text>
+<rect x="335" y="253.0" width="0.009" height="22" rx="3" fill="#0891b2"/>
+<text x="343.01" y="270.00" font-size="11" fill="#334155" text-anchor="start" >0.000679</text>
+</g>
+<text x="652.50" y="327.00" font-size="13" fill="#334155" text-anchor="middle" >Mean main-effect fraction (%)</text>
+</g></svg>

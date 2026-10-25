@@ -15,7 +15,7 @@ KT_PYTHON_BIN=.venv/bin/python bash scripts/run_gpu_smoke.sh 4090 artifacts/4090
 KT_PYTHON_BIN=.venv/bin/python bash scripts/run_gpu_smoke.sh 5060ti16g artifacts/5060ti
 ```
 
-The GPU script performs physical/runtime preflight and ten small experiments: four operators in FP16/BF16 and the two reductions in FP32. Each example contains two shapes, including uneven tail dimensions. Reduction smoke domains deliberately cover the largest row so an eight-attempt budget validates both shapes. Every tested config must succeed; current-run snapshots preserve history separately. A successful suite writes `validation_summary.json`. Actual physical GPU compilation, correctness and performance remain unverified on the current CPU host. See `docs/RTX5060TI.md` for the local-to-Hopper workflow.
+The GPU script performs physical/runtime preflight and ten small experiments: four operators in FP16/BF16 and the two reductions in FP32. Each example contains two shapes, including uneven tail dimensions. Reduction smoke domains deliberately cover the largest row so an eight-attempt budget validates both shapes. Every tested config must succeed; current-run snapshots preserve history separately. A successful suite writes `validation_summary.json`. Physical 5060 Ti evidence is recorded in [5060TI_RESULTS.md](../docs/5060TI_RESULTS.md); other target GPUs still require their own execution. See `docs/RTX5060TI.md` for the local-to-Hopper workflow.
 
 `report/` is generated from the full four-operator Mock run; its captions prominently identify synthetic data. `public_report/` is generated from two complete downloaded upstream files; correctness is unknown and no performance oracle is derived from it. The real sample and retained upstream license live under `kernel_tuning_lab/adapters/data/`; see `docs/PUBLIC_DATA.md` for source and reproduction.
 
@@ -34,4 +34,16 @@ ktlab --plugin examples/plugins/deterministic_mock.py benchmark --spec examples/
 `extensions/` provides independent SDK-only assets and schema-v2 configurations. Run `ktlab run --spec examples/extensions/cpu_gemm.json --output artifacts/extensions/cpu` to combine two Kernel implementations, two algorithms and two shapes automatically. `custom_operator.json`, `conditional_space.json` and `scoped_claim.json` cover new operator semantics, mixed/conditional parameters and declared-vs-reference evidence. The four `failure_*.json` files intentionally fail with saved diagnostics. `gpu_gemm.json` selects 5060 Ti 16GB and remains deferred without CUDA.
 
 `ktlab scaffold kernel|algorithm --output DIRECTORY` generates a working asset and experiment; see [EXTENDING.md](../docs/EXTENDING.md). New execution evidence is under `artifacts/auto-integration-validation/`, including CPU runs, failures, timeouts and template checks.
+
+## Shape/config study
+
+`research_phase1/` freezes the explicit T1 GEMM study: tail acceptance, pilot,
+10-Shape/64-config primary matrix, matched library/simple baselines, repeated
+anchors, limited BF16 and W4A16 supplements, and unmeasured cross-hardware
+templates. `cohort.py` is an SDK algorithm plugin; `design.py` regenerates JSON
+specifications. Use the existing `ktlab research` command or its serial telemetry
+wrapper `scripts/collect_phase1.py`. The default primary matrix requests 1,920
+observations plus independent acceptance, not 64 total measurements. Complete
+real results, raw-data selection/Replay/L3 commands and limits are in
+[RESEARCH_PHASE1.md](../docs/RESEARCH_PHASE1.md).
 

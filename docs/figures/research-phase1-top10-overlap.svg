@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="800" viewBox="0 0 900 800" role="img" aria-labelledby="title desc">
+<title id="title">Top-10% configuration overlap</title>
+<desc id="desc">Jaccard intersection/union of strict top 7 / 64 observed ranks; tiny gaps can be noise</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Top-10% configuration overlap</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Jaccard intersection/union of strict top 7 / 64 observed ranks; tiny gaps can be noise</text>
+<text x="170.00" y="192.00" font-size="11" fill="#334155" text-anchor="end" >decode-l2</text>
+<text x="195.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 195 145)">decode-l2</text>
+<rect x="180" y="160" width="58" height="58" fill="rgb(65,125,245)"><title>decode-l2 / decode-l2: 1.0</title></rect>
+<text x="210.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="240" y="160" width="58" height="58" fill="rgb(173,197,245)"><title>decode-l2 / small-tokens: 0.4</title></rect>
+<text x="270.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="300" y="160" width="58" height="58" fill="rgb(215,225,245)"><title>decode-l2 / balanced-medium: 0.16666666666666666</title></rect>
+<text x="330.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="360" y="160" width="58" height="58" fill="rgb(215,225,245)"><title>decode-l2 / tall: 0.16666666666666666</title></rect>
+<text x="390.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="420" y="160" width="58" height="58" fill="rgb(195,212,245)"><title>decode-l2 / decode-beyond-l2: 0.2727272727272727</title></rect>
+<text x="450.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="480" y="160" width="58" height="58" fill="rgb(215,225,245)"><title>decode-l2 / irregular: 0.16666666666666666</title></rect>
+<text x="510.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="540" y="160" width="58" height="58" fill="rgb(173,197,245)"><title>decode-l2 / few-tokens-wide: 0.4</title></rect>
+<text x="570.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="600" y="160" width="58" height="58" fill="rgb(195,212,245)"><title>decode-l2 / prefill: 0.2727272727272727</title></rect>
+<text x="630.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="660" y="160" width="58" height="58" fill="rgb(215,225,245)"><title>decode-l2 / compute-large: 0.16666666666666666</title></rect>
+<text x="690.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="720" y="160" width="58" height="58" fill="rgb(215,225,245)"><title>decode-l2 / wide-k-small: 0.16666666666666666</title></rect>
+<text x="750.00" y="192.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<text x="170.00" y="252.00" font-size="11" fill="#334155" text-anchor="end" >small-tokens</text>
+<text x="255.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 255 145)">small-tokens</text>
+<rect x="180" y="220" width="58" height="58" fill="rgb(173,197,245)"><title>small-tokens / decode-l2: 0.4</title></rect>
+<text x="210.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="240" y="220" width="58" height="58" fill="rgb(65,125,245)"><title>small-tokens / small-tokens: 1.0</title></rect>
+<text x="270.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="300" y="220" width="58" height="58" fill="rgb(215,225,245)"><title>small-tokens / balanced-medium: 0.16666666666666666</title></rect>
+<text x="330.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="360" y="220" width="58" height="58" fill="rgb(215,225,245)"><title>small-tokens / tall: 0.16666666666666666</title></rect>
+<text x="390.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="420" y="220" width="58" height="58" fill="rgb(173,197,245)"><title>small-tokens / decode-beyond-l2: 0.4</title></rect>
+<text x="450.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="480" y="220" width="58" height="58" fill="rgb(195,212,245)"><title>small-tokens / irregular: 0.2727272727272727</title></rect>
+<text x="510.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="540" y="220" width="58" height="58" fill="rgb(65,125,245)"><title>small-tokens / few-tokens-wide: 1.0</title></rect>
+<text x="570.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="600" y="220" width="58" height="58" fill="rgb(195,212,245)"><title>small-tokens / prefill: 0.2727272727272727</title></rect>
+<text x="630.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="660" y="220" width="58" height="58" fill="rgb(215,225,245)"><title>small-tokens / compute-large: 0.16666666666666666</title></rect>
+<text x="690.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="720" y="220" width="58" height="58" fill="rgb(215,225,245)"><title>small-tokens / wide-k-small: 0.16666666666666666</title></rect>
+<text x="750.00" y="252.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<text x="170.00" y="312.00" font-size="11" fill="#334155" text-anchor="end" >balanced-medium</text>
+<text x="315.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 315 145)">balanced-medium</text>
+<rect x="180" y="280" width="58" height="58" fill="rgb(215,225,245)"><title>balanced-medium / decode-l2: 0.16666666666666666</title></rect>
+<text x="210.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="240" y="280" width="58" height="58" fill="rgb(215,225,245)"><title>balanced-medium / small-tokens: 0.16666666666666666</title></rect>
+<text x="270.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="300" y="280" width="58" height="58" fill="rgb(65,125,245)"><title>balanced-medium / balanced-medium: 1.0</title></rect>
+<text x="330.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="360" y="280" width="58" height="58" fill="rgb(173,197,245)"><title>balanced-medium / tall: 0.4</title></rect>
+<text x="390.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="420" y="280" width="58" height="58" fill="rgb(231,235,245)"><title>balanced-medium / decode-beyond-l2: 0.07692307692307693</title></rect>
+<text x="450.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="480" y="280" width="58" height="58" fill="rgb(231,235,245)"><title>balanced-medium / irregular: 0.07692307692307693</title></rect>
+<text x="510.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="540" y="280" width="58" height="58" fill="rgb(215,225,245)"><title>balanced-medium / few-tokens-wide: 0.16666666666666666</title></rect>
+<text x="570.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="600" y="280" width="58" height="58" fill="rgb(173,197,245)"><title>balanced-medium / prefill: 0.4</title></rect>
+<text x="630.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="660" y="280" width="58" height="58" fill="rgb(173,197,245)"><title>balanced-medium / compute-large: 0.4</title></rect>
+<text x="690.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="720" y="280" width="58" height="58" fill="rgb(173,197,245)"><title>balanced-medium / wide-k-small: 0.4</title></rect>
+<text x="750.00" y="312.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<text x="170.00" y="372.00" font-size="11" fill="#334155" text-anchor="end" >tall</text>
+<text x="375.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 375 145)">tall</text>
+<rect x="180" y="340" width="58" height="58" fill="rgb(215,225,245)"><title>tall / decode-l2: 0.16666666666666666</title></rect>
+<text x="210.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="240" y="340" width="58" height="58" fill="rgb(215,225,245)"><title>tall / small-tokens: 0.16666666666666666</title></rect>
+<text x="270.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="300" y="340" width="58" height="58" fill="rgb(173,197,245)"><title>tall / balanced-medium: 0.4</title></rect>
+<text x="330.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="360" y="340" width="58" height="58" fill="rgb(65,125,245)"><title>tall / tall: 1.0</title></rect>
+<text x="390.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="420" y="340" width="58" height="58" fill="rgb(231,235,245)"><title>tall / decode-beyond-l2: 0.07692307692307693</title></rect>
+<text x="450.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="480" y="340" width="58" height="58" fill="rgb(231,235,245)"><title>tall / irregular: 0.07692307692307693</title></rect>
+<text x="510.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="540" y="340" width="58" height="58" fill="rgb(215,225,245)"><title>tall / few-tokens-wide: 0.16666666666666666</title></rect>
+<text x="570.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="600" y="340" width="58" height="58" fill="rgb(195,212,245)"><title>tall / prefill: 0.2727272727272727</title></rect>
+<text x="630.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="660" y="340" width="58" height="58" fill="rgb(195,212,245)"><title>tall / compute-large: 0.2727272727272727</title></rect>
+<text x="690.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="720" y="340" width="58" height="58" fill="rgb(195,212,245)"><title>tall / wide-k-small: 0.2727272727272727</title></rect>
+<text x="750.00" y="372.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<text x="170.00" y="432.00" font-size="11" fill="#334155" text-anchor="end" >decode-beyond-l2</text>
+<text x="435.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 435 145)">decode-beyond-l2</text>
+<rect x="180" y="400" width="58" height="58" fill="rgb(195,212,245)"><title>decode-beyond-l2 / decode-l2: 0.2727272727272727</title></rect>
+<text x="210.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="240" y="400" width="58" height="58" fill="rgb(173,197,245)"><title>decode-beyond-l2 / small-tokens: 0.4</title></rect>
+<text x="270.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="300" y="400" width="58" height="58" fill="rgb(231,235,245)"><title>decode-beyond-l2 / balanced-medium: 0.07692307692307693</title></rect>
+<text x="330.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="360" y="400" width="58" height="58" fill="rgb(231,235,245)"><title>decode-beyond-l2 / tall: 0.07692307692307693</title></rect>
+<text x="390.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="420" y="400" width="58" height="58" fill="rgb(65,125,245)"><title>decode-beyond-l2 / decode-beyond-l2: 1.0</title></rect>
+<text x="450.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="480" y="400" width="58" height="58" fill="rgb(145,178,245)"><title>decode-beyond-l2 / irregular: 0.5555555555555556</title></rect>
+<text x="510.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.56</text>
+<rect x="540" y="400" width="58" height="58" fill="rgb(173,197,245)"><title>decode-beyond-l2 / few-tokens-wide: 0.4</title></rect>
+<text x="570.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="600" y="400" width="58" height="58" fill="rgb(215,225,245)"><title>decode-beyond-l2 / prefill: 0.16666666666666666</title></rect>
+<text x="630.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="660" y="400" width="58" height="58" fill="rgb(231,235,245)"><title>decode-beyond-l2 / compute-large: 0.07692307692307693</title></rect>
+<text x="690.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="720" y="400" width="58" height="58" fill="rgb(215,225,245)"><title>decode-beyond-l2 / wide-k-small: 0.16666666666666666</title></rect>
+<text x="750.00" y="432.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<text x="170.00" y="492.00" font-size="11" fill="#334155" text-anchor="end" >irregular</text>
+<text x="495.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 495 145)">irregular</text>
+<rect x="180" y="460" width="58" height="58" fill="rgb(215,225,245)"><title>irregular / decode-l2: 0.16666666666666666</title></rect>
+<text x="210.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="240" y="460" width="58" height="58" fill="rgb(195,212,245)"><title>irregular / small-tokens: 0.2727272727272727</title></rect>
+<text x="270.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="300" y="460" width="58" height="58" fill="rgb(231,235,245)"><title>irregular / balanced-medium: 0.07692307692307693</title></rect>
+<text x="330.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="360" y="460" width="58" height="58" fill="rgb(231,235,245)"><title>irregular / tall: 0.07692307692307693</title></rect>
+<text x="390.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="420" y="460" width="58" height="58" fill="rgb(145,178,245)"><title>irregular / decode-beyond-l2: 0.5555555555555556</title></rect>
+<text x="450.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.56</text>
+<rect x="480" y="460" width="58" height="58" fill="rgb(65,125,245)"><title>irregular / irregular: 1.0</title></rect>
+<text x="510.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="540" y="460" width="58" height="58" fill="rgb(195,212,245)"><title>irregular / few-tokens-wide: 0.2727272727272727</title></rect>
+<text x="570.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="600" y="460" width="58" height="58" fill="rgb(215,225,245)"><title>irregular / prefill: 0.16666666666666666</title></rect>
+<text x="630.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="660" y="460" width="58" height="58" fill="rgb(215,225,245)"><title>irregular / compute-large: 0.16666666666666666</title></rect>
+<text x="690.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="720" y="460" width="58" height="58" fill="rgb(195,212,245)"><title>irregular / wide-k-small: 0.2727272727272727</title></rect>
+<text x="750.00" y="492.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<text x="170.00" y="552.00" font-size="11" fill="#334155" text-anchor="end" >few-tokens-wide</text>
+<text x="555.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 555 145)">few-tokens-wide</text>
+<rect x="180" y="520" width="58" height="58" fill="rgb(173,197,245)"><title>few-tokens-wide / decode-l2: 0.4</title></rect>
+<text x="210.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="240" y="520" width="58" height="58" fill="rgb(65,125,245)"><title>few-tokens-wide / small-tokens: 1.0</title></rect>
+<text x="270.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="300" y="520" width="58" height="58" fill="rgb(215,225,245)"><title>few-tokens-wide / balanced-medium: 0.16666666666666666</title></rect>
+<text x="330.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="360" y="520" width="58" height="58" fill="rgb(215,225,245)"><title>few-tokens-wide / tall: 0.16666666666666666</title></rect>
+<text x="390.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="420" y="520" width="58" height="58" fill="rgb(173,197,245)"><title>few-tokens-wide / decode-beyond-l2: 0.4</title></rect>
+<text x="450.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="480" y="520" width="58" height="58" fill="rgb(195,212,245)"><title>few-tokens-wide / irregular: 0.2727272727272727</title></rect>
+<text x="510.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="540" y="520" width="58" height="58" fill="rgb(65,125,245)"><title>few-tokens-wide / few-tokens-wide: 1.0</title></rect>
+<text x="570.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="600" y="520" width="58" height="58" fill="rgb(195,212,245)"><title>few-tokens-wide / prefill: 0.2727272727272727</title></rect>
+<text x="630.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="660" y="520" width="58" height="58" fill="rgb(215,225,245)"><title>few-tokens-wide / compute-large: 0.16666666666666666</title></rect>
+<text x="690.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="720" y="520" width="58" height="58" fill="rgb(215,225,245)"><title>few-tokens-wide / wide-k-small: 0.16666666666666666</title></rect>
+<text x="750.00" y="552.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<text x="170.00" y="612.00" font-size="11" fill="#334155" text-anchor="end" >prefill</text>
+<text x="615.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 615 145)">prefill</text>
+<rect x="180" y="580" width="58" height="58" fill="rgb(195,212,245)"><title>prefill / decode-l2: 0.2727272727272727</title></rect>
+<text x="210.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="240" y="580" width="58" height="58" fill="rgb(195,212,245)"><title>prefill / small-tokens: 0.2727272727272727</title></rect>
+<text x="270.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="300" y="580" width="58" height="58" fill="rgb(173,197,245)"><title>prefill / balanced-medium: 0.4</title></rect>
+<text x="330.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="360" y="580" width="58" height="58" fill="rgb(195,212,245)"><title>prefill / tall: 0.2727272727272727</title></rect>
+<text x="390.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="420" y="580" width="58" height="58" fill="rgb(215,225,245)"><title>prefill / decode-beyond-l2: 0.16666666666666666</title></rect>
+<text x="450.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="480" y="580" width="58" height="58" fill="rgb(215,225,245)"><title>prefill / irregular: 0.16666666666666666</title></rect>
+<text x="510.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="540" y="580" width="58" height="58" fill="rgb(195,212,245)"><title>prefill / few-tokens-wide: 0.2727272727272727</title></rect>
+<text x="570.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="600" y="580" width="58" height="58" fill="rgb(65,125,245)"><title>prefill / prefill: 1.0</title></rect>
+<text x="630.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="660" y="580" width="58" height="58" fill="rgb(173,197,245)"><title>prefill / compute-large: 0.4</title></rect>
+<text x="690.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="720" y="580" width="58" height="58" fill="rgb(173,197,245)"><title>prefill / wide-k-small: 0.4</title></rect>
+<text x="750.00" y="612.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<text x="170.00" y="672.00" font-size="11" fill="#334155" text-anchor="end" >compute-large</text>
+<text x="675.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 675 145)">compute-large</text>
+<rect x="180" y="640" width="58" height="58" fill="rgb(215,225,245)"><title>compute-large / decode-l2: 0.16666666666666666</title></rect>
+<text x="210.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="240" y="640" width="58" height="58" fill="rgb(215,225,245)"><title>compute-large / small-tokens: 0.16666666666666666</title></rect>
+<text x="270.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="300" y="640" width="58" height="58" fill="rgb(173,197,245)"><title>compute-large / balanced-medium: 0.4</title></rect>
+<text x="330.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="360" y="640" width="58" height="58" fill="rgb(195,212,245)"><title>compute-large / tall: 0.2727272727272727</title></rect>
+<text x="390.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="420" y="640" width="58" height="58" fill="rgb(231,235,245)"><title>compute-large / decode-beyond-l2: 0.07692307692307693</title></rect>
+<text x="450.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.08</text>
+<rect x="480" y="640" width="58" height="58" fill="rgb(215,225,245)"><title>compute-large / irregular: 0.16666666666666666</title></rect>
+<text x="510.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="540" y="640" width="58" height="58" fill="rgb(215,225,245)"><title>compute-large / few-tokens-wide: 0.16666666666666666</title></rect>
+<text x="570.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="600" y="640" width="58" height="58" fill="rgb(173,197,245)"><title>compute-large / prefill: 0.4</title></rect>
+<text x="630.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="660" y="640" width="58" height="58" fill="rgb(65,125,245)"><title>compute-large / compute-large: 1.0</title></rect>
+<text x="690.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+<rect x="720" y="640" width="58" height="58" fill="rgb(110,155,245)"><title>compute-large / wide-k-small: 0.75</title></rect>
+<text x="750.00" y="672.00" font-size="11" fill="#334155" text-anchor="middle" >0.75</text>
+<text x="170.00" y="732.00" font-size="11" fill="#334155" text-anchor="end" >wide-k-small</text>
+<text x="735.00" y="145.00" font-size="11" fill="#334155" text-anchor="start" transform="rotate(-50 735 145)">wide-k-small</text>
+<rect x="180" y="700" width="58" height="58" fill="rgb(215,225,245)"><title>wide-k-small / decode-l2: 0.16666666666666666</title></rect>
+<text x="210.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="240" y="700" width="58" height="58" fill="rgb(215,225,245)"><title>wide-k-small / small-tokens: 0.16666666666666666</title></rect>
+<text x="270.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="300" y="700" width="58" height="58" fill="rgb(173,197,245)"><title>wide-k-small / balanced-medium: 0.4</title></rect>
+<text x="330.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="360" y="700" width="58" height="58" fill="rgb(195,212,245)"><title>wide-k-small / tall: 0.2727272727272727</title></rect>
+<text x="390.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="420" y="700" width="58" height="58" fill="rgb(215,225,245)"><title>wide-k-small / decode-beyond-l2: 0.16666666666666666</title></rect>
+<text x="450.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="480" y="700" width="58" height="58" fill="rgb(195,212,245)"><title>wide-k-small / irregular: 0.2727272727272727</title></rect>
+<text x="510.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.27</text>
+<rect x="540" y="700" width="58" height="58" fill="rgb(215,225,245)"><title>wide-k-small / few-tokens-wide: 0.16666666666666666</title></rect>
+<text x="570.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.17</text>
+<rect x="600" y="700" width="58" height="58" fill="rgb(173,197,245)"><title>wide-k-small / prefill: 0.4</title></rect>
+<text x="630.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.40</text>
+<rect x="660" y="700" width="58" height="58" fill="rgb(110,155,245)"><title>wide-k-small / compute-large: 0.75</title></rect>
+<text x="690.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >0.75</text>
+<rect x="720" y="700" width="58" height="58" fill="rgb(65,125,245)"><title>wide-k-small / wide-k-small: 1.0</title></rect>
+<text x="750.00" y="732.00" font-size="11" fill="#334155" text-anchor="middle" >1.00</text>
+</g></svg>

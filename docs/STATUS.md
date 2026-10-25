@@ -35,6 +35,17 @@ This is workflow acceptance on a four-config space, not a claim of algorithm
 superiority or exhaustive operator coverage; compact evidence is in
 [research-workflow-validation.json](data/research-workflow-validation.json).
 
+The first configuration-space study is now measured on the same 5060 Ti: a new
+explicitly tuned T1 GEMM, a complete 10-Shape × 64-config × 3-input-seed FP16
+matrix (1,920 new observations), finite BF16/tail checks, 3,600 offline L2 Replays,
+10-Shape config-budget L3 experiments and a 144-observation fused/pipeline W4A16
+supplement. Fresh online search revealed 48 observations (35 new / 13 cached).
+Actual compiler identities distinguish config budgets from physical variants;
+the solver still constrains configs. Matched baselines, noise, negative results,
+raw-data archives and cross-hardware replication templates are documented in
+[RESEARCH_PHASE1.md](RESEARCH_PHASE1.md). None of the other GPU templates is
+measurement evidence.
+
 The original presentation mentions previous RTX 4090/H200 measurements but supplies no raw measurement table in this repository. Those figures were read for project context and are not represented as newly reproduced results.
 
 ## Explicitly unfinished
@@ -44,7 +55,7 @@ The original presentation mentions previous RTX 4090/H200 measurements but suppl
 - Clusters, warp specialization and arbitrary kernel code generation. Split-K and descriptor/TMA loads are sampled on 5060 Ti; Hopper paths still need physical validation.
 - Nsight Systems/Compute orchestration, concurrent-device workers, thermal/clock control, cold-cache modes and GPU driver fault reset. V2 now has explicit CUDA Graph full-plan timing, process isolation and hard phase deadlines, including compiler calls; direct v1 Runner calls retain admission-only limits.
 - Imputation or active acquisition for incomplete L3 matrices; unknown cells are preserved rather than predicted.
-- Generalization of finite L3 dispatcher to unseen shape ranges and deployment binary-size measurement.
+- Generalization of finite L3 dispatcher to unseen shape ranges and deployment binary-size optimization. Compiler CUBIN container/text bytes can be recorded; driver-resident and packaged deployment sizes remain unknown.
 - Fully sandboxed generated policy execution. Current Python policies are trusted code with validated outputs.
 - Automated LLM policy generation/evolution, paid API integrations or claims that a learned algorithm beats expert libraries.
 - Remaining 25 original active Hub caches were catalogued but not downloaded/imported in this run. T4 export import, archived collections and specialized source adapters are not implemented.

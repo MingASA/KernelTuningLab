@@ -1,6 +1,6 @@
 # Kernel Tuning Research Lab v0.1
 
-面向硬件特性的算子参数寻优研究平台，覆盖 L2（有限测量预算下单 Shape 搜索）和 L3（有限变体集合与分派）。原始立项书和 PPTX 保留在仓库根目录；其中历史实验图表没有原始数据，**不会作为本平台实测数据导入**。
+面向硬件特性的算子参数寻优研究平台，覆盖 L2（有限测量预算下单 Shape 搜索）和 L3（有限配置集合与分派；配置数不同于物理编译变体数）。原始立项书和 PPTX 保留在仓库根目录；其中历史实验图表没有原始数据，**不会作为本平台实测数据导入**。
 
 Python >= 3.10，核心包无第三方运行依赖；Mock、搜索、Policy、SQLite、L3 和 SVG 报告均可在 CPU 上运行。
 
@@ -16,6 +16,8 @@ ktlab research --spec examples/research/cpu.json --output artifacts/cpu-study
 新增算法只提交 SDK 插件，在 JSON 中与 Random/Heuristic 等基线并列选择，无需改核心注册或报告代码。入口自动生成搜索/墙钟曲线、已验证性能图、CSV、成本和失败分析；不适用、缺设备及失败分别记录，各算法独立监督并复用兼容 v2 缓存。相同命令恢复中断，`--write-only` 先检查矩阵与预算，`--report-only` 可在无 GPU 环境重建已有报告。
 
 完整配置、独立插件、产物及验收数据见 **[RESEARCH_WORKFLOW.md](docs/RESEARCH_WORKFLOW.md)**。原 5060 Ti 专用脚本保留用于历史实验复现，新研究优先使用通用入口。
+
+第一批配置空间研究已在 RTX 5060 Ti 上实测：新增 T1 GEMM，10 Shape × 64 配置 × 3 输入 seed 的完整 FP16 矩阵，以及真实标签上的 L2 Replay、L3 Config Budget、编译身份统计和有限 W4A16 补充。数据、图表、复现和结论边界见 **[RESEARCH_PHASE1.md](docs/RESEARCH_PHASE1.md)**；其他 GPU 尚未采集本轮研究数据。
 
 ## 新 Kernel 与算法：配置驱动接入
 

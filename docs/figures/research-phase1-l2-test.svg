@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Offline Replay: finite-set regret</title>
+<desc id="desc">test; 3 physical replicates x 10 search seeds; no fresh GPU measurements</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Offline Replay: finite-set regret</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >test; 3 physical replicates x 10 search seeds; no fresh GPU measurements</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >8.61</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >17.2</text>
+<line x1="100" x2="810" y1="232.99999999999997" y2="232.99999999999997" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >25.8</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >34.4</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >43.1</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >16</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >32</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Revealed observations</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Mean relative regret (%)</text>
+<polyline points="100.00,120.56 201.43,120.56 404.29,153.71 810.00,440.00" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#2563eb"><title>grid: 4, 39.86</title></circle>
+<circle cx="201.43" cy="120.56" r="3" fill="#2563eb"><title>grid: 8, 39.86</title></circle>
+<circle cx="404.29" cy="153.71" r="3" fill="#2563eb"><title>grid: 16, 35.73</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#2563eb"><title>grid: 32, 0</title></circle>
+<g><title>grid</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >grid</text>
+</g>
+<polyline points="100.00,367.42 201.43,395.62 404.29,409.30 810.00,440.00" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="367.42" r="3" fill="#d97706"><title>heuristic: 4, 9.057</title></circle>
+<circle cx="201.43" cy="395.62" r="3" fill="#d97706"><title>heuristic: 8, 5.538</title></circle>
+<circle cx="404.29" cy="409.30" r="3" fill="#d97706"><title>heuristic: 16, 3.831</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#d97706"><title>heuristic: 32, 0</title></circle>
+<g><title>heuristic</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >heuristic</text>
+</g>
+<polyline points="100.00,340.42 201.43,380.52 404.29,431.60 810.00,438.10" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="340.42" r="3" fill="#059669"><title>random: 4, 12.43</title></circle>
+<circle cx="201.43" cy="380.52" r="3" fill="#059669"><title>random: 8, 7.423</title></circle>
+<circle cx="404.29" cy="431.60" r="3" fill="#059669"><title>random: 16, 1.048</title></circle>
+<circle cx="810.00" cy="438.10" r="3" fill="#059669"><title>random: 32, 0.2375</title></circle>
+<g><title>random</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >random</text>
+</g>
+<polyline points="100.00,340.42 201.43,387.81 404.29,432.48 810.00,438.02" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="340.42" r="3" fill="#dc2626"><title>surrogate: 4, 12.43</title></circle>
+<circle cx="201.43" cy="387.81" r="3" fill="#dc2626"><title>surrogate: 8, 6.512</title></circle>
+<circle cx="404.29" cy="432.48" r="3" fill="#dc2626"><title>surrogate: 16, 0.9385</title></circle>
+<circle cx="810.00" cy="438.02" r="3" fill="#dc2626"><title>surrogate: 32, 0.2465</title></circle>
+<g><title>surrogate</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >surrogate</text>
+</g>
+<polyline points="100.00,440.00 201.43,440.00 404.29,440.00 810.00,440.00" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="440.00" r="3" fill="#7c3aed"><title>transfer: 4, 0</title></circle>
+<circle cx="201.43" cy="440.00" r="3" fill="#7c3aed"><title>transfer: 8, 0</title></circle>
+<circle cx="404.29" cy="440.00" r="3" fill="#7c3aed"><title>transfer: 16, 0</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#7c3aed"><title>transfer: 32, 0</title></circle>
+<g><title>transfer</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >transfer</text>
+</g>
+</g></svg>
