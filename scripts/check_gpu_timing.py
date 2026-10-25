@@ -22,7 +22,7 @@ def telemetry():
         "--format=csv,noheader"], capture_output=True, text=True, check=True).stdout.strip()
 
 
-def run(output, rounds=5):
+def run(output, rounds=5, graph_batch_size=128):
     import torch
     import triton.testing
 
@@ -35,11 +35,12 @@ def run(output, rounds=5):
                                catalog.resolve("operator", "gemm@1.0.0"), accept_claims=False)
     graph_asset = AssetKernelAdapter(catalog.resolve("kernel", "triton/gemm@1.0.0"),
                                      catalog.resolve("operator", "gemm@1.0.0"), accept_claims=False,
-                                     timing_mode="cuda_graph")
+                                     timing_mode="cuda_graph", cuda_graph_batch_size=graph_batch_size)
     config = KernelConfig({"BLOCK_M": 32, "BLOCK_N": 64, "BLOCK_K": 32, "num_warps": 4, "num_stages": 2})
     report = {"environment": adapter.environment(), "asset_environment": asset.environment(),
               "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
               "config": config.params, "seed": 7, "warmup": 50, "rounds": rounds,
+              "cuda_graph_batch_size": graph_batch_size,
               "notice": "Same gemm_kernel source, inputs and config; scopes remain separate. Graph replay excludes host launch and uses hot reused buffers.",
               "cases": []}
     for m, n, k in ((32, 64, 64), (512, 512, 512), (1024, 1024, 1024)):
@@ -100,5 +101,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
     parser.add_argument("--rounds", type=int, default=5)
+    parser.add_argument("--graph-batch-size", type=int, default=128)
     args = parser.parse_args()
-    run(args.output, args.rounds)
+    run(args.output, args.rounds, args.graph_batch_size)

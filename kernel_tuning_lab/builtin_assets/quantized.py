@@ -178,8 +178,8 @@ def _gemm_constraint(config, context):
     group = config.get("GROUP_M")
     if isinstance(group, bool) or not isinstance(group, int) or group not in (1, 2, 4, 8):
         return "GROUP_M must be 1, 2, 4, or 8"
-    if group > (shape.get("M") + bm - 1) // bm:
-        return "GROUP_M cannot exceed the number of M tiles"
+    # _program_coordinates clamps the final group to the remaining row tiles.
+    # GROUP_M is an ordering preference, not a minimum number of M tiles.
     split = config.get("SPLIT_K")
     if isinstance(split, bool) or not isinstance(split, int) or split not in (1, 2, 4, 8, 16):
         return "SPLIT_K must be 1, 2, 4, 8, or 16"
@@ -231,7 +231,6 @@ def _gemm_space_domains(context, *, pipeline=False):
     m, n, k = (shape.get(name) for name in ("M", "N", "K"))
     result["num_warps"] = tuple(w for w in result["num_warps"]
                                 if w * hardware.warp_size <= hardware.max_threads_per_block)
-    result["GROUP_M"] = tuple(g for g in result["GROUP_M"] if g <= (m + 15) // 16)
     weight_bytes = k * n * 2 if pipeline else 0
     result["SPLIT_K"] = tuple(s for s in result["SPLIT_K"] if s <= (k + 31) // 32
                               and weight_bytes + (s * m * n * 4 if s > 1 else 0) <= context.workspace_memory_limit_bytes

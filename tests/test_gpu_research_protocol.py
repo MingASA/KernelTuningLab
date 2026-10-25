@@ -71,3 +71,19 @@ def test_graph_scope_and_batch_size_change_cache_identity():
     assert len({r.cache_key for r in records}) == 3
     assert full.protocol_metadata()["cuda_graph"] is None
     assert graph.protocol_metadata()["cuda_graph"]["host_steps_replayed"] is False
+
+
+@pytest.mark.parametrize("kernel_ref", [f"{prefix}/w{bits}a16_gemm"
+                                        for prefix in ("triton", "triton_pipeline") for bits in (4, 3, 2)])
+def test_quantized_partial_m_group_is_legal(kernel_ref):
+    from kernel_tuning_lab.asset_space import build_effective_space
+    from kernel_tuning_lab.catalog import get_catalog
+    catalog = get_catalog()
+    kernel = catalog.resolve("kernel", kernel_ref)
+    definition = catalog.resolve("operator", kernel.operator)
+    hardware = HardwareSpec("test", architecture="sm_120", smem_per_block=101376)
+    operator = OperatorSpec(definition.id, kind=definition.id, implementation=kernel.ref,
+                            dtype="float16", version=definition.version, parameters=dict(definition.parameters))
+    shape = ShapeSpec({"M": 1, "N": 65, "K": 129})
+    space = build_effective_space(kernel, hardware, operator, shape, {"GROUP_M": (8,)})
+    assert any(space.validate(c, hardware, operator, shape).valid for c in space.iter_configs())

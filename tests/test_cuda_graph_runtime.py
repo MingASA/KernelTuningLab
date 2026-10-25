@@ -18,7 +18,8 @@ pytestmark = pytest.mark.skipif(os.environ.get("KT_RUN_GPU_TESTS") != "1", reaso
     ("triton_pipeline/w4a16_gemm", {"M": 7, "N": 33, "K": 129}, {"SPLIT_K": (2,)}),
     ("triton/moe_grouped_gemm", {"M": 19, "N": 32, "K": 128, "Groups": 4},
      {"SPLIT_K": (2,), "SCHEDULE": ("persistent",), "USE_TMA": (False,)}),
-])
+] + [(f"{prefix}/w{bits}a16_gemm", {"M": 1, "N": 65, "K": 129}, {"GROUP_M": (8,), "SPLIT_K": (2,)})
+     for prefix in ("triton", "triton_pipeline") for bits in (4, 3, 2)])
 def test_graph_replays_full_plan_and_validates_actual_timed_outputs(kernel_ref, shape, restrictions):
     pytest.importorskip("torch")
     catalog = get_catalog()
