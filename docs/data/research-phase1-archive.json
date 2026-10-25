@@ -1,0 +1,16 @@
+{
+  "status": "verified",
+  "archive": "research-phase1-evidence-20261025.tar.gz",
+  "sha256": "1fbc2625417723030545c1ff5855558376bda671a3a713a86a0bdbce2420b12f",
+  "archive_bytes": 30080535,
+  "stream_verified_files": 6619,
+  "uncompressed_file_bytes": 250629473,
+  "inventory_sha256": "4b7c79b8fd5b5314199eea99927e66df4da6c4d594220bd888e7316f5fc63033",
+  "source_commit": "c653bf72100b129b036b978a6739a3825c5dca9d",
+  "dataset_id": "c1996b97f16e2e1020b6c0326b8877d8a15eb601f12d10b7276698ccc917d3c5",
+  "prior_archive_sha256_unchanged": {
+    "5060ti-evidence-20261025.tar.gz": "2bd56c0c31d47790d73c737e2f6b8676c6d86f91f8cb2979e4713452a0683774",
+    "research-workflow-evidence-20261025.tar.gz": "431538aaca28714710dfd8c2dd8d4f8629ffaf5a5c90803476f3a39074b56987"
+  },
+  "backup_destination": "local only; see backup_research_artifacts.sh"
+}

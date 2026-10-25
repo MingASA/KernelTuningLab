@@ -274,6 +274,8 @@ python scripts/summarize_phase1.py --root artifacts/research-phase1
 
 新原始归档为 `artifacts/research-phase1-evidence-20261025.tar.gz`，旁边的 `.sha256` 与 `.audit.json` 保存归档校验和及逐文件流式审核结果。归档内含原SQLite/JSONL/logs、每次实验冻结配置、遥测、旧失败attempts、标准数据集导出、编译CUBIN/PTX、文件清单、源码bundle/patch及最终状态。旧两份归档保持原SHA，不会被新归档覆盖。公开Git只保存精简JSON/矩阵和SVG，未提交大型二进制或原始数据库。
 
+封存产物为 **30,080,535 bytes、6,619个文件逐一校验通过**；公开[归档校验清单](data/research-phase1-archive.json)记录SHA256、dataset ID和代码快照`c653bf7`。清单在封存后单独提交，避免让归档包含自己的校验和；后续清单文档提交不改变实验源码或数据。没有已授权的外部原始数据备份目的地，当前原始归档仍仅在本机，需使用上面的备份脚本迁移到授权目的地。
+
 ```bash
 (cd artifacts && sha256sum -c research-phase1-evidence-20261025.tar.gz.sha256)
 tar -tzf artifacts/research-phase1-evidence-20261025.tar.gz
