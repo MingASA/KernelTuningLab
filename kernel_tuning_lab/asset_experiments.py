@@ -109,10 +109,16 @@ class AssetExperiment:
     split: str = "train"
     schema_version: int = 2
     workspace_memory_limit_bytes: int = 256 * 1024**2
+    timing_mode: str = "full_flow"
+    cuda_graph_batch_size: int = 128
 
     def __post_init__(self):
         if type(self.schema_version) is not int or self.schema_version != 2:
             raise ValueError("asset experiments require schema_version=2; v1 remains supported by benchmark")
+        if self.timing_mode not in {"full_flow", "cuda_graph"}:
+            raise ValueError("timing_mode must be full_flow or cuda_graph")
+        if type(self.cuda_graph_batch_size) is not int or not 1 <= self.cuda_graph_batch_size <= 4096:
+            raise ValueError("cuda_graph_batch_size must be an integer in [1, 4096]")
         if not isinstance(self.name, str) or not self.name.strip() or not isinstance(self.operator, str) or not self.operator:
             raise ValueError("experiment name and operator reference are required")
         for key, expected in (("kernels", KernelSelection), ("algorithms", AlgorithmSelection), ("shapes", ShapeSpec)):

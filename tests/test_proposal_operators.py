@@ -290,7 +290,8 @@ def test_proposal_suite_write_only_generates_production_specs_without_measuremen
     assert not list(output.rglob("measurements.sqlite"))
 
 
-def test_proposal_suite_cli_propagates_cuda_deferred_exit_code(tmp_path):
+def test_proposal_suite_cli_propagates_cuda_deferred_exit_code(tmp_path, monkeypatch):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     result = subprocess.run([sys.executable, "-m", "kernel_tuning_lab", "proposal-suite",
                              "--runtime", "cuda", "--scale", "smoke", "--max-evaluations", "1",
                              "--operators", "attention@1.0.0", "--output", str(tmp_path / "cuda")],

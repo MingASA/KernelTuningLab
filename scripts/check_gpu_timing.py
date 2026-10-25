@@ -33,6 +33,9 @@ def run(output, rounds=5):
     catalog = get_catalog()
     asset = AssetKernelAdapter(catalog.resolve("kernel", "triton/gemm@1.0.0"),
                                catalog.resolve("operator", "gemm@1.0.0"), accept_claims=False)
+    graph_asset = AssetKernelAdapter(catalog.resolve("kernel", "triton/gemm@1.0.0"),
+                                     catalog.resolve("operator", "gemm@1.0.0"), accept_claims=False,
+                                     timing_mode="cuda_graph")
     config = KernelConfig({"BLOCK_M": 32, "BLOCK_N": 64, "BLOCK_K": 32, "num_warps": 4, "num_stages": 2})
     report = {"environment": adapter.environment(), "asset_environment": asset.environment(),
               "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
@@ -50,6 +53,9 @@ def run(output, rounds=5):
         assert torch.equal(prepared.b, asset_prepared.context.inputs["b"])
         asset_compiled = asset.compile(asset_prepared, config)
         assert asset.check_correctness(asset_compiled)[0]
+        graph_prepared = graph_asset.prepare(hardware, operator, shape, 7)
+        graph_compiled = graph_asset.compile(graph_prepared, config)
+        assert graph_asset.check_correctness(graph_compiled)[0]
         adapter.warmup(compiled, 50)
         asset.warmup(asset_compiled, 50)
         case = {"shape": shape.dims, "estimated_input_output_reference_bytes": 2 * (m*k+k*n+2*m*n),
@@ -77,14 +83,16 @@ def run(output, rounds=5):
             case["rounds"].append({"round": index, "v1_event_ms": adapter.measure(compiled, 50),
                 "independent_event_ms": independent, "event_batch_per_call_ms": batch,
                 "v2_full_flow_ms": asset.measure(asset_compiled, 50),
+                "v2_graph_ms": graph_asset.measure(graph_compiled, 50),
                 "triton_graph_ms": graph, "torch_mm_graph_ms": torch_graph})
             assert asset.check_after_measurement(asset_compiled)[0]
+            assert graph_asset.check_after_measurement(graph_compiled)[0]
             assert adapter.check_correctness(compiled)[0]
         case["telemetry_after"] = telemetry()
         report["cases"].append(case)
         (output / "timing.json").write_text(json.dumps(report, indent=2) + "\n")
         print(shape.dims, {key: statistics.median([value for row in case["rounds"] for value in row[key]])
-                             for key in ("v1_event_ms", "independent_event_ms", "v2_full_flow_ms", "triton_graph_ms", "torch_mm_graph_ms")}, flush=True)
+                             for key in ("v1_event_ms", "independent_event_ms", "v2_full_flow_ms", "v2_graph_ms", "triton_graph_ms", "torch_mm_graph_ms")}, flush=True)
     return report
 
 

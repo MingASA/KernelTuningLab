@@ -169,6 +169,7 @@ class CompiledAsset:
     build_time_ms: float
     setup_time_ms: float
     correctness_details: dict[str, Any] = field(default_factory=dict)
+    cuda_graph: Any = None
 
     @property
     def context(self) -> ExecutionContext:
@@ -311,7 +312,8 @@ class AssetKernelAdapter:
 
     def __init__(self, kernel, operator_definition, *, accept_claims: bool = True,
                  force_correctness: bool = False, device: int = 0,
-                 workspace_memory_limit_bytes: int = 256 * 1024**2):
+                 workspace_memory_limit_bytes: int = 256 * 1024**2,
+                 timing_mode: str = "full_flow", cuda_graph_batch_size: int = 128):
         self.kernel, self.operator_definition = kernel, operator_definition
         self.name = kernel.ref
         self.accept_claims, self.force_correctness = accept_claims, force_correctness
@@ -323,7 +325,16 @@ class AssetKernelAdapter:
             raise ValueError("workspace_memory_limit_bytes must be positive")
         if kernel.runtime not in {"python", "cuda"}:
             raise ValueError(f"unsupported Kernel runtime {kernel.runtime!r}")
+        if timing_mode not in {"full_flow", "cuda_graph"}:
+            raise ValueError("timing_mode must be full_flow or cuda_graph")
+        if timing_mode == "cuda_graph" and kernel.runtime != "cuda":
+            raise ValueError("cuda_graph timing requires a CUDA Kernel")
+        if type(cuda_graph_batch_size) is not int or not 1 <= cuda_graph_batch_size <= 4096:
+            raise ValueError("cuda_graph_batch_size must be an integer in [1, 4096]")
+        self.timing_mode, self.cuda_graph_batch_size = timing_mode, cuda_graph_batch_size
         self.measurement_mode = "cpu_full_flow_perf_counter" if kernel.runtime == "python" else "cuda_synchronized_full_flow_perf_counter"
+        if timing_mode == "cuda_graph":
+            self.measurement_mode = "cuda_graph_events_full_flow_amortized"
         self._torch = None
         self._triton = None
         self._hardware = None
@@ -414,7 +425,11 @@ class AssetKernelAdapter:
                 "timing": self.measurement_mode, "excluded_from_timing": ["input_generation", "reference", "build", "one_time_setup", "workspace_allocation"],
                 "input_contract": {"mutation": "forbidden", "integrity": "full_logical_sha256_at_execution_boundaries",
                                    "output_input_aliasing": "forbidden", "checks_excluded_from_timing": True},
-                "output_poisoning": {"before_each_invocation": True, "timed": False,
+                "cuda_graph": ({"calls_per_replay": self.cuda_graph_batch_size, "host_steps_replayed": False,
+                                "scope": "all captured GPU initialize and ordered steps; reused buffers; hot cache",
+                                "setup_excluded": True} if self.timing_mode == "cuda_graph" else None),
+                "output_poisoning": {"before_each_invocation": self.timing_mode != "cuda_graph",
+                                     "before_each_graph_replay": self.timing_mode == "cuda_graph", "timed": False,
                                      "floating": "nan", "boolean_integer": "elementwise_reference_distinct_sentinel"},
                 "post_measurement_check": "final output and input integrity, without another invocation",
                 "claim_policy": {"accept_claims": self.accept_claims, "force_correctness": self.force_correctness,
@@ -525,7 +540,24 @@ class AssetKernelAdapter:
         self._synchronize()
         setup_ms = (time.perf_counter() - setup_started) * 1000
         prepared.context._workspace_allocation_open = False
-        return CompiledAsset(prepared, plan, build_ms, setup_ms)
+        compiled = CompiledAsset(prepared, plan, build_ms, setup_ms)
+        if self.timing_mode == "cuda_graph":
+            torch = self._load_cuda()
+            graph_started = time.perf_counter()
+            # Warm lazy launch machinery on a side stream before capture.
+            stream = torch.cuda.Stream(device=self.device)
+            stream.wait_stream(torch.cuda.current_stream(self.device))
+            with torch.cuda.stream(stream):
+                self._invoke(compiled)
+            stream.synchronize()
+            graph = torch.cuda.CUDAGraph()
+            with torch.cuda.graph(graph, stream=stream):
+                for _ in range(self.cuda_graph_batch_size):
+                    self._invoke(compiled)
+            self._synchronize()
+            compiled.cuda_graph = graph
+            prepared.context.metadata["cuda_graph_setup_time_ms"] = (time.perf_counter() - graph_started) * 1000
+        return compiled
 
     def _synchronize(self):
         if self.kernel.runtime == "cuda":
@@ -777,6 +809,7 @@ class AssetKernelAdapter:
         execution = {"steps": [step.name for step in compiled.plan.steps], "initialize_each_invocation": compiled.plan.initialize is not None,
                      "setup_once": compiled.plan.setup is not None, "setup_time_ms": compiled.setup_time_ms,
                      "build_time_ms": compiled.build_time_ms, "workspace_bytes": ctx.workspace_bytes,
+                     "cuda_graph_setup_time_ms": ctx.metadata.get("cuda_graph_setup_time_ms"),
                      "workspace_allocations": ctx.metadata.get("workspace_allocations", []),
                      "compiled_resources": ctx.metadata.get("execution_resources", {})}
         origin = "platform_structure" if claim is not None else "platform_reference"
@@ -860,6 +893,21 @@ class AssetKernelAdapter:
 
     def measure(self, compiled: CompiledAsset, repetitions: int) -> tuple[float, ...]:
         samples = []
+        if self.timing_mode == "cuda_graph":
+            torch = self._load_cuda()
+            compiled.cuda_graph.replay()
+            self._synchronize()
+            for _ in range(repetitions):
+                if not self._output_input_aliases(compiled.context):
+                    self._poison_outputs(compiled.context, compiled.prepared.reference)
+                self._synchronize()
+                start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+                start.record()
+                compiled.cuda_graph.replay()
+                end.record()
+                end.synchronize()
+                samples.append(float(start.elapsed_time(end)) / self.cuda_graph_batch_size)
+            return tuple(samples)
         for _ in range(repetitions):
             if not self._output_input_aliases(compiled.context):
                 self._poison_outputs(compiled.context, compiled.prepared.reference)

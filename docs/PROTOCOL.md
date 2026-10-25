@@ -16,6 +16,36 @@ Version/content/scope-bound submitter declarations can skip numerical comparison
 
 ## Dataset and protocol identity
 
+### Explicit v2 CUDA Graph timing
+
+V2 specifications accept `timing_mode="cuda_graph"` and `cuda_graph_batch_size=128`
+(1–4096). The default remains `full_flow`. Graph mode records
+`measurement_mode="cuda_graph_events_full_flow_amortized"`: each Event sample
+times one replay of a graph containing the declared number of complete
+`initialize → ordered steps` GPU sequences, then divides by that count. Capture,
+lazy-launch warmup and one untimed replay are excluded from latency, but charged
+to the physical evaluation's wall time; capture cost is recorded separately in
+the correctness execution metadata. Build/setup stay outside capture.
+
+This mode is opt-in for capture-compatible CUDA plans using stable, preallocated
+buffers. Host callbacks run during capture and are **not replayed**; host routing,
+Python work and dynamic allocation cannot be represented as GPU-only performance.
+An incompatible capture remains a compile failure. Output poisoning happens before
+each replay outside timing, rather than between its internal calls. Initial
+repeated-call correctness and final actual timed output/input integrity checks
+still apply. Hot buffers and cache reuse are explicit; this is not a cold-cache
+or end-to-end deployment measurement. Retain full-flow experiments separately.
+
+The graph mode, batch size, runtime/source fingerprints and correctness protocol
+participate in cache identity. L3 rejects mixed measurement modes, software/source
+contexts, warmup/repetition counts and correctness protocols. Shape-dependent
+configuration domains may differ; they do not change measurement scope.
+
+On the physical 5060 Ti WSL environment, even a single-launch Event may contain
+large CPU submission gaps. `scripts/check_gpu_timing.py` compares v1, v2 full flow,
+independent Events, v2 graphs and Triton graphs on identical GEMM inputs/configs.
+Never silently interpret Event or synchronized wall measurements as GPU-only cost.
+
 Every record stores a complete hardware spec, operator implementation/version/dtype/parameters, shape, config, seed, experiment ID and environment. GPU data includes Python/Torch/Triton/CUDA/driver versions, the actual device name and kernel source digest. A datasheet profile is a requested hardware identity; real execution probes the device and uses probed resource limits. Profiles alone are not execution evidence.
 
 `ExperimentSpec` JSON is portable across machines. Save a copy beside every journal. Built-in schemas cover contiguous GEMM, independent batched GEMM, row Softmax and non-affine row LayerNorm. Hardware-specific TMA/cluster/warp-specialization knobs are not attached to these implementations.

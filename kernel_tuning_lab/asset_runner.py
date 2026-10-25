@@ -293,7 +293,8 @@ def _prepare_cases(spec, catalog, output, mark):
                 raise ValueError(f"kernel {kernel.ref} does not support dtype={spec.dtype}; choose from {kernel.dtypes}")
             adapter = AssetKernelAdapter(kernel, operator_definition, accept_claims=spec.validation.trust_claims,
                                          force_correctness=not spec.validation.trust_claims,
-                                         workspace_memory_limit_bytes=spec.workspace_memory_limit_bytes)
+                                         workspace_memory_limit_bytes=spec.workspace_memory_limit_bytes,
+                                         timing_mode=spec.timing_mode, cuda_graph_batch_size=spec.cuda_graph_batch_size)
             unavailable = None
             try:
                 hardware = adapter.probe_hardware()

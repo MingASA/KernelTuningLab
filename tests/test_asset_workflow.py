@@ -255,7 +255,8 @@ def test_declared_correctness_is_archived_as_claim_not_verified_oracle(tmp_path)
         assert correctness.get("oracle_eligible", False) is False
 
 
-def test_missing_cuda_is_deferred_and_keeps_static_and_algorithm_evidence(tmp_path):
+def test_missing_cuda_is_deferred_and_keeps_static_and_algorithm_evidence(tmp_path, monkeypatch):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     plugin = tmp_path / "gpu_assets.py"
     _write_plugin(plugin, runtime="cuda")
     spec = _spec(tmp_path, plugin, hardware="h200-sxm")
