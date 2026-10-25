@@ -36,3 +36,28 @@ def test_compiled_artifact_identity_is_separate_from_configuration():
     ctx.record_compiled_kernel("unknown",SimpleNamespace())
     assert ctx.metadata["execution_resources"]["unknown"]["compiler_cache_identity"] is None
     assert ctx.metadata["execution_resources"]["unknown"]["artifacts"]=={}
+
+
+def test_explicit_cohort_passes_sdk_portable_acceptance():
+    from kernel_tuning_lab.acceptance import check_algorithm
+    from kernel_tuning_lab.sdk import SearchAlgorithmDefinition
+    from kernel_tuning_lab.space import ConfigSpace
+    path=Path(__file__).resolve().parents[1]/"examples/research_phase1/cohort.py"
+    spec=importlib.util.spec_from_file_location("phase1_cohort",path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    space=ConfigSpace({"BLOCK_M":[32,128],"GROUP_M":[1,8]})
+    definition=SearchAlgorithmDefinition("test/cohort","1",module.create)
+    result=check_algorithm(definition,{"configs":[{"BLOCK_M":32,"GROUP_M":1}]},7,
+        HardwareSpec("test"),OperatorSpec("gemm"),ShapeSpec({"M":1}),space)
+    assert result["status"]=="passed"
+
+
+def test_l3_labels_config_budget_without_inventing_binary_count():
+    from kernel_tuning_lab.l3 import PerformanceMatrix,greedy
+    from kernel_tuning_lab.models import KernelConfig,WorkloadDistribution
+    matrix=PerformanceMatrix(WorkloadDistribution((ShapeSpec({"M":1}),),(1,)),
+        (KernelConfig({"tile":32}),),((1.,),))
+    result=greedy(matrix,1).to_dict()
+    assert result["config_count"]==result["variant_count"]==1
+    assert result["budget_kind"]=="config_count"
+    assert result["compiled_variant_count"] is None and result["binary_size_bytes"] is None
