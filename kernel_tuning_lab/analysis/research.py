@@ -47,7 +47,10 @@ def _trial(output, job, raw, store, directory):
         record = store.get_record(rid)
         if record is None:
             raise ValueError(f"trial references missing record {rid}; restore its v2 journal")
-        if record.id != rid or record.case_id != raw["case_id"] or record.operator.implementation != raw["kernel_ref"]:
+        # AssetCase.id includes the Kernel ref; MeasurementRecord.case_id is
+        # the hardware/operator/shape identity and deliberately differs.
+        asset_case_id = stable_id([raw["kernel_ref"], record.hardware.id, record.operator.id, record.shape.id])
+        if record.id != rid or asset_case_id != raw["case_id"] or record.operator.implementation != raw["kernel_ref"]:
             raise ValueError("record content/case/kernel identity disagrees with trial")
         if record.seed != job["seed"] or record.shape.dims != raw["shape"] or record.operator.dtype != job["dtype"]:
             raise ValueError("trial references a different seed, shape or dtype")
@@ -118,6 +121,9 @@ def generate_research_report(output_dir):
         raw_trials = []
         if snapshot is not None:
             item["snapshot"] = snapshot.relative_to(output).as_posix()
+            preflight = snapshot / "preflight.json"
+            item["preflight_failures"] = [c for c in read_json(preflight).get("checks", [])
+                                           if c.get("status") == "failed"] if preflight.exists() else []
             path = snapshot / "trials.json"
             raw_trials = read_json(path) if path.exists() else []
             known = {t["trial_id"] for t in raw_trials}
@@ -176,7 +182,8 @@ def generate_research_report(output_dir):
                     "best_verified_latency_ms": None, "observations_trace": []})
         if job["status"] != "passed" and manifest["status"] != "generated":
             failures.append({"kind": "job", "job_id": job["id"], "status": job["status"],
-                             "result": job.get("result"), "snapshot": item.get("snapshot")})
+                             "result": job.get("result"), "snapshot": item.get("snapshot"),
+                             "preflight_failures": item.get("preflight_failures", [])})
         jobs.append(item)
     groups = defaultdict(list)
     for trial in trials:
@@ -291,6 +298,12 @@ def generate_research_report(output_dir):
         "Shared measurement/JIT caches make execution order affect physical tuning cost. Equal observation allowances do not imply equal cold-start cost. "
         "Failed attempts consume budgets; terminated attempts may have incomplete compile costs (see v2 interrupted evidence). "
         "Source measurement cost describes the original observation; cache hits add lookup/wall overhead, not another compilation.", ""]
+    rejected = [j for j in jobs if j["status"] not in {"passed", "not_run"}]
+    if rejected:
+        lines += [_table(("Case", "Algorithm", "Status", "Diagnostic"),
+            ((j["case"], j["algorithm"], j["status"],
+              "; ".join(c.get("error", {}).get("message", "") for c in j.get("preflight_failures", [])) or
+              canonical_json(j.get("result", {}).get("error", {}))) for j in rejected)), ""]
     for group in comparisons:
         lines += [f"## {_md(group['kernel'])} / {_md(group['dtype'])} / {_md(canonical_json(group['shape']))}", "",
             f"{_md(group['hardware'])}; `{group['measurement_mode']}`; source context `{group['source_context_id']}`.", "",
@@ -301,4 +314,19 @@ def generate_research_report(output_dir):
     lines += ["", "[Summary](summary.json) · [Trials CSV](trials.csv) · [Observation CSV](observations.csv) · "
               "[Failure events](failures.jsonl) · [Frozen experiment](experiment.json) · [Job manifest](research_manifest.json)", ""]
     (output / "report.md").write_text("\n".join(lines), encoding="utf-8")
+    # V2 moves the last live snapshot into attempts/ on the next invocation.
+    # Repair only presentation links in older suite reports, preserving their
+    # observations, manifests and the original v2 journals.
+    for previous in (output / "attempts").glob("*/research_manifest.json"):
+        report = previous.parent / "report.md"
+        if not report.exists():
+            continue
+        text = report.read_text(encoding="utf-8")
+        for job in read_json(previous)["jobs"]:
+            snapshot = snapshot_directory(output, job)
+            if snapshot is not None:
+                old = f"](../../{job['output']}/report.md)"
+                new = f"](../../{snapshot.relative_to(output).as_posix()}/report.md)"
+                text = text.replace(old, new)
+        report.write_text(text, encoding="utf-8")
     return {key: val for key, val in summary.items() if key not in {"jobs", "trials", "comparison_groups"}} | {"report": str(output / "report.md")}

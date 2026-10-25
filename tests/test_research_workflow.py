@@ -7,6 +7,7 @@ import subprocess
 import sys
 import signal
 import time
+import re
 
 import pytest
 
@@ -80,6 +81,9 @@ def test_research_cli_executes_multiple_cases_and_resumes_without_extra_measurem
     assert resumed["cache_hits"] == resumed["observations"] == report["observations"]
     assert list((output / "attempts").glob("*/summary.json"))
     assert list((output / "runs").glob("*/attempts/*/trials.json"))
+    for old in (output / "attempts").glob("*/report.md"):
+        for href in re.findall(r"\[attempt\]\(([^)]+)\)", old.read_text()):
+            assert (old.parent / href).is_file(), href
 
 
 def test_research_dry_run_counts_all_dimensions_without_loading_plugins(tmp_path):
