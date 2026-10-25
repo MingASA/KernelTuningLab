@@ -145,10 +145,69 @@ def prediction_quality(primary,prior,replay):
         'notice':'4 test Shapes x 3 physical replicates; existing searchers also have 10 RNG seeds. Deterministic seed repeats are not additional independent experiments. Surrogate has a random cold start. Prior acquisition cost is conditional historical knowledge, not free cold-start tuning.'}
 
 
+def matched_simple(primary,baseline):
+    core.require_baseline_compatible(primary[0],baseline[0])
+    raw=defaultdict(list);tuned=defaultdict(list);full=defaultdict(list)
+    for r in baseline:
+        if r.correctness_verified: raw[r.shape.id,r.config.id].extend(r.runtime_samples_ms)
+    for r in primary:
+        if not r.correctness_verified: continue
+        full[r.shape.id,r.config.id].extend(r.runtime_samples_ms)
+        if r.config.params['GROUP_M']==1:
+            key=core.KernelConfig({k:v for k,v in r.config.params.items() if k!='GROUP_M'}).id
+            tuned[r.shape.id,key].extend(r.runtime_samples_ms)
+    result=[]
+    for name,_,dims,_ in core.design.SHAPES:
+        shape=core.ShapeSpec(dict(zip(('M','N','K'),dims)));pairs=[]
+        for key,values in raw.items():
+            if key[0]==shape.id and key in tuned:
+                pairs.append({'simple_config_id':key[1],'simple_us':st.median(values)*1000,'t1_group1_us':st.median(tuned[key])*1000})
+        if pairs:
+            result.append({'shape':name,'matched_candidates':len(pairs),'pairs':pairs,
+                'best_simple_us':min(p['simple_us'] for p in pairs),'best_t1_matched_us':min(p['t1_group1_us'] for p in pairs),
+                'best_t1_64_config_us':min(st.median(v)*1000 for (sid,cid),v in full.items() if sid==shape.id)})
+    return {'scope':'Same six tile/warp/stage candidates; T1 GROUP_M=1. Larger T1 64-config best is separate, not attributed solely to implementation changes.','rows':result}
+
+
+def cohort_probe(primary,probe):
+    """Keep the supplementary tile cohort separate from the factorial oracle."""
+    core.require_baseline_compatible(primary[0],probe[0])
+    original=defaultdict(list);extra=defaultdict(list);groups=defaultdict(list)
+    for record in primary:
+        if record.correctness_verified: original[record.shape.id,record.config.id].extend(record.runtime_samples_ms)
+    for record in probe:
+        groups[record.shape.id,record.config.id].append(record)
+        if record.correctness_verified: extra[record.shape.id,record.config.id].extend(record.runtime_samples_ms)
+    rows=[]
+    for name,_,dims,_ in core.design.SHAPES:
+        shape=core.ShapeSpec(dict(zip(('M','N','K'),dims)))
+        candidates={cid:values for (sid,cid),values in extra.items() if sid==shape.id}
+        if not candidates: continue
+        best=min(candidates,key=lambda cid:st.median(candidates[cid]))
+        best_record=groups[shape.id,best][0]
+        primary_best=min(st.median(values) for (sid,cid),values in original.items() if sid==shape.id)
+        rows.append({'shape':name,'dims':dict(shape.dims),'tested_configs':len(candidates),
+            'measurement_replicates':sorted({r.seed for (sid,cid),rr in groups.items() if sid==shape.id for r in rr}),
+            'primary_factorial_best_us':primary_best*1000,'probe_best_us':st.median(candidates[best])*1000,
+            'probe_best_config':dict(best_record.config.params),'probe_over_primary_best':st.median(candidates[best])/primary_best,
+            'best_repeat_quality':core.reference_stability(groups[shape.id,best])})
+    return {'rows':rows,'records':len(probe),'costs':cost_summary(probe),
+        'scope':'Post-primary exploratory six-config cohort includes BLOCK_M=16/64 and BLOCK_N=64. Only four Shapes measured. Never merged into the ten-Shape 64-config primary finite oracle or training prior.'}
+
+
+def repeated_reference(records):
+    groups=defaultdict(list)
+    for record in records:
+        if record.correctness_verified: groups[record.shape.id].append(record)
+    return {'rows':[{'shape':dict(rows[0].shape.dims),'record_ids':[r.id for r in rows],
+        **core.reference_stability(rows)} for rows in groups.values()],
+        'notice':'Targeted independent repeat with the same driver/protocol/input seeds. Original unstable observations are retained; no cherry-picked speedup denominator.'}
+
+
 def main(root,output):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     result={'protocol':'supplemental analyses are stored separately from the primary full matrix','studies':{}}
-    for label in ('correctness','pilot','matrix','library','anchor-before','anchor-after','bf16','simple','w4','online','expert-probe'):
+    for label in ('correctness','pilot','matrix','library','library-repeat','anchor-before','anchor-after','bf16','simple','w4','online','expert-probe'):
         path=root/label/'summary.json'
         if path.is_file():
             summary=core.read_json(path)
@@ -156,6 +215,12 @@ def main(root,output):
             result['studies'][label]['telemetry']=telemetry(root/(label+'-telemetry.jsonl'))
         else:result['studies'][label]={'status':'not_run'}
     if (root/'matrix/summary.json').is_file(): result['primary_costs']=cost_summary(core.current_records(root/'matrix'))
+    if all((root/label/'summary.json').is_file() for label in ('matrix','simple')):
+        core.write(output/'simple-matched.json',matched_simple(core.current_records(root/'matrix'),core.current_records(root/'simple')))
+    if all((root/label/'summary.json').is_file() for label in ('matrix','expert-probe')):
+        core.write(output/'expert-probe.json',cohort_probe(core.current_records(root/'matrix'),core.current_records(root/'expert-probe')))
+    if (root/'library-repeat/summary.json').is_file():
+        result['repeated_library_reference']=repeated_reference(core.current_records(root/'library-repeat'))
     if all((root/label/'summary.json').is_file() for label in ('anchor-before','anchor-after')): result['drift']=drift(root/'anchor-before',root/'anchor-after')
     if (root/'w4/summary.json').is_file():
         w4=w4_study(root/'w4');core.write(output/'w4.json',w4)

@@ -98,10 +98,20 @@ def require_baseline_compatible(target, baseline):
     if (target.hardware.id,target.operator.dtype,target.operator.kind,target.operator.parameters,target.measurement_mode,target.warmup,target.repetitions) != (
         baseline.hardware.id,baseline.operator.dtype,baseline.operator.kind,baseline.operator.parameters,baseline.measurement_mode,baseline.warmup,baseline.repetitions):
         raise ValueError("baseline hardware/semantics/dtype/timing/repetition mismatch")
-    for key in ("python","torch","cuda_runtime","nvidia_driver","runtime_source_sha256","operator_fingerprint"):
+    for key in ("python","torch","triton","cuda_runtime","nvidia_driver","runtime_source_sha256","operator_fingerprint"):
         if target.environment.get(key)!=baseline.environment.get(key): raise ValueError("baseline software/reference mismatch: "+key)
     for key in ("cuda_graph","tolerances","input_contract","measurement_scope","measurement_driver_source_sha256"):
         if target.metadata["protocol"].get(key)!=baseline.metadata["protocol"].get(key): raise ValueError("baseline protocol mismatch: "+key)
+
+
+def reference_stability(records):
+    medians=[r.median_ms for r in records]
+    cv=st.pstdev(medians)/st.mean(medians) if len(medians)>1 else None
+    widths=[(r.quantile_ms(.9)-r.quantile_ms(.1))/r.median_ms for r in records]
+    unstable=cv is None or cv>.05 or max(widths,default=0)>.10
+    return {'status':'unstable_no_speedup_ratio' if unstable else 'point_comparison_only',
+        'run_medians_ms':medians,'run_median_cv':cv,'max_within_run_p10_p90_relative_width':max(widths,default=None),
+        'notice':'Exploratory comparison guard: >5% between-run CV or >10% within-run P10-P90 width suppresses a speedup ratio. Numerical tolerances and raw measurements are unchanged.'}
 
 
 def factorial_effects(configs, latencies, domains):
@@ -459,9 +469,11 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
             for r in baseline_records:
                 if r.shape.id==shape.id and r.correctness_verified: cells[r.config.id].extend(r.runtime_samples_ms)
             if cells:
-                value=min(st.median(v) for v in cells.values())
+                best_id=min(cells,key=lambda key:st.median(cells[key]));value=st.median(cells[best_id])
+                quality=reference_stability([r for r in baseline_records if r.shape.id==shape.id and r.config.id==best_id and r.correctness_verified])
                 baselines.append({"shape":labels[i],"baseline":tag,"latency_ms":value,"t1_best_ms":min(matrix.latencies_ms[i]),
-                    "t1_over_baseline_latency":min(matrix.latencies_ms[i])/value,"baseline_configs":len(cells),
+                    "t1_over_baseline_latency":min(matrix.latencies_ms[i])/value if quality['status']=='point_comparison_only' else None,
+                    'reference_quality':quality,"baseline_configs":len(cells),
                     "notice":"same contiguous dtype/semantic, preallocated output, Graph protocol; independently collected inputs share generator seeds. Library internal dispatch is opaque."})
                 if tag=='simple':
                     matched=[]

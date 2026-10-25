@@ -66,6 +66,9 @@ def generate(directory):
     outputs["matrix.json"]["budgets"][0]["max_wall_time_s"]=600
     outputs['train-only.json']=json.loads(json.dumps(outputs['matrix.json']))
     outputs['train-only.json']['cases']=[c for c in outputs['train-only.json']['cases'] if c['split']=='train']
+    outputs['library-repeat.json']=json.loads(json.dumps(outputs['library.json']))
+    outputs['library-repeat.json']['name']='t1-library-repeat-v1'
+    outputs['library-repeat.json']['cases']=[outputs['library-repeat.json']['cases'][i] for i in (0,2,8)]
     for filename, value in outputs.items():
         (directory / filename).write_text(json.dumps(value,indent=2)+'\n')
     anchors=[configs()[0], configs()[-1]]

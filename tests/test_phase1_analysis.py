@@ -57,6 +57,8 @@ def test_baseline_comparison_rejects_dtype_and_protocol_mixing():
         analysis.require_baseline_compatible(record,replace(record,operator=replace(record.operator,dtype='bfloat16')))
     with pytest.raises(ValueError,match='protocol mismatch'):
         analysis.require_baseline_compatible(record,replace(record,metadata={'protocol':{'cuda_graph':{'calls_per_replay':128}}}))
+    with pytest.raises(ValueError,match='software/reference mismatch: triton'):
+        analysis.require_baseline_compatible(record,replace(record,environment={'triton':'different-compiler'}))
 
 
 def test_l3_research_report_keeps_all_solver_series_and_validates_dispatch():
@@ -83,3 +85,12 @@ def test_prior_freeze_refuses_retrospective_test_access(tmp_path):
     with pytest.raises(ValueError,match='retrospective'):
         analysis.freeze_training_prior(tmp_path,tmp_path/'prior')
     assert not (tmp_path/'prior/training-prior.json').exists()
+
+
+def test_unstable_reference_suppresses_speedup_without_discarding_samples():
+    base=MeasurementRecord(HardwareSpec('unit'),OperatorSpec('gemm'),ShapeSpec({'M':1}),KernelConfig({'tile':1}),
+        RecordStatus.SUCCESS,runtime_samples_ms=(.01,.01,.01),provenance='mock')
+    assert analysis.reference_stability([base,base])['status']=='point_comparison_only'
+    noisy=replace(base,runtime_samples_ms=(.009,.016,.022))
+    assert analysis.reference_stability([base,noisy])['status']=='unstable_no_speedup_ratio'
+    assert noisy.runtime_samples_ms==(.009,.016,.022)

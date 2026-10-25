@@ -36,7 +36,7 @@ def text_sections(blob):
 def archive(root,output):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     wanted={};studies={};wanted_ptx=set()
-    for label in ('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4'):
+    for label in ('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4','simple','expert-probe'):
         if not (root/label/'summary.json').is_file(): continue
         needed=set()
         for record in core.current_records(root/label):
