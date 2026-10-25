@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "kind": "training-only constant config prior",
+  "created_utc": "2026-10-25T17:54:42.915101+00:00",
+  "collection_commit": "97cc869b4ddeb96a4991c56597e6d93c6efd88e1",
+  "collection_run_id": "fe1c3f4c6eb2408eabf14540f01323f9",
+  "test_not_started": true,
+  "test_not_started_scope": "primary matrix suite only; library/resource acceptance studies may share geometry but are excluded from training and search inputs",
+  "training_records": 768,
+  "training_source_wall_s": 765.5903942837031,
+  "source_record_ids_sha256": "7d6738c4dd24124aa6c8d57a093c14579f0d9b2415c423cadd317db3a52e1d82",
+  "ranking": [
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "b28d2a2487f560c2bd4367c3",
+      "training_mean_relative_loss": 0.042598493009154526
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 8
+      },
+      "config_id": "6cc4f237bbbbf30038245977",
+      "training_mean_relative_loss": 0.04279915493119146
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "39a2563d8645155de4ca40ff",
+      "training_mean_relative_loss": 0.07027329831027318
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 8
+      },
+      "config_id": "8092ed6a9646fe0bac850a6d",
+      "training_mean_relative_loss": 0.07324265915743622
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "2da22f5b26592ddacdf9201f",
+      "training_mean_relative_loss": 0.09580955057022167
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 8
+      },
+      "config_id": "8bdabc3fd79491971fac878b",
+      "training_mean_relative_loss": 0.10074347667860062
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 8
+      },
+      "config_id": "5cfec91db407098019380e8d",
+      "training_mean_relative_loss": 0.13110085883271827
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "bff8c7b583f9f82921f68f54",
+      "training_mean_relative_loss": 0.13617738644001443
+    }
+  ],
+  "notice": "Whole-Shape train labels only; no target observations or new GPU execution. Historical acquisition cost is not free.",
+  "ranking_truncated": true,
+  "full_ranking": "artifacts/research-phase1/pretest/training-prior.json"
+}

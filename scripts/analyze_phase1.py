@@ -335,7 +335,8 @@ def freeze_training_prior(directory,output):
     scores=[st.mean(row[j]/min(row) for row in matrix.latencies_ms) for j in range(len(configs))]
     result={'schema_version':1,'kind':'training-only constant config prior','created_utc':datetime.now(timezone.utc).isoformat(),
         'collection_commit':manifest.get('git_commit'),'collection_run_id':manifest.get('run_id'),
-        'test_not_started':True,'training_records':len(records),'training_source_wall_s':sum(r.wall_time_s for r in records),
+        'test_not_started':True,'test_not_started_scope':'primary matrix suite only; library/resource acceptance studies may share geometry but are excluded from training and search inputs',
+        'training_records':len(records),'training_source_wall_s':sum(r.wall_time_s for r in records),
         'source_record_ids_sha256':hashlib.sha256(canonical_json(sorted(r.id for r in records)).encode()).hexdigest(),
         'ranking':[{'config':dict(configs[j].params),'config_id':configs[j].id,'training_mean_relative_loss':scores[j]-1}
             for j in sorted(range(len(configs)),key=lambda j:(scores[j],configs[j].id))],
