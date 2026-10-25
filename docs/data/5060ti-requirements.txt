@@ -1,5 +1,5 @@
 # Physical RTX 5060 Ti environment; Python 3.12.13
-# Install with --index-url https://download.pytorch.org/whl/cu132
+# Install with --extra-index-url https://download.pytorch.org/whl/cu132
 # Then install project via python -m pip install -e .
 contourpy==1.4.0
 cuda-bindings==13.3.1

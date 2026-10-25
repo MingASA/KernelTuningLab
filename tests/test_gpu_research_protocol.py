@@ -87,3 +87,28 @@ def test_quantized_partial_m_group_is_legal(kernel_ref):
     shape = ShapeSpec({"M": 1, "N": 65, "K": 129})
     space = build_effective_space(kernel, hardware, operator, shape, {"GROUP_M": (8,)})
     assert any(space.validate(c, hardware, operator, shape).valid for c in space.iter_configs())
+
+
+@pytest.mark.parametrize("bits,bm,stages,group_size,expected", [
+    (3, 64, 2, 32, 122880), (3, 64, 3, 32, 221184),
+    (4, 16, 3, 32, 149504), (4, 16, 3, 64, 84992),
+])
+def test_fused_quantized_staging_respects_actual_hardware_capacity(bits, bm, stages, group_size, expected):
+    from kernel_tuning_lab.assets import SpaceContext
+    from kernel_tuning_lab.builtin_assets.quantized import _gemm_constraint, _pipeline_constraint
+    config = KernelConfig({"BLOCK_M": bm, "BLOCK_N": 128, "BLOCK_K": 64, "num_warps": 8,
+                           "num_stages": stages, "GROUP_M": 1, "SPLIT_K": 1})
+    operator = OperatorSpec(f"w{bits}a16_gemm", kind=f"w{bits}a16_gemm", dtype="bfloat16",
+                            parameters={"group_size": group_size})
+    shape = ShapeSpec({"M": 2, "N": 7, "K": 65})
+    small = HardwareSpec("5060ti", architecture="sm_120", smem_per_block=101376)
+    hopper = HardwareSpec("H200", architecture="sm_90", smem_per_block=232448)
+    reason = _gemm_constraint(config, SpaceContext(small, operator, shape))
+    if expected > small.smem_per_block:
+        assert reason and "staging" in reason
+    else:
+        assert reason is None
+    assert _gemm_constraint(config, SpaceContext(hopper, operator, shape)) is None
+    # The materialized dense pipeline has no staged integer unpack buffers.
+    pipeline = KernelConfig({**config.params, "DEQUANT_BLOCK_SIZE": 512})
+    assert _pipeline_constraint(pipeline, SpaceContext(small, operator, shape)) is None

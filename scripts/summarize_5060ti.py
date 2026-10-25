@@ -28,7 +28,7 @@ def main(root, output):
                "records": len(unique), "statuses": dict(Counter(r.status.value for r in unique.values())),
                "measurement_modes": dict(Counter(r.measurement_mode for r in unique.values())),
                "environments": list({json.dumps(r.environment, sort_keys=True): r.environment for r in unique.values()}.values()),
-               "suites": {}, "coverage": [], "l2": [], "l3": None}
+               "suites": {}, "coverage": [], "l2": [], "l3": None, "representative": []}
     for p in root.glob("*/suite_summary.json"):
         s = read(p)
         summary["suites"][p.parent.name] = {k: s.get(k) for k in (
@@ -65,6 +65,21 @@ def main(root, output):
                 "failed_measurements": sum(not r.successful for r in rows),
                 "source_compile_ms": sum(r.compile_time_ms for r in rows),
                 "source_wall_time_s": sum(r.wall_time_s for r in rows)})
+    for p in sorted((root / "representative").glob("runs/*/trials.json")):
+        for trial in read(p):
+            rows = [unique[rid] for rid in trial["record_ids"]]
+            best = min((r for r in rows if r.correctness_verified), key=lambda r: r.median_ms, default=None)
+            summary["representative"].append({"experiment": p.parent.name,
+                **{k: trial[k] for k in ("kernel_ref", "shape", "dtype", "seed", "observations", "evaluations", "cache_hits", "wall_time_s")},
+                "samples": [{"config": r.config.params, "median_us": r.median_ms*1000 if r.successful else None,
+                    "p10_us": r.quantile_ms(0.1)*1000 if r.successful else None,
+                    "p90_us": r.quantile_ms(0.9)*1000 if r.successful else None,
+                    "cv": statistics.stdev(r.runtime_samples_ms)/statistics.mean(r.runtime_samples_ms) if r.successful else None,
+                    "compile_ms": r.compile_time_ms, "status": r.status.value,
+                    "workspace_bytes": r.metadata.get("correctness", {}).get("execution", {}).get("workspace_bytes"),
+                    "steps": r.metadata.get("correctness", {}).get("execution", {}).get("steps")} for r in rows],
+                "best_verified_config": best.config.params if best else None,
+                "best_verified_latency_us": best.median_ms*1000 if best else None})
     l3_rows = [r for p, rows in journals.items() if p.is_relative_to(root / "l3") for r in rows
                if r.seed in (7, 19, 31) and r.correctness_verified]
     if l3_rows:
@@ -87,6 +102,10 @@ def main(root, output):
             store.export_jsonl(exchange / "measurements.jsonl")
         returned = records(exchange / "measurements.jsonl")
         assert {r.id for r in returned} == {r.id for r in l3_rows}
+        with ExperimentStore(exchange / "imported.sqlite") as imported:
+            imported.import_jsonl(exchange / "measurements.jsonl")
+            imported.export_jsonl(exchange / "imported.jsonl")
+        assert {r.id for r in records(exchange / "imported.jsonl")} == {r.id for r in l3_rows}
         summary["l3"]["roundtrip_identical_record_ids"] = True
     timing = root / "timing-control-graph" / "timing.json"
     if timing.is_file():

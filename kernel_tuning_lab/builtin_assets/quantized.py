@@ -159,7 +159,7 @@ def _dequant_constraint(config, hardware, operator, shape):
     return None
 
 
-def _gemm_constraint(config, context):
+def _gemm_constraint(config, context, *, fused=True):
     hardware, operator, shape = context.hardware, context.operator, context.shape
     reason = _cuda_supports(hardware, operator, shape) or _thread_error(config, hardware)
     if reason:
@@ -192,13 +192,24 @@ def _gemm_constraint(config, context):
         if split * shape.get("M") * shape.get("N") > _MAX_INDEX:
             return "Split-K FP32 partials exceed signed 32-bit indexing"
     estimate = (bm * bk + bk * bn) * 2 * stages
+    if fused:
+        # The fused loop pipelines integer packed-word and zero-point loads,
+        # not just the final A16 dot operands. W3 loads a second packed word.
+        # Physical sm120/Triton 3.7 resource probes agree with this layout;
+        # retain the compiler resource check for layout/version differences.
+        operands = 2 * (bm * bk + bk * bn)
+        group_size = _group_size(operator)
+        zero_elements = bn if group_size >= bk and group_size % bk == 0 else bk * bn
+        raw_loads = 4 * (bk * bn * (2 if _BITS[operator.kind] == 3 else 1) + zero_elements)
+        iterations = (shape.get("K") + bk * split - 1) // (bk * split)
+        estimate = operands + (stages - 1) * raw_loads if iterations > 1 else operands
     if hardware.smem_per_block and estimate > hardware.smem_per_block:
-        return f"staged A16 tile estimate {estimate} exceeds {hardware.smem_per_block} shared-memory bytes"
+        return f"{'fused integer staging' if fused else 'staged A16 tile'} estimate {estimate} exceeds {hardware.smem_per_block} shared-memory bytes"
     return None
 
 
 def _pipeline_constraint(config, context):
-    reason = _gemm_constraint(config, context)
+    reason = _gemm_constraint(config, context, fused=False)
     if reason:
         return reason
     shape = context.shape
