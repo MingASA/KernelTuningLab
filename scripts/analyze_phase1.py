@@ -98,7 +98,7 @@ def require_baseline_compatible(target, baseline):
         raise ValueError("baseline hardware/semantics/dtype/timing/repetition mismatch")
     for key in ("python","torch","cuda_runtime","nvidia_driver","runtime_source_sha256","operator_fingerprint"):
         if target.environment.get(key)!=baseline.environment.get(key): raise ValueError("baseline software/reference mismatch: "+key)
-    for key in ("cuda_graph","tolerances","input_contract","measurement_scope"):
+    for key in ("cuda_graph","tolerances","input_contract","measurement_scope","measurement_driver_source_sha256"):
         if target.metadata["protocol"].get(key)!=baseline.metadata["protocol"].get(key): raise ValueError("baseline protocol mismatch: "+key)
 
 
@@ -322,6 +322,8 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
             raise ValueError("dataset version contains unrelated records")
         store.export_jsonl(dataset/"measurements.jsonl")
     write(output/"dataset-manifest.json",{"schema_version":1,"dataset_id":dataset_id,"records":len(records),
+        "collection_git_commit":read_json(Path(directory)/"research_manifest.json").get("git_commit"),
+        "collection_run_id":read_json(Path(directory)/"research_manifest.json").get("run_id"),
         "sqlite":(dataset/"measurements.sqlite").relative_to(output).as_posix(),
         "jsonl":(dataset/"measurements.jsonl").relative_to(output).as_posix(),
         "selection":"only current v2 observed IDs; validation excluded; original records unmodified"})
