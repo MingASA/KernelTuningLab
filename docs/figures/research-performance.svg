@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="246" viewBox="0 0 1080 246" role="img" aria-labelledby="title desc">
+<title id="title">Observed best: gemm / triton/gemm@1.0.0 / float16</title>
+<desc id="desc">NVIDIA GeForce RTX 5060 Ti / cuda_graph_events_full_flow_amortized / {&quot;K&quot;:65,&quot;M&quot;:37,&quot;N&quot;:71} / budget={&quot;max_evaluations&quot;:2,&quot;max_wall_time_s&quot;:30}; valid seed counts shown</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Observed best: gemm / triton/gemm@1.0.0 / float16</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >NVIDIA GeForce RTX 5060 Ti / cuda_graph_events_full_flow_amortized / {&quot;K&quot;:65,&quot;M&quot;:37,&quot;N&quot;:71} / budget={&quot;max_evaluations&quot;:2,&quot;max_wall_time_s&quot;:30}; valid seed coun</text>
+<g><title>random@1.0.0 [8d6bd7] (n=2/2)</title>
+<text x="325.00" y="111.00" font-size="11" fill="#334155" text-anchor="end" >random@1.0.0 [8d6bd7] (n=2/2)</text>
+<rect x="335" y="93.0" width="635.000" height="22" rx="3" fill="#2563eb"/>
+<text x="978.00" y="110.00" font-size="11" fill="#334155" text-anchor="start" >1.8</text>
+</g>
+<g><title>example/stride@1.0.0 [dee698] (n=2/2)</title>
+<text x="325.00" y="143.00" font-size="11" fill="#334155" text-anchor="end" >example/stride@1.0.0 [dee698] (n=2/2)</text>
+<rect x="335" y="125.0" width="466.216" height="22" rx="3" fill="#d97706"/>
+<text x="809.22" y="142.00" font-size="11" fill="#334155" text-anchor="start" >1.32</text>
+</g>
+<g><title>heuristic@1.0.0 [67825d] (n=2/2)</title>
+<text x="325.00" y="175.00" font-size="11" fill="#334155" text-anchor="end" >heuristic@1.0.0 [67825d] (n=2/2)</text>
+<rect x="335" y="157.0" width="466.216" height="22" rx="3" fill="#059669"/>
+<text x="809.22" y="174.00" font-size="11" fill="#334155" text-anchor="start" >1.32</text>
+</g>
+<text x="652.50" y="231.00" font-size="13" fill="#334155" text-anchor="middle" >Median best verified latency across successful seeds (us)</text>
+</g></svg>

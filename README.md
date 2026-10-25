@@ -4,6 +4,19 @@
 
 Python >= 3.10，核心包无第三方运行依赖；Mock、搜索、Policy、SQLite、L3 和 SVG 报告均可在 CPU 上运行。
 
+## 搜索算法研究：插件 + 配置 + 一条命令
+
+```bash
+# 算子/实现 × Shape × dtype × seed × 预算，与配置中的已有算法对照
+ktlab research --spec examples/research/cuda.json --output artifacts/my-study
+# 无 GPU 的完整真实 CPU 工作流
+ktlab research --spec examples/research/cpu.json --output artifacts/cpu-study
+```
+
+新增算法只提交 SDK 插件，在 JSON 中与 Random/Heuristic 等基线并列选择，无需改核心注册或报告代码。入口自动生成搜索/墙钟曲线、已验证性能图、CSV、成本和失败分析；不适用、缺设备及失败分别记录，各算法独立监督并复用兼容 v2 缓存。相同命令恢复中断，`--write-only` 先检查矩阵与预算，`--report-only` 可在无 GPU 环境重建已有报告。
+
+完整配置、独立插件、产物及验收数据见 **[RESEARCH_WORKFLOW.md](docs/RESEARCH_WORKFLOW.md)**。原 5060 Ti 专用脚本保留用于历史实验复现，新研究优先使用通用入口。
+
 ## 新 Kernel 与算法：配置驱动接入
 
 新贡献者从公开 SDK 和可运行模板开始，无需阅读或修改平台底层：

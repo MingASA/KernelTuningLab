@@ -1,4 +1,7 @@
-"""Build compact, path-free evidence and figures from the physical journals."""
+"""Historical 5060 Ti evidence summary; new studies use ``ktlab research``.
+
+The generic workflow/report has no dependency on this original acceptance tree.
+"""
 
 import argparse
 from collections import Counter, defaultdict

@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "kind": "research_workflow_acceptance",
+  "recorded_date": "2026-10-25",
+  "branch": "gpu/5060ti-validation",
+  "base_commit": "72619d30c8c0f67af81e09cb5db1f0954f517527",
+  "implementation_commits": [
+    "47f2f7bd9d9829ed30536b0e7e32e68dddb6aa70",
+    "aa05678bec815408ccccf831c5522be9c657e385",
+    "5d9270c364f63f5bf4e752798ccc44378483c10e"
+  ],
+  "evidence_notice": "Run commits are execution-time HEADs. Kernel/operator/runtime/algorithm source fingerprints and effective protocols live in the original v2 journals. Later presentation fixes do not claim new GPU execution. This compact summary contains no absolute workspace or login paths.",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.13.0+cu132",
+    "triton": "3.7.1",
+    "cuda_runtime": "13.2",
+    "nvidia_driver": "616.92",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "architecture": "sm_120",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "runtime": "cuda",
+    "torch_compiled_arches": [
+      "sm_75",
+      "sm_80",
+      "sm_86",
+      "sm_90",
+      "sm_100",
+      "sm_120"
+    ],
+    "runtime_source_sha256": "4ed5e2bd3c41de458d1edb380090f3af79198a30ccd986a6cbb2f8f735f01607"
+  },
+  "hardware": {
+    "name": "NVIDIA GeForce RTX 5060 Ti",
+    "architecture": "sm_120",
+    "memory_bytes": 17074421760,
+    "l2_bytes": 33554432,
+    "sm_count": 36,
+    "smem_per_block": 101376
+  },
+  "plugin": {
+    "source": "examples/research/stride_search.py",
+    "sha256": "d68c5ebac2e5f8570fee1bdcd3ac1714ecc3beb3fc8399a3ee6ece837df2fb7d",
+    "asset": "example/stride@1.0.0",
+    "platform_core_registration_required": false
+  },
+  "primary_spec": "examples/research/cuda.json",
+  "primary_dimensions": {
+    "operators": [
+      "gemm",
+      "w4a16_gemm"
+    ],
+    "kernels": [
+      "triton/gemm@1.0.0",
+      "triton/w4a16_gemm@1.0.0",
+      "triton_pipeline/w4a16_gemm@1.0.0"
+    ],
+    "dtypes": [
+      "float16",
+      "bfloat16"
+    ],
+    "seeds": [
+      7,
+      19
+    ],
+    "budgets": [
+      {
+        "max_evaluations": 2,
+        "max_wall_time_s": 30
+      },
+      {
+        "max_evaluations": 4,
+        "max_wall_time_s": 30
+      }
+    ],
+    "shapes_by_case": {
+      "gemm": [
+        {
+          "M": 37,
+          "N": 71,
+          "K": 65
+        },
+        {
+          "M": 128,
+          "N": 256,
+          "K": 128
+        }
+      ],
+      "quantized": [
+        {
+          "M": 3,
+          "N": 35,
+          "K": 65
+        },
+        {
+          "M": 32,
+          "N": 64,
+          "K": 128
+        }
+      ]
+    },
+    "configurations_per_context": 4,
+    "warmup": 3,
+    "repetitions": 9,
+    "graph_calls_per_replay": 512
+  },
+  "experiments": {
+    "gpu": {
+      "directory": "artifacts/research-workflow/gpu",
+      "run_id": "a7488efdbc7f4d389eadda428b10ae6f",
+      "git_commit": "aa05678bec815408ccccf831c5522be9c657e385",
+      "status": "passed",
+      "exit_code": 0,
+      "planned": {
+        "jobs": 72,
+        "groups": 6,
+        "trials": 144,
+        "max_observations": 432,
+        "max_validation_evaluations": 144,
+        "serial_wall_allowance_s": 11160
+      },
+      "job_statuses": {
+        "passed": 72
+      },
+      "trial_count": 144,
+      "executed_trial_count": 144,
+      "trial_statuses": {
+        "passed": 144
+      },
+      "observations": 432,
+      "research_evaluations": 68,
+      "cache_hits": 364,
+      "validation_evaluations": 144,
+      "job_wall_time_s": 320.17053276178194,
+      "validation_wall_time_s": 145.61271140055032,
+      "known_physical_compile_time_ms": 5991.856699809432,
+      "unknown_compile_cost_attempts": 0,
+      "physical_compile_time_ms": 5991.856699809432,
+      "physical_measurement_wall_time_s": 8.69316039205296,
+      "cost_trace_complete": true,
+      "physical_gpu_validated": true,
+      "gpu_verified_jobs": 72,
+      "comparison_contexts": 12,
+      "svg_files": 122,
+      "measurement_modes": [
+        "cuda_graph_events_full_flow_amortized"
+      ]
+    },
+    "gpu-cache-probe": {
+      "directory": "artifacts/research-workflow/gpu-cache-probe",
+      "run_id": "389499929b964f1b89b02059aed59d9f",
+      "git_commit": "aa05678bec815408ccccf831c5522be9c657e385",
+      "status": "passed",
+      "exit_code": 0,
+      "planned": {
+        "jobs": 3,
+        "groups": 1,
+        "trials": 6,
+        "max_observations": 24,
+        "max_validation_evaluations": 6,
+        "serial_wall_allowance_s": 465
+      },
+      "job_statuses": {
+        "passed": 3
+      },
+      "trial_count": 6,
+      "executed_trial_count": 6,
+      "trial_statuses": {
+        "passed": 6
+      },
+      "observations": 24,
+      "research_evaluations": 0,
+      "cache_hits": 24,
+      "validation_evaluations": 6,
+      "job_wall_time_s": 12.841919782978948,
+      "validation_wall_time_s": 5.306854595080949,
+      "known_physical_compile_time_ms": 0,
+      "unknown_compile_cost_attempts": 0,
+      "physical_compile_time_ms": 0,
+      "physical_measurement_wall_time_s": 0,
+      "cost_trace_complete": true,
+      "physical_gpu_validated": true,
+      "gpu_verified_jobs": 3,
+      "comparison_contexts": 2,
+      "svg_files": 8,
+      "measurement_modes": [
+        "cuda_graph_events_full_flow_amortized"
+      ]
+    },
+    "gpu-diagnostics": {
+      "directory": "artifacts/research-workflow/gpu-diagnostics",
+      "run_id": "c74a725f9fa34249b539f99099729c18",
+      "git_commit": "aa05678bec815408ccccf831c5522be9c657e385",
+      "status": "failed",
+      "exit_code": 2,
+      "planned": {
+        "jobs": 9,
+        "groups": 3,
+        "trials": 12,
+        "max_observations": 24,
+        "max_validation_evaluations": 18,
+        "serial_wall_allowance_s": 1215
+      },
+      "job_statuses": {
+        "passed": 4,
+        "failed": 2,
+        "not_applicable": 3
+      },
+      "trial_count": 12,
+      "executed_trial_count": 6,
+      "trial_statuses": {
+        "passed": 6,
+        "not_run": 3,
+        "not_applicable": 3
+      },
+      "observations": 12,
+      "research_evaluations": 9,
+      "cache_hits": 3,
+      "validation_evaluations": 8,
+      "job_wall_time_s": 21.23033650207799,
+      "validation_wall_time_s": 6.596581308054738,
+      "known_physical_compile_time_ms": 66.00649590836838,
+      "unknown_compile_cost_attempts": 0,
+      "physical_compile_time_ms": 66.00649590836838,
+      "physical_measurement_wall_time_s": 0.2695712660206482,
+      "cost_trace_complete": true,
+      "physical_gpu_validated": false,
+      "gpu_verified_jobs": 4,
+      "comparison_contexts": 3,
+      "svg_files": 11,
+      "measurement_modes": [
+        "cuda_graph_events_full_flow_amortized",
+        "cuda_synchronized_full_flow_perf_counter"
+      ]
+    },
+    "gpu-options": {
+      "directory": "artifacts/research-workflow/gpu-options",
+      "run_id": "0580cd8b2b7f4959a68c6dc06e5d4f0f",
+      "git_commit": "5d9270c364f63f5bf4e752798ccc44378483c10e",
+      "status": "passed",
+      "exit_code": 0,
+      "planned": {
+        "jobs": 6,
+        "groups": 1,
+        "trials": 6,
+        "max_observations": 18,
+        "max_validation_evaluations": 12,
+        "serial_wall_allowance_s": 750
+      },
+      "job_statuses": {
+        "passed": 6
+      },
+      "trial_count": 6,
+      "executed_trial_count": 6,
+      "trial_statuses": {
+        "passed": 6
+      },
+      "observations": 18,
+      "research_evaluations": 4,
+      "cache_hits": 14,
+      "validation_evaluations": 12,
+      "job_wall_time_s": 23.64527918706881,
+      "validation_wall_time_s": 9.94097163999686,
+      "known_physical_compile_time_ms": 42.25870000664145,
+      "unknown_compile_cost_attempts": 0,
+      "physical_compile_time_ms": 42.25870000664145,
+      "physical_measurement_wall_time_s": 0.15153434599051252,
+      "cost_trace_complete": true,
+      "physical_gpu_validated": true,
+      "gpu_verified_jobs": 6,
+      "comparison_contexts": 1,
+      "svg_files": 8,
+      "measurement_modes": [
+        "cuda_graph_events_full_flow_amortized"
+      ]
+    }
+  },
+  "interruption": {
+    "directory": "artifacts/research-workflow/gpu/attempts/215f13f9be134fb6818c13316fae820a",
+    "run_id": "215f13f9be134fb6818c13316fae820a",
+    "git_commit": "47f2f7bd9d9829ed30536b0e7e32e68dddb6aa70",
+    "status": "interrupted",
+    "job_statuses": {
+      "passed": 19,
+      "interrupted": 1,
+      "not_run": 52
+    },
+    "observations": 112,
+    "research_evaluations": 28,
+    "cache_hits": 84,
+    "validation_evaluations": 39,
+    "incomplete_attempts": 1,
+    "cost_trace_complete": false,
+    "note": "Intentional interruption while repairing the first report regression. All original evidence retained; archived legacy compile-cost field is known cost only, not a complete total. Resume revalidated every requested job."
+  },
+  "tests": {
+    "environment": {
+      "python": "3.10.12",
+      "torch_installed": false,
+      "triton_installed": false,
+      "matplotlib_installed": false
+    },
+    "command": "CUDA_VISIBLE_DEVICES='' artifacts/5060ti/cpu-only-venv/bin/python -m pytest -q",
+    "passed": 322,
+    "skipped": 9,
+    "failed": 0,
+    "workflow_tests": 17,
+    "log": "artifacts/research-workflow/cpu-only-release-complete.log"
+  },
+  "audit": {
+    "status": "passed",
+    "scope": "read-only stored evidence audit; no new GPU measurement",
+    "unique_primary_research_records": 96,
+    "distinct_algorithm_trajectory_groups": 48,
+    "total_trajectory_groups": 48,
+    "cached_probe_record_ids_match": true,
+    "current_svg_files_checked": 149,
+    "sqlite_journals_checked": 19,
+    "current_and_archived_report_links_exist": true,
+    "timing_scopes_kept_separate": true,
+    "failed_algorithms_retained_in_seed_denominators": true,
+    "gpu_option_variants_distinct": true
+  },
+  "archival": {
+    "raw_directory": "artifacts/research-workflow",
+    "archive": "artifacts/research-workflow-evidence-20261025.tar.gz",
+    "sha256_sidecar": "artifacts/research-workflow-evidence-20261025.tar.gz.sha256",
+    "note": "Raw artifacts are ignored by Git; compact evidence and selected SVGs are versioned. Archive includes frozen specs, logs, exact traces, SQLite journals, source patch and final repository state."
+  },
+  "limits": [
+    "Workflow acceptance uses small, four-config spaces; no algorithm superiority or production-scale claim.",
+    "Shared source/JIT/measurement caches prevent interpreting observed new costs as independent cold-start algorithm costs.",
+    "Graph replay and synchronized full-call latencies are separate measurement scopes.",
+    "Report-only reads stored GPU evidence and performs no new GPU measurement.",
+    "Only the requested original CUDA implementations/dtypes/Shapes are covered; Hopper hardware and other configurations require independent acceptance.",
+    "Per-study serial execution and output leases do not schedule unrelated output directories on the same GPU."
+  ],
+  "cpu_example": {
+    "spec": "examples/research/cpu.json",
+    "directory": "artifacts/research-workflow/cpu-example-release",
+    "run_id": "603880b1b8a7435f9fe310c73e647b4b",
+    "git_commit": "5d9270c364f63f5bf4e752798ccc44378483c10e",
+    "status": "passed",
+    "job_statuses": {
+      "passed": 16
+    },
+    "trial_count": 24,
+    "observations": 60,
+    "research_evaluations": 18,
+    "cache_hits": 42,
+    "validation_evaluations": 32,
+    "physical_gpu_validated": false
+  }
+}

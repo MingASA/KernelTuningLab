@@ -17,6 +17,11 @@ ktlab run --spec my_algorithm/experiment.json --output artifacts/my-algorithm-ru
 
 模板生成 `assets.py`、`experiment.json` 和简短说明，初始实现可直接执行。Kernel 模板复用已工作的实现、输入服务和默认空间；替换 `build` 后继续运行同一套检查。算法模板提供满足预算、历史和合法性约束的有限遍历起点。目标文件已存在时拒绝覆盖。
 
+研究多个算子/实现、Shape、dtype、seed、预算并与基线比较时，直接使用
+`ktlab research --spec study.json --output artifacts/study`。搜索插件仍使用本 SDK，
+无需接入新的 Runner 或存储；通用矩阵配置、自动图表、成本/失败分析和断点恢复见
+[RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md)。
+
 CUDA 模板使用 `--runtime cuda`；在有对应依赖和 GPU 的机器上执行。无 CUDA 时返回待验证状态。5060 Ti 安装步骤见 [RTX5060TI.md](RTX5060TI.md)。
 
 不使用模板也可以。独立文件只需 `from kernel_tuning_lab.sdk import ...`，并导出：

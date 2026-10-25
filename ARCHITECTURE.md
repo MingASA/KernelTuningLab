@@ -43,6 +43,7 @@ flowchart TD
 | `kernel_runtime.py`, `operator_library.py`, `claims.py` | Shared operator services, full-flow execution and scoped correctness evidence |
 | `asset_experiments.py`, `asset_context.py` | Strict v2 asset-selection experiments and resolved execution cases |
 | `asset_validation.py`, `asset_search.py`, `asset_runner.py` | Bounded acceptance, guarded search, supervised deadlines and archives |
+| `research.py`, `analysis/research.py` | Expand multi-case/dtype/seed/budget comparisons into serial v2 jobs; isolate algorithm failures, retain shared journals and report exact revealed observations/costs by measurement context |
 | `scaffolding.py` | Working SDK-only Kernel/algorithm templates and their experiment configuration |
 | `builtin_assets/`, `quantization.py` | Auto-discovered quantized, attention and MoE semantics, bit packing and real implementations |
 | `proposal_suite.py` | Dynamic operator matrix, small/production specifications and strict suite archives |

@@ -1,5 +1,7 @@
 """Small, serial physical experiments using the existing v2 runner and journal.
 
+Historical 5060 Ti reproduction. New studies should use ``ktlab research`` with
+examples/research/ and docs/RESEARCH_WORKFLOW.md instead of editing this driver.
 Generate with --write-only; run one family at a time on an otherwise idle GPU.
 """
 

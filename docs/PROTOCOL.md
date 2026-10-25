@@ -14,6 +14,32 @@ The supervisor freezes the parsed experiment before worker launch, holds an excl
 
 Version/content/scope-bound submitter declarations can skip numerical comparisons, while output structure and finite values are still checked. Such observations remain `declared` with `correctness_verified=false`. Direct comparison records `verified` plus CPU/GPU evidence. Default verified reports, Replay and L3 exclude declared observations. Persisted matching correctness counterexamples revoke affected declarations and are restored from the journal before the next acceptance pass.
 
+## Multi-case online research
+
+`ktlab research` expands a strict `kind=research` configuration into original v2
+jobs, serially across algorithms, Kernels, dtypes, seeds and budgets. Each job
+keeps its own supervised preflight/acceptance/trials. A compatible shared v2
+journal is retained for each named operator/Kernel/dtype group; the existing
+cache key, not the group directory name, determines reuse. Repeating the command
+revalidates the current source/environment and replays suggestions using that
+cache. No previous completion flag bypasses validation.
+
+Online trial traces record exact revealed record IDs, cache-hit flags, failed
+observations, elapsed trial time, source costs and new physical costs. Source
+costs are not charged again for cache hits. Compilation is part of physical
+measurement wall time, not an additional additive cost. Unfinished attempts keep
+known elapsed time; unknown compile costs remain unknown. Preflight, validation
+and process-startup/job costs are separate from the candidate observation budget.
+
+Reports read only current-attempt trial IDs, including explicitly revealed cached
+records. They never scan an accumulated journal for an unobserved best. Curve and
+performance cohorts preserve hardware/operator/implementation/Shape/dtype,
+source/environment, measurement scope, repetitions/warmup, Graph batch size and
+space/protocol identities. Missing/failed selectors remain in requested-seed
+denominators; no 0 latency or global optimum is inferred. Algorithm source and
+options are also kept distinct. No relative performance is pooled across
+incompatible implementations or timing scopes. See [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md).
+
 ## Dataset and protocol identity
 
 ### Explicit v2 CUDA Graph timing

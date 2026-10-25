@@ -14,6 +14,7 @@
 - Markdown/SVG and optional PNG reports: heatmaps, regret-budget, transfer, matched sensitivity, K-loss, failure and coverage statistics.
 - Kernel Tuner import and full pinned Benchmark Hub catalogue discovery, hash-verified downloads and whole-file normalization. Two complete caches totaling 15,492 upstream records were actually imported; a 24-record excerpt and MIT notice are bundled. Unknown correctness remains unknown.
 - CLI, portable experiment examples, runnable Mock Demo and core regressions.
+- One-command online research comparisons from an SDK plugin and a matrix configuration, reusing supervised v2 jobs/journals across operators, implementations, dtypes, seeds and budgets. Automatic scope-isolated search/performance/cost/failure reports, exact revealed-record traces and resume are documented in [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md).
 - Runnable scale exercise with 139,968 candidates, 24 budgeted online trials and a 128×64 synthetic L3 problem; million-candidate regression cases prohibit eager enumeration.
 
 ## Validation boundary
@@ -24,6 +25,15 @@ observations and 140 acceptance attempts). Actual compilation, numerical behavio
 and timing were exercised. First failures and sampled coverage are retained in
 [5060TI_RESULTS.md](5060TI_RESULTS.md). **H200, H800 and RTX 4090 still require
 independent physical validation.** CPU paths continue to require no CUDA packages.
+
+The generic research workflow was separately exercised on the same physical GPU:
+72/72 jobs, 144 trials and 432 verified observations across GEMM and fused/pipeline
+W4A16, with an external SDK algorithm versus Random/Heuristic, two dtypes, two
+seeds and two budgets. Interruption recovery, a fully cached replay, deliberately
+failed/inapplicable jobs, and separate Graph/full-call reporting also ran.
+This is workflow acceptance on a four-config space, not a claim of algorithm
+superiority or exhaustive operator coverage; compact evidence is in
+[research-workflow-validation.json](data/research-workflow-validation.json).
 
 The original presentation mentions previous RTX 4090/H200 measurements but supplies no raw measurement table in this repository. Those figures were read for project context and are not represented as newly reproduced results.
 
