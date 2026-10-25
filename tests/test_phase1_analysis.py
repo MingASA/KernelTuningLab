@@ -75,3 +75,11 @@ def test_l3_research_report_keeps_all_solver_series_and_validates_dispatch():
             rows=[r for r in result['results'] if r['weights']==weight and r['k']==k]
             assert {r['method'] for r in rows}=={'greedy','local_swap','exact'}
             assert all(r['dispatch_legality'].startswith('passed') for r in rows)
+
+
+def test_prior_freeze_refuses_retrospective_test_access(tmp_path):
+    import json
+    (tmp_path/'research_manifest.json').write_text(json.dumps({'jobs':[{'status':'running','experiment':{'split':'test'}}]}))
+    with pytest.raises(ValueError,match='retrospective'):
+        analysis.freeze_training_prior(tmp_path,tmp_path/'prior')
+    assert not (tmp_path/'prior/training-prior.json').exists()

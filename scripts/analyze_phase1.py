@@ -317,6 +317,15 @@ def joint_study(matrix,records):
                     # Explicit, charged completion before deployment selection.
                     for i in range(count):
                         for j in candidates: reveal(i,j)
+                    # Spend spare reserved cells on random, fully validated
+                    # common candidates. Do not handicap this baseline by
+                    # leaving a large unused completion allowance.
+                    remainder=[j for j in range(n) if j not in candidates];rng.shuffle(remainder)
+                    for j in remainder:
+                        needed=sum((i,j) not in seen for i in range(count))
+                        if len(seen)+needed<=budget:
+                            for i in range(count): reveal(i,j)
+                            candidates.append(j)
                 else:
                     order=prior if method=="training_prior_common_panel" else rng.sample(range(n),n)
                     candidates=order[:budget//count]
@@ -335,7 +344,7 @@ def joint_study(matrix,records):
                 results[-1].update(known_source_wall_s=sum(known),source_cost_coverage=len(known)/len(seen),new_gpu_measurements=0)
     return {"kind":"offline simulated acquisition over real measured finite matrix; no new GPU execution",
         "target_shapes":[labels[i] for i in target],"training_shapes":[labels[i] for i in train],"results":results,
-        "notice":"Equal upper allowances, actual reveals reported. Independent L2 reserves up to 16 completion cells. Common panels can spend more cells exploring configs shared by all target Shapes. Prior uses training Shapes only; all target measurements are charged."}
+        "notice":"Equal upper allowances, actual reveals reported. Independent random L2 reserves up to 16 completion cells and spends spare cells on validated random common candidates. Common panels directly explore configs shared by all target Shapes. Prior uses training Shapes only; all target measurements are charged."}
 
 
 def freeze_training_prior(directory,output):

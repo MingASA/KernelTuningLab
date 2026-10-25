@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import struct
 import subprocess
@@ -34,13 +35,15 @@ def text_sections(blob):
 
 def archive(root,output):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
-    wanted={};studies={}
+    wanted={};studies={};wanted_ptx=set()
     for label in ('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4'):
         if not (root/label/'summary.json').is_file(): continue
         needed=set()
         for record in core.current_records(root/label):
             resources=record.metadata.get('correctness',{}).get('execution',{}).get('compiled_resources',{})
             for resource in resources.values():
+                ptx=resource.get('artifacts',{}).get('ptx')
+                if ptx:wanted_ptx.add(ptx['sha256'])
                 artifact=resource.get('artifacts',{}).get('cubin')
                 if artifact:
                     identity=artifact['sha256'];wanted[identity]=artifact['bytes'];needed.add(identity)
@@ -58,6 +61,15 @@ def archive(root,output):
         sections=text_sections(blob)
         matched[identity]={'bytes':len(blob),'file':destination.name,'text_sections':sections,
             'text_bytes':sum(s['bytes'] for s in sections) if sections is not None else None}
+        ptx_path=path.with_suffix('.ptx')
+        if ptx_path.is_file():
+            ptx_blob=ptx_path.read_bytes();ptx_identity=hashlib.sha256(ptx_blob).hexdigest()
+            if ptx_identity in wanted_ptx:
+                ptx_text=ptx_blob.decode('utf-8','replace');ptx_target=re.search(r'(?m)^\s*\.target\s+([^\r\n]+)',ptx_text)
+                ptx_file=output/(ptx_identity+'.ptx');ptx_file.write_bytes(ptx_blob)
+                matched[identity].update(ptx_sha256=ptx_identity,ptx_file=ptx_file.name,
+                    ptx_target=ptx_target.group(1) if ptx_target else None,
+                    tensor_core_instructions=sorted(set(re.findall(r'\b(?:mma\.sync[\w.]*|wgmma\.[\w.]+|tcgen05\.[\w.]+)',ptx_text))))
     missing=sorted(set(wanted)-set(matched))
     report={'status':'complete' if not missing else 'partial','wanted_cubin_artifacts':len(wanted),'copied_cubin_artifacts':len(matched),
         'missing_cubin_sha256':missing,'artifacts':matched,'study_cubin_sha256':studies,
