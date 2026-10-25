@@ -162,7 +162,8 @@ def test_compiled_resource_metadata_records_valid_values_and_rejects_shared_limi
     compiled = type("Compiled", (), {"metadata": metadata, "n_regs": 32})()
     context.record_compiled_kernel("fake", compiled)
     assert context.metadata["execution_resources"]["fake"] == {
-        "shared_memory_bytes": 1024, "registers_per_thread": 32, "num_warps": 4}
+        "shared_memory_bytes": 1024, "registers_per_thread": 32, "num_warps": 4,
+        "compiler_cache_identity": None, "artifacts": {}}
     too_large = type("Compiled", (), {"metadata": type("Metadata", (), {"shared": 50_000, "num_warps": 4})(),
                                       "n_regs": 32})()
     with pytest.raises(RuntimeError, match="exceeds"):
