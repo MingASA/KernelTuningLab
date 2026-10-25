@@ -261,16 +261,23 @@ def _bar_chart(path: Path, title: str, context: str, labels: Sequence[str], valu
     if not labels:
         _empty_chart(path, title, context, "No numeric groups are available for this chart.", render_png=render_png)
         return
-    width, left, right, top, row_height = 1080, 335, 970, 90, 32
-    height = max(220, top + len(labels) * row_height + 60)
+    width, left, right, top = 1080, 335, 970, 90
+    wrapped = [textwrap.wrap(label, width=46) or [label] for label in labels]
+    row_heights = [max(32, len(lines) * 14 + 12) for lines in wrapped]
+    height = max(220, top + sum(row_heights) + 60)
     maximum = max(max(values, default=0), 0.01)
     parts = []
-    for i, (label, value) in enumerate(zip(labels, values)):
-        y = top + i * row_height
+    cursor = top
+    for i, (label, value, lines, row_height) in enumerate(zip(labels, values, wrapped, row_heights)):
+        y = cursor + (row_height - 32) / 2
         length = (right - left) * value / maximum
-        parts.extend([_text(left - 10, y + 20, label[:46], size=11, anchor="end"),
+        parts.append(f'<g><title>{escape(label)}</title>')
+        parts.extend(_text(left - 10, cursor + (row_height - len(lines) * 14) / 2 + 12 + n * 14,
+                           line, size=11, anchor="end") for n, line in enumerate(lines))
+        parts.extend([
                       f'<rect x="{left}" y="{y + 3}" width="{length:.3f}" height="22" rx="3" fill="{_COLORS[i % len(_COLORS)]}"/>',
-                      _text(left + length + 8, y + 20, _fmt(value, 3), size=11)])
+                      _text(left + length + 8, y + 20, _fmt(value, 3), size=11), "</g>"])
+        cursor += row_height
     parts.append(_text((left + right) / 2, height - 15, xlabel, size=13, anchor="middle"))
     _svg(path, title, context, width, height, parts, render_png=render_png)
 

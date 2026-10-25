@@ -299,6 +299,8 @@ def _prepare_cases(spec, catalog, output, mark):
             bound_operator = catalog.resolve("operator", kernel.operator)
             if bound_operator.ref != operator_definition.ref or bound_operator.fingerprint != operator_definition.fingerprint:
                 raise ValueError(f"kernel {kernel.ref} implements {bound_operator.ref}, experiment selects {operator_definition.ref}")
+            if spec.dtype not in operator_definition.dtypes:
+                raise AssetNotApplicableError(f"operator {operator_definition.ref} does not support dtype={spec.dtype}; choose from {operator_definition.dtypes}")
             if kernel.dtypes and spec.dtype not in kernel.dtypes:
                 raise AssetNotApplicableError(f"kernel {kernel.ref} does not support dtype={spec.dtype}; choose from {kernel.dtypes}")
             adapter = AssetKernelAdapter(kernel, operator_definition, accept_claims=spec.validation.trust_claims,

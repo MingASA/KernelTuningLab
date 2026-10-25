@@ -7,7 +7,7 @@ stale completion flags or bypassing current source/environment validation.
 
 from __future__ import annotations
 
-from dataclasses import asdict, replace
+from dataclasses import asdict
 import json
 from pathlib import Path
 import subprocess
@@ -75,13 +75,18 @@ def expand_research(value, *, directory=Path("."), plugins=()):
         names.add(case_name)
         case_dtypes = _distinct(case.get("dtypes", dtypes), "case dtypes")
         kernels = _distinct(case.get("kernels"), "case kernels")
-        # Validate one full v2 template first, including all shapes and selections.
+        # Each algorithm has an independent v2 job. Validate its selection with
+        # that schema, allowing comparisons of one asset with different options
+        # without changing v2's single-experiment uniqueness contract.
         common = {"split": "validation", "validation": {"trust_claims": False}, **defaults,
                   **{key: val for key, val in case.items() if key not in {"name", "dtypes"}}}
         common["validation"] = {"trust_claims": False, **defaults.get("validation", {}), **case.get("validation", {})}
-        template = AssetExperiment.from_dict({**common, "schema_version": 2, "name": name,
-            "plugins": list(references), "algorithms": algorithms, "dtype": case_dtypes[0],
-            "seed": seeds[0], "budget": budgets[0]})
+        templates = [AssetExperiment.from_dict({**common, "schema_version": 2, "name": name,
+            "plugins": list(references), "algorithms": [algorithm], "dtype": case_dtypes[0],
+            "seed": seeds[0], "budget": budgets[0]}) for algorithm in algorithms]
+        template = templates[0]
+        selections = [item.algorithms[0] for item in templates]
+        _distinct([asdict(item) for item in selections], "normalized algorithms")
         count = len(kernels) * len(case_dtypes) * len(seeds) * len(budgets) * len(algorithms)
         if len(jobs) + count > limit:
             raise ValueError(f"research expansion exceeds max_jobs={limit}; inspect dimensions before increasing it")
@@ -95,7 +100,7 @@ def expand_research(value, *, directory=Path("."), plugins=()):
                 group_id = stable_id([name, case_name, template.operator, kernel.asset, dtype])
                 for seed in seeds:
                     for budget in budgets:
-                        for algorithm in template.algorithms:
+                        for algorithm in selections:
                             spec = AssetExperiment.from_dict({**template.to_dict(), "name": name + "-" + group_id,
                                 "kernels": [asdict(kernel)], "algorithms": [asdict(algorithm)],
                                 "dtype": dtype, "seed": seed, "budget": budget})

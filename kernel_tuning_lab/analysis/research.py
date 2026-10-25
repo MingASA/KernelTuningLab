@@ -63,8 +63,10 @@ def _trial(output, job, raw, store, directory):
     series_id = stable_id([job["algorithm"], raw.get("algorithm_ref"), raw.get("algorithm_fingerprint"), raw.get("options", {})])
     info = {"job_id": job["id"], "case": job["case"], "trial_id": raw["trial_id"],
         "operator": first.operator.kind if first else job["operator"].split("@")[0],
+        "operator_parameters": dict(first.operator.parameters) if first else job["experiment"]["parameters"],
         "kernel": raw.get("kernel_ref", job["kernel"]), "algorithm": raw.get("algorithm_ref", job["algorithm"]),
         "algorithm_fingerprint": raw.get("algorithm_fingerprint"), "algorithm_options": raw.get("options", {}),
+        "algorithm_selector": job["experiment"]["algorithms"][0],
         "series_id": series_id, "shape": raw["shape"], "dtype": job["dtype"], "seed": job["seed"],
         "budget": job["budget"], "status": raw.get("status", "interrupted"),
         "stop_reason": raw.get("stop_reason", "incomplete_trial"),
@@ -87,6 +89,8 @@ def _trial(output, job, raw, store, directory):
         "observations_trace": [], "errors": raw.get("failures", [])}
     if raw.get("status") == "running":
         info["status"] = "interrupted"
+    if raw.get("status") == "passed" and not records and job["budget"]["max_evaluations"] > 0:
+        info["status"] = "partial"
     if records and not comparable:
         info.update(status="failed", stop_reason="incompatible_measurement_protocols")
         info["errors"].append({"phase": "report", "error": "trial mixes source/timing/hardware contexts; no ranking produced"})
@@ -195,8 +199,9 @@ def generate_research_report(output_dir):
     for identity, members in sorted(groups.items()):
         first = members[0]
         scope = f"{first['hardware']} / {first['measurement_mode']} / {canonical_json(first['shape'])}"
-        title = f"{first['kernel']} / {first['dtype']}"
-        comparison = {"id": identity, "operator": first["operator"], "kernel": first["kernel"],
+        title = f"{first['case'][:32]} / {first['kernel']} / {first['dtype']}"
+        comparison = {"id": identity, "case": first["case"], "operator": first["operator"],
+            "operator_parameters": first["operator_parameters"], "kernel": first["kernel"],
             "dtype": first["dtype"], "shape": first["shape"], "hardware": first["hardware"],
             "source_context_id": first["source_context_id"], "measurement_mode": first["measurement_mode"],
             "figures": [], "aggregates": []}
@@ -222,16 +227,42 @@ def generate_research_report(output_dir):
             values = sorted(t["best_verified_latency_ms"] for t in eligible)
             comparison["aggregates"].append({"algorithm": rows[0]["algorithm"], "series_id": series,
                 "algorithm_options": rows[0]["algorithm_options"], "algorithm_fingerprint": rows[0]["algorithm_fingerprint"],
+                "algorithm_selector": rows[0]["algorithm_selector"],
                 "budget": json.loads(budget), "successful_seeds": [t["seed"] for t in eligible],
                 "attempted_seeds": [t["seed"] for t in rows], "n": len(values),
                 "median_best_verified_ms": statistics.median(values) if values else None,
                 "min_best_verified_ms": min(values) if values else None,
                 "max_best_verified_ms": max(values) if values else None})
+        # Keep failed/deferred/unstarted selectors in the requested denominator,
+        # even when they produced no record from which to infer a protocol.
+        first_job = next(j for j in manifest["jobs"] if j["id"] == first["job_id"])
+        roster = defaultdict(list)
+        for job in manifest["jobs"]:
+            if job["group_id"] == first_job["group_id"]:
+                selector = job["experiment"]["algorithms"][0]
+                roster[canonical_json(job["budget"]), canonical_json(selector)].append(job)
+        for (budget, selector), expected_jobs in sorted(roster.items()):
+            matching = [a for a in comparison["aggregates"] if canonical_json(a["budget"]) == budget and
+                        canonical_json(a["algorithm_selector"]) == selector]
+            if not matching:
+                selected = json.loads(selector)
+                missing = {"algorithm": selected["asset"], "algorithm_selector": selected,
+                    "algorithm_options": selected["options"], "algorithm_fingerprint": None,
+                    "series_id": stable_id([selector, identity]), "budget": json.loads(budget),
+                    "successful_seeds": [], "attempted_seeds": [], "n": 0,
+                    "median_best_verified_ms": None, "min_best_verified_ms": None, "max_best_verified_ms": None}
+                comparison["aggregates"].append(missing)
+                matching = [missing]
+            for aggregate in matching:
+                aggregate["requested_seeds"] = sorted({j["seed"] for j in expected_jobs})
+                aggregate["job_seed_statuses"] = {str(j["seed"]): j["status"] for j in expected_jobs}
         for budget in sorted({canonical_json(a["budget"]) for a in comparison["aggregates"]}):
             rows = [a for a in comparison["aggregates"] if canonical_json(a["budget"]) == budget and a["n"]]
             filename = f"performance-{stable_id([identity, budget])}.svg"
             _bar_chart(figures / filename, f"Observed best: {title}", scope + f" / budget={budget}; valid seed counts shown",
-                [a["algorithm"] + f" (n={a['n']})" for a in rows], [a["median_best_verified_ms"]*1000 for a in rows],
+                [a["algorithm"] + " [" + a["algorithm_fingerprint"][:6] + "]" +
+                 (" " + canonical_json(a["algorithm_options"]) if a["algorithm_options"] else "") +
+                 f" (n={a['n']}/{len(a['requested_seeds'])})" for a in rows], [a["median_best_verified_ms"]*1000 for a in rows],
                 xlabel="Median best verified latency across successful seeds (us)", render_png=False)
             comparison["figures"].append("figures/" + filename)
         comparisons.append(comparison)
@@ -241,19 +272,25 @@ def generate_research_report(output_dir):
     status = ("generated" if manifest["status"] == "generated" else
               "interrupted" if statuses["interrupted"] else
               "failed" if statuses["failed"] or statuses["timeout"] or measured_failures or trial_errors else
-              "partial" if any(s != "passed" for s in statuses) or manifest["status"] != "finished" else "passed")
+              "partial" if any(s != "passed" for s in statuses) or manifest["status"] != "finished" or
+                  any(t["status"] in {"partial", "not_run", "interrupted"} for t in trials) else "passed")
     interrupted_code = next((j.get("result", {}).get("exit_code", 130) for j in jobs if j["status"] == "interrupted"), 130)
     summary = {"schema_version": 1, "name": manifest["name"], "status": status,
         "exit_code": interrupted_code if status == "interrupted" else 2 if status == "failed" else 3 if status == "partial" else 0,
         "run_id": manifest["run_id"], "git_commit": manifest.get("git_commit"), "planned": manifest["planned"],
         "job_statuses": dict(statuses), "jobs": jobs, "trials": trials, "trial_count": len(trials),
+        "executed_trial_count": sum("trial_id" in t for t in trials),
+        "trial_statuses": dict(Counter(t["status"] for t in trials)),
         "observations": sum(t["observations"] for t in trials),
         "research_evaluations": sum(t["evaluations"] for t in trials) + sum(a["stage"] == "research" for a in incomplete), "cache_hits": sum(t["cache_hits"] for t in trials),
         "validation_evaluations": sum(j.get("validation_evaluations", 0) for j in jobs) + sum(a["stage"] == "validation" for a in incomplete),
         "validation_wall_time_s": sum(j.get("validation_wall_time_s", 0.0) for j in jobs),
         "job_wall_time_s": sum(j.get("wall_time_s", 0.0) for j in jobs),
         "failed_measurement_observations": measured_failures, "failure_events": len(failures),
-        "physical_compile_time_ms": sum(t.get("physical_compile_time_ms") or 0 for t in trials),
+        "known_physical_compile_time_ms": sum(t.get("physical_compile_time_ms") or 0 for t in trials),
+        "unknown_compile_cost_attempts": len(incomplete) + sum(t["observations"] > 0 and not t.get("trace_available", False) for t in trials),
+        "physical_compile_time_ms": None if incomplete or any(t["observations"] and not t.get("trace_available", False) for t in trials)
+            else sum(t.get("physical_compile_time_ms") or 0 for t in trials),
         "physical_measurement_wall_time_s": sum(t.get("physical_measurement_wall_time_s") or 0 for t in trials) + sum(a["wall_time_s"] for a in incomplete if a["stage"] == "research"),
         "incomplete_attempts": incomplete,
         "cost_trace_complete": not incomplete and not statuses["timeout"] and not statuses["interrupted"] and all(t.get("trace_available", t["observations"] == 0) for t in trials),
@@ -269,11 +306,12 @@ def generate_research_report(output_dir):
         "shape": t["shape"], "measurement_mode": t.get("measurement_mode"),
         "source_context_id": t.get("source_context_id"), **row} for t in trials for row in t["observations_trace"]]
     _csv(output / "trials.csv", trials, ["job_id", "trial_id", "case", "operator", "kernel", "algorithm", "dtype", "shape", "seed",
-        "budget", "status", "stop_reason", "observations", "evaluations", "cache_hits", "best_verified_latency_ms",
+        "operator_parameters", "budget", "status", "stop_reason", "observations", "evaluations", "cache_hits", "best_verified_latency_ms",
         "measurement_mode", "source_context_id", "wall_time_s", "physical_compile_time_ms", "physical_measurement_wall_time_s"])
     _csv(output / "observations.csv", observations, ["job_id", "trial_id", "case", "algorithm", "kernel", "dtype", "shape", "seed",
         "source_context_id", "measurement_mode", "observation", "record_id", "config", "status", "cache_hit",
         "correctness_verified", "latency_ms", "p10_ms", "p90_ms", "best_verified_latency_ms", "elapsed_wall_time_s",
+        "lookup_and_measurement_wall_time_s",
         "physical_compile_time_ms", "physical_measurement_wall_time_s", "source_compile_time_ms", "source_measurement_wall_time_s", "failure_reason"])
     (output / "failures.jsonl").write_text("".join(canonical_json(f) + "\n" for f in failures), encoding="utf-8")
     _write(output / "trials.json", trials)
@@ -282,7 +320,7 @@ def generate_research_report(output_dir):
     _bar_chart(figures / "cost.svg", "Current research attempt costs", "Actual observed costs; compilation is included in measurement wall time",
         ["All v2 job wall time", "Validation wall time", "New research measurement wall time", "New research compile time (subset)"],
         [summary["job_wall_time_s"], summary["validation_wall_time_s"], summary["physical_measurement_wall_time_s"],
-         summary["physical_compile_time_ms"]/1000], xlabel="Seconds (components overlap; do not sum bars)", render_png=False)
+         summary["known_physical_compile_time_ms"]/1000], xlabel="Known seconds (components overlap; incomplete costs flagged)", render_png=False)
     counts = Counter(f.get("status", f["kind"]) for f in failures)
     _bar_chart(figures / "failures.svg", "Failure and applicability events", "Job/validation/measurement events are separate; cached observations may repeat failures",
         list(counts), list(counts.values()), xlabel="Event count", render_png=False)
@@ -291,8 +329,9 @@ def generate_research_report(output_dir):
         f"Observations/new attempts/cache hits: {summary['observations']} / {summary['research_evaluations']} / {summary['cache_hits']}. "
         f"Validation attempts: {summary['validation_evaluations']}.", "",
         "CPU measurements verify CPU execution only. Failures, unsupported declarations and missing GPU are not successful GPU validation.", "",
-        _table(("Case", "Kernel", "Algorithm", "Dtype", "Seed", "Budget", "Job status", "Evidence"),
-            ((j["case"], j["kernel"], j["algorithm"], j["dtype"], j["seed"], j["budget"]["max_evaluations"], j["status"],
+        _table(("Case", "Kernel", "Algorithm", "Dtype", "Seed", "Budget (observations / seconds)", "Job status", "Evidence"),
+            ((j["case"], j["kernel"], j["algorithm"], j["dtype"], j["seed"],
+              f"{j['budget']['max_evaluations']} / {j['budget']['max_wall_time_s']}", j["status"],
               f"[attempt]({j['snapshot']}/report.md)" if j.get("snapshot") else "not executed") for j in jobs)), "",
         "## Costs and failures", "", "![Costs](figures/cost.svg)", "", "![Failures](figures/failures.svg)", "",
         "Shared measurement/JIT caches make execution order affect physical tuning cost. Equal observation allowances do not imply equal cold-start cost. "
@@ -305,10 +344,12 @@ def generate_research_report(output_dir):
               "; ".join(c.get("error", {}).get("message", "") for c in j.get("preflight_failures", [])) or
               canonical_json(j.get("result", {}).get("error", {}))) for j in rejected)), ""]
     for group in comparisons:
-        lines += [f"## {_md(group['kernel'])} / {_md(group['dtype'])} / {_md(canonical_json(group['shape']))}", "",
+        lines += [f"## {_md(group['case'])} / {_md(group['kernel'])} / {_md(group['dtype'])} / {_md(canonical_json(group['shape']))}", "",
             f"{_md(group['hardware'])}; `{group['measurement_mode']}`; source context `{group['source_context_id']}`.", "",
-            _table(("Algorithm", "Budget", "Valid / attempted seeds", "Median best ms", "Min / max ms"),
-                ((a["algorithm"], a["budget"]["max_evaluations"], f"{a['n']} / {len(a['attempted_seeds'])}",
+            f"Operator parameters: `{_md(canonical_json(group['operator_parameters']))}`.", "",
+            _table(("Algorithm / options", "Budget (observations / seconds)", "Valid / requested seeds", "Median best ms", "Min / max ms"),
+                ((a["algorithm"] + (" " + canonical_json(a["algorithm_options"]) if a["algorithm_options"] else ""),
+                  f"{a['budget']['max_evaluations']} / {a['budget']['max_wall_time_s']}", f"{a['n']} / {len(a['requested_seeds'])}",
                   a["median_best_verified_ms"], f"{a['min_best_verified_ms']} / {a['max_best_verified_ms']}") for a in group["aggregates"])), ""]
         lines += [f"![Observed comparison]({path})\n" for path in group["figures"]]
     lines += ["", "[Summary](summary.json) · [Trials CSV](trials.csv) · [Observation CSV](observations.csv) · "

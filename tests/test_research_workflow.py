@@ -105,7 +105,8 @@ def test_research_dry_run_counts_all_dimensions_without_loading_plugins(tmp_path
 
 
 @pytest.mark.parametrize("update", [{"seeds": [True]}, {"seeds": [1, 1]},
-                                     {"budgets": [{"max_evaluations": 4}]}, {"surprise": 1}])
+                                     {"budgets": [{"max_evaluations": 4}]}, {"surprise": 1},
+                                     {"algorithms": ["random", {"asset": "random", "options": {}}]}])
 def test_research_rejects_ambiguous_or_unbounded_configuration(tmp_path, update):
     spec = {**cpu_spec(), **update}
     result = run_cli("research", "--spec", write(tmp_path / "spec.json", spec), "--output", tmp_path / "out")
@@ -128,6 +129,8 @@ ASSETS = [SearchAlgorithmDefinition("broken", "1", create)]
     report = json.loads((tmp_path / "out/summary.json").read_text())
     assert report["job_statuses"] == {"failed": 2, "passed": 2}
     assert any(t["algorithm"] == "random@1.0.0" and t["observations"] == 2 for t in report["trials"])
+    assert all(any(a["algorithm"] == "broken@1" and a["n"] == 0 and a["requested_seeds"] == [7]
+                   for a in group["aggregates"]) for group in report["comparison_groups"])
     assert any(json.loads(line)["kind"] == "job" for line in (tmp_path / "out/failures.jsonl").read_text().splitlines())
 
 
@@ -174,6 +177,28 @@ def test_report_corruption_cannot_retain_success_flag(tmp_path):
     assert result.returncode == 2
     summary = json.loads((out / "summary.json").read_text())
     assert summary["phase"] == "report" and summary["physical_gpu_validated"] is False
+
+
+def test_comparisons_separate_algorithm_options_and_full_budgets(tmp_path):
+    import xml.etree.ElementTree as ET
+
+    spec = cpu_spec()
+    spec["cases"] = [spec["cases"][0]]
+    spec["cases"][0]["shapes"] = [spec["cases"][0]["shapes"][0]]
+    spec["algorithms"] = [{"asset": "example/stride@1.0.0", "options": {"probe_limit": n}} for n in (128, 256)]
+    spec["budgets"] = [{"max_evaluations": 2, "max_wall_time_s": n} for n in (10, 11)]
+    out = tmp_path / "out"
+    result = run_cli("research", "--spec", write(tmp_path / "spec.json", spec), "--output", out)
+    assert result.returncode == 0, result.stdout + result.stderr
+    report = json.loads((out / "summary.json").read_text())
+    assert len(report["comparison_groups"]) == 1
+    aggregates = report["comparison_groups"][0]["aggregates"]
+    assert len(aggregates) == 4 and len({a["series_id"] for a in aggregates}) == 2
+    for path in (out / "figures").glob("performance-*.svg"):
+        labels = " ".join(ET.parse(path).getroot().itertext())
+        assert "probe_limit" in labels and "128" in labels and "256" in labels
+    text = (out / "report.md").read_text()
+    assert "2 / 10" in text and "2 / 11" in text
 
 
 def test_missing_cuda_is_deferred_and_reported(tmp_path, monkeypatch):
@@ -231,12 +256,26 @@ def test_timeout_keeps_partial_trace_cost_and_retries_only_incomplete_measuremen
     assert partial["observations"] == 1 and partial["research_evaluations"] == 2
     assert partial["validation_evaluations"] == 1
     assert len(partial["incomplete_attempts"]) == 1 and not partial["cost_trace_complete"]
+    assert partial["physical_compile_time_ms"] is None and partial["unknown_compile_cost_attempts"] == 1
     assert partial["physical_measurement_wall_time_s"] > 0.2
     flag.unlink()
     recovered = run_cli("research", "--spec", spec, "--output", out)
     assert recovered.returncode == 0, recovered.stdout + recovered.stderr
     final = json.loads((out / "summary.json").read_text())
     assert final["observations"] == 2 and final["cache_hits"] == final["research_evaluations"] == 1
+
+
+def test_operator_dtype_capability_is_not_applicable_even_with_unrestricted_kernel(tmp_path):
+    path, _, _ = slow_spec(tmp_path)
+    plugin = tmp_path / "slow.py"
+    plugin.write_text(plugin.read_text().replace('dtypes=("float32",)', 'dtypes=()'))
+    spec = json.loads(path.read_text())
+    spec["dtypes"] = ["float64"]
+    write(path, spec)
+    result = run_cli("research", "--spec", path, "--output", tmp_path / "out")
+    assert result.returncode == 3, result.stdout + result.stderr
+    report = json.loads((tmp_path / "out/summary.json").read_text())
+    assert report["job_statuses"] == {"not_applicable": 1} and report["observations"] == 0
 
 
 @pytest.mark.skipif(os.name != "posix", reason="POSIX inherited output lease")
