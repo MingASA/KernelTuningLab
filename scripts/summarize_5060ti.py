@@ -83,14 +83,16 @@ def main(root, output):
     l3_rows = [r for p, rows in journals.items() if p.is_relative_to(root / "l3") for r in rows
                if r.seed in (7, 19, 31) and r.correctness_verified]
     if l3_rows:
-        shapes = tuple({r.shape.id: r.shape for r in l3_rows}.values())
-        configs = tuple({r.config.id: r.config for r in l3_rows}.values())
+        shapes = tuple(sorted({r.shape.id: r.shape for r in l3_rows}.values(), key=lambda s: s.get("M")))
+        configs = tuple(sorted({r.config.id: r.config for r in l3_rows}.values(), key=lambda c: c.id))
         assert len(shapes) == 3 and len(configs) == 12
         workload = WorkloadDistribution(shapes, (0.4, 0.3, 0.3), "5060ti-limited-observed-gemm")
         matrix = PerformanceMatrix.from_records(workload, configs, l3_rows)
         solutions = [solver(matrix, k).to_dict() for k in (1, 2, 4) for solver in (oracle, greedy, greedy_local_swap)]
         result = oracle(matrix, 2)
-        dispatcher = ShapeDispatcher.from_result(matrix, result)
+        from kernel_tuning_lab.space import gemm_space
+        dispatcher = ShapeDispatcher.from_result(matrix, result, hardware=l3_rows[0].hardware,
+                                                  operator=l3_rows[0].operator, space=gemm_space())
         assert all(dispatcher(s).id in {c.id for c in result.configs} for s in shapes)
         summary["l3"] = {"matrix": matrix.to_dict(), "solutions": solutions,
                           "notice": "Complete only within these 3 shapes x 12 declared candidates; no global-space optimum or unseen-shape generalization claim."}

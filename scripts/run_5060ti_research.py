@@ -39,6 +39,10 @@ def specs(family):
                 ({"M": 1, "N": 2048, "K": 1024}, {"M": 512, "N": 512, "K": 512},
                  {"M": 257, "N": 769, "K": 513}), seed=seed, budget=12)
     elif family == "representative":
+        yield base("gemm-memory-compute", "gemm", (KernelSelection("triton/gemm", {
+            "BLOCK_M": (16, 64), "BLOCK_N": (64, 128), "BLOCK_K": (64,),
+            "num_warps": (4,), "num_stages": (2,)}),),
+            ({"M": 1, "N": 8192, "K": 4096}, {"M": 1024, "N": 2048, "K": 2048}), budget=4)
         quant = {"BLOCK_M": (16, 32), "BLOCK_N": (64,), "BLOCK_K": (32,), "num_warps": (4,),
                  "num_stages": (2,), "GROUP_M": (1,), "SPLIT_K": (1, 2)}
         yield base("w4-fused-pipeline", "w4a16_gemm", (
@@ -69,12 +73,18 @@ def main():
     parser.add_argument("family", choices=("l2", "l3", "representative"))
     parser.add_argument("--output", required=True)
     parser.add_argument("--write-only", action="store_true")
+    parser.add_argument("--only", help="execute only this exact generated experiment name")
     args = parser.parse_args()
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     manifest = {"git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                 "family": args.family, "serial": True, "cases": []}
-    for spec in specs(args.family):
+    selected = [s for s in specs(args.family) if args.only is None or s.name == args.only]
+    if not selected:
+        parser.error("--only did not match an experiment")
+    if args.only:
+        manifest["selection"] = args.only
+    for spec in selected:
         path = output / "specs" / (spec.name + ".json")
         spec.save(path)
         def telemetry():
@@ -85,7 +95,8 @@ def main():
                   execute_asset_experiment(path, output / "runs" / spec.name))
         manifest["cases"].append({"name": spec.name, "spec": str(path), "result": result,
                                   "telemetry_before": before, "telemetry_after": None if args.write_only else telemetry()})
-        (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        manifest_name = "manifest.json" if args.only is None else f"manifest-{args.only}.json"
+        (output / manifest_name).write_text(json.dumps(manifest, indent=2) + "\n")
         print(spec.name, result["status"], flush=True)
         if not args.write_only and result["status"] != "passed":
             raise SystemExit(result.get("exit_code", 2))
