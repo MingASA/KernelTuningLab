@@ -423,6 +423,17 @@ def build_parser() -> argparse.ArgumentParser:
         asset_run.add_argument("--spec", required=True, help="schema_version=2 asset experiment JSON")
         asset_run.add_argument("--output", default="artifacts/assets")
         asset_run.set_defaults(handler=command_asset_experiment)
+    research = sub.add_parser("research", help="search and compare multiple asset cases, dtypes, seeds and budgets; write reports")
+    research.add_argument("--spec", help="kind=research matrix experiment JSON")
+    research.add_argument("--output", default="artifacts/research")
+    research_mode = research.add_mutually_exclusive_group()
+    research_mode.add_argument("--write-only", action="store_true", help="validate/expand specs and budgets without importing plugins or CUDA")
+    research_mode.add_argument("--report-only", action="store_true", help="regenerate current attempt reports without importing plugins or CUDA")
+    def execute_research(args):
+        from .research import run_research
+        return run_research(args.spec, args.output, write_only=args.write_only,
+                            report_only=args.report_only, plugins=tuple(args.plugin))
+    research.set_defaults(handler=execute_research)
     assets = sub.add_parser("assets", help="discover registered versioned operators, Kernels and algorithms")
     assets.add_argument("assets_action", choices=("list", "show"))
     assets.add_argument("--kind", choices=("operator", "kernel", "algorithm"))
@@ -563,7 +574,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         from .plugins import load_plugin
-        if args.command not in {"run", "check"}:
+        if args.command not in {"run", "check", "research"}:
             for plugin in args.plugin:
                 load_plugin(plugin)
         result = args.handler(args)
@@ -571,4 +582,4 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"error": type(exc).__name__, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
-    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite"} else 0
+    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite", "research"} else 0

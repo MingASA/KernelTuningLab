@@ -23,6 +23,10 @@ from .run_lifecycle import (OutputDirectoryBusyError, OutputLease, WorkerInterru
                             archive_previous_attempt, supervised_worker)
 
 
+class AssetNotApplicableError(ValueError):
+    """A declared dtype/architecture/algorithm capability does not match."""
+
+
 def _write(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -119,6 +123,7 @@ def _interrupt_measurement(output: Path, progress: dict, reason: str, *, status:
         row = replace(row, status=RecordStatus.RUNTIME_ERROR, runtime_samples_ms=(), failure_reason=reason,
                       wall_time_s=max(0.0, time.monotonic() - progress.get("attempt_started_monotonic", time.monotonic())),
                       metadata={**row.metadata, "terminated_by_parent": True, "termination_kind": status,
+                                "termination_run_id": _read(output / "run_metadata.json", {}).get("run_id"),
                                 "timeout_phase": progress.get("phase") if status == "timeout" else None})
         with ExperimentStore(output / "measurements.sqlite") as store:
             store.add(row)
@@ -128,7 +133,7 @@ def _interrupt_measurement(output: Path, progress: dict, reason: str, *, status:
 
 
 def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, check_only: bool = False,
-                             plugins: tuple[str, ...] = ()) -> dict:
+                             plugins: tuple[str, ...] = (), inherited_fds: tuple[int, ...] = ()) -> dict:
     """Run untrusted-in-behavior extensions in a disposable supervised process.
 
     Local Python plugins are trusted code, not a security sandbox. The parent
@@ -138,7 +143,8 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
     output, source = Path(output_dir).resolve(), Path(spec_path).resolve()
     try:
         with OutputLease(output) as lease:
-            return _execute_owned(source, output, check_only=check_only, plugins=plugins, lease=lease)
+            return _execute_owned(source, output, check_only=check_only, plugins=plugins, lease=lease,
+                                  inherited_fds=inherited_fds)
     except OutputDirectoryBusyError as exc:
         # A rejected concurrent caller must not overwrite the owner's progress,
         # worker log, approval marker, or archived experiment.
@@ -146,7 +152,8 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
                 "physical_gpu_validated": False, "output": str(output)}
 
 
-def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tuple[str, ...], lease) -> dict:
+def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tuple[str, ...], lease,
+                   inherited_fds: tuple[int, ...] = ()) -> dict:
     # Parse before moving the old metadata: the user may resume using the
     # archived experiment.json from this very output directory.
     try:
@@ -177,8 +184,11 @@ def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tup
     total_limit += 5.0
     with (output / "worker.log").open("w", encoding="utf-8") as log:
         try:
+            process_options = lease.subprocess_options
+            if os.name == "posix":
+                process_options["pass_fds"] = tuple(dict.fromkeys((*process_options.get("pass_fds", ()), *inherited_fds)))
             process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=os.name == "posix",
-                                       **lease.subprocess_options)
+                                       **process_options)
         except OSError as exc:
             return _save_failure(output, "failed", _error(exc), phase="worker_startup", exit_code=2)
         timeout = None
@@ -290,7 +300,7 @@ def _prepare_cases(spec, catalog, output, mark):
             if bound_operator.ref != operator_definition.ref or bound_operator.fingerprint != operator_definition.fingerprint:
                 raise ValueError(f"kernel {kernel.ref} implements {bound_operator.ref}, experiment selects {operator_definition.ref}")
             if kernel.dtypes and spec.dtype not in kernel.dtypes:
-                raise ValueError(f"kernel {kernel.ref} does not support dtype={spec.dtype}; choose from {kernel.dtypes}")
+                raise AssetNotApplicableError(f"kernel {kernel.ref} does not support dtype={spec.dtype}; choose from {kernel.dtypes}")
             adapter = AssetKernelAdapter(kernel, operator_definition, accept_claims=spec.validation.trust_claims,
                                          force_correctness=not spec.validation.trust_claims,
                                          workspace_memory_limit_bytes=spec.workspace_memory_limit_bytes,
@@ -312,7 +322,7 @@ def _prepare_cases(spec, catalog, output, mark):
                                              "theoretical_values_source": "vendor profile; not measured"})
             if (kernel.architectures and hardware.architecture != "unknown"
                     and not any(fnmatchcase(hardware.architecture, pattern) for pattern in kernel.architectures)):
-                raise ValueError(f"kernel {kernel.ref} does not support target architecture={hardware.architecture}")
+                raise AssetNotApplicableError(f"kernel {kernel.ref} does not support target architecture={hardware.architecture}")
             runtime_environment = adapter.environment() if not unavailable else {}
             checks.append({"kernel": kernel.ref, "check": "physical_runtime", "status": "deferred" if unavailable else "passed",
                            "reason": unavailable, "hardware": asdict(hardware),
@@ -363,7 +373,7 @@ def _prepare_cases(spec, catalog, output, mark):
                     try:
                         match = check_algorithm_compatibility(algorithm, space)
                         if not match.valid:
-                            raise ValueError("algorithm/space mismatch: " + "; ".join(match.reasons))
+                            raise AssetNotApplicableError("algorithm/space mismatch: " + "; ".join(match.reasons))
                         if probe["configs"]:
                             evidence = check_algorithm(algorithm, algorithm_selection.options, spec.seed,
                                                        hardware, operator, shape, space)

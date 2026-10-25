@@ -63,11 +63,35 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                 "budget": {"max_evaluations": budget.max_evaluations, "max_wall_time_s": budget.max_wall_time_s}}
     trial_id = stable_id(identity)
     records = []
+    trace = []
     attempted = set()
     failures = []
     attempts = evaluations = cache_hits = contract_failures = unrecorded_failures = 0
     status = "passed"
     stop_reason = "evaluation_budget"
+    trace_path = output / "observations.jsonl"
+    trace_path.write_text("", encoding="utf-8")
+    _save_json(output / "trial.json", {**identity, "trial_id": trial_id, "status": "running",
+        "kernel_ref": case.kernel.ref, "operator_ref": case.operator_definition.ref,
+        "shape": dict(case.shape.dims), "dtype": case.operator.dtype, "trace_schema_version": 1})
+
+    def observed(record, cached, admitted_at):
+        verified = _correctness(record)[0]
+        previous = trace[-1]["best_verified_latency_ms"] if trace else None
+        best = min(previous, record.median_ms) if verified and previous is not None else (
+            record.median_ms if verified else previous)
+        row = {"observation": len(records), "record_id": record.id, "config_id": record.config.id,
+               "status": record.status.value, "cache_hit": cached, "correctness_verified": verified,
+               "latency_ms": record.median_ms if verified else None, "best_verified_latency_ms": best,
+               "elapsed_wall_time_s": time.perf_counter() - started,
+               "lookup_and_measurement_wall_time_s": time.perf_counter() - admitted_at,
+               "source_compile_time_ms": record.compile_time_ms, "source_measurement_wall_time_s": record.wall_time_s,
+               "physical_compile_time_ms": 0.0 if cached else record.compile_time_ms,
+               "physical_measurement_wall_time_s": 0.0 if cached else record.wall_time_s}
+        trace.append(row)
+        # Linear append-only checkpoint; final trial.json remains the manifest.
+        with trace_path.open("a", encoding="utf-8") as stream:
+            stream.write(canonical_json(row) + "\n")
 
     def notify(value):
         if progress is not None:
@@ -112,6 +136,11 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "wall_time_s": time.perf_counter() - started, "budget": identity["budget"],
                   "space_cardinality": case.space.cardinality,
                   "space_fingerprint": identity["space_fingerprint"], "failures": failures,
+                  "trace_schema_version": 1, "observation_trace": trace,
+                  "physical_compile_time_ms": sum(row["physical_compile_time_ms"] for row in trace),
+                  "physical_measurement_wall_time_s": sum(row["physical_measurement_wall_time_s"] for row in trace),
+                  "source_compile_time_ms": sum(row["source_compile_time_ms"] for row in trace),
+                  "source_measurement_wall_time_s": sum(row["source_measurement_wall_time_s"] for row in trace),
                   "budget_semantics": "max_evaluations bounds revealed candidates, including failures and cache hits; physical evaluations are reported separately; parent enforces hard wall deadline"}
         _save_json(output / "trial.json", result)
         return result
@@ -195,6 +224,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             if record.case_id != initial.case_id or record.config.id != config.id or record.split != split:
                 raise ValueError("runner returned a record for a different case/configuration/split")
             records.append(deepcopy(record))
+            observed(record, runner.last_cache_hit, attempt_started)
             notify({"event": "measurement_completed", "config": dict(config.params),
                     "record_id": record.id, "record_status": record.status.value,
                     "cache_hit": runner.last_cache_hit, "attempts": attempts,
@@ -212,6 +242,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                     if store is not None:
                         store.add(failed)
                     records.append(failed)
+                    observed(failed, False, attempt_started)
                     archived = True
                 except Exception as archive_error:
                     note_failure("failure_archive", archive_error)

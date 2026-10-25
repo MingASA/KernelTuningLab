@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "plugins": [
+    "stride_search.py"
+  ],
+  "algorithms": [
+    "example/stride@1.0.0",
+    "random@1.0.0",
+    "heuristic@1.0.0"
+  ],
+  "dtypes": [
+    "float16",
+    "bfloat16"
+  ],
+  "seeds": [
+    7,
+    19
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 2,
+      "max_wall_time_s": 30
+    },
+    {
+      "max_evaluations": 4,
+      "max_wall_time_s": 30
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 512,
+    "warmup": 3,
+    "repetitions": 9,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 2,
+      "max_cases": 0,
+      "max_wall_time_s": 45,
+      "seed": 17,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        {
+          "asset": "triton/gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32,
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 37,
+          "N": 71,
+          "K": 65
+        },
+        {
+          "M": 128,
+          "N": 256,
+          "K": 128
+        }
+      ]
+    },
+    {
+      "name": "quantized",
+      "operator": "w4a16_gemm@1.0.0",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32,
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ]
+          }
+        },
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32,
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              256
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 35,
+          "K": 65
+        },
+        {
+          "M": 32,
+          "N": 64,
+          "K": 128
+        }
+      ]
+    }
+  ],
+  "name": "cuda-search-comparison"
+}

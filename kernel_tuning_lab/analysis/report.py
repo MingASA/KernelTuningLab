@@ -107,14 +107,15 @@ def _text(x: float, y: float, text: Any, *, size: int = 12, color: str = "#33415
     return f'<text x="{x:.2f}" y="{y:.2f}" font-size="{size}" fill="{color}" text-anchor="{anchor}" {extra}>{escape(str(text))}</text>'
 
 
-def _svg(path: Path, title: str, subtitle: str, width: int, height: int, content: Sequence[str]) -> None:
+def _svg(path: Path, title: str, subtitle: str, width: int, height: int, content: Sequence[str], *, render_png: bool = True) -> None:
     body = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
             f"<title id=\"title\">{escape(title)}</title>", f"<desc id=\"desc\">{escape(subtitle)}</desc>",
             '<rect width="100%" height="100%" fill="#ffffff"/>',
             '<g font-family="Arial, Helvetica, sans-serif">', _text(24, 30, title, size=20, color="#0f172a"),
             _text(24, 54, subtitle[:160], size=12, color="#9f1239" if "MOCK" in subtitle else "#64748b"), *content, "</g></svg>"]
     path.write_text("\n".join(body) + "\n", encoding="utf-8")
-    _optional_png(path)
+    if render_png:
+        _optional_png(path)
 
 
 def _optional_png(path: Path) -> None:
@@ -173,15 +174,15 @@ def _optional_png(path: Path) -> None:
     figure.clear()
 
 
-def _empty_chart(path: Path, title: str, context: str, reason: str) -> None:
-    _svg(path, title, context, 960, 180, [_text(28, 105, "Insufficient data", size=18), _text(28, 134, reason[:135])])
+def _empty_chart(path: Path, title: str, context: str, reason: str, *, render_png: bool = True) -> None:
+    _svg(path, title, context, 960, 180, [_text(28, 105, "Insufficient data", size=18), _text(28, 134, reason[:135])], render_png=render_png)
 
 
-def _line_chart(path: Path, title: str, context: str, series: Mapping[str, Sequence[tuple[float, float]]], xlabel: str, ylabel: str, *, series_labels: Mapping[str, str] | None = None) -> None:
+def _line_chart(path: Path, title: str, context: str, series: Mapping[str, Sequence[tuple[float, float]]], xlabel: str, ylabel: str, *, series_labels: Mapping[str, str] | None = None, render_png: bool = True) -> None:
     filtered = {key: sorted((float(x), float(y)) for x, y in values if _number(x) and _number(y)) for key, values in series.items()}
     filtered = {key: value for key, value in filtered.items() if value}
     if not filtered:
-        _empty_chart(path, title, context, "No finite scored points were supplied.")
+        _empty_chart(path, title, context, "No finite scored points were supplied.", render_png=render_png)
         return
     width, height, left, right, top, bottom = 1100, 540, 100, 810, 95, 440
     xs = [x for values in filtered.values() for x, _ in values]
@@ -221,7 +222,7 @@ def _line_chart(path: Path, title: str, context: str, series: Mapping[str, Seque
         parts.extend(_text(865, legend_cursor + 4 + line_index * 14, line, size=11) for line_index, line in enumerate(legend_lines))
         parts.append("</g>")
         legend_cursor += max(22, len(legend_lines) * 14 + 8)
-    _svg(path, title, context, width, max(height, legend_cursor + 30), parts)
+    _svg(path, title, context, width, max(height, legend_cursor + 30), parts, render_png=render_png)
 
 
 def _heatmap(path: Path, title: str, context: str, rows: Sequence[str], columns: Sequence[str], values: Sequence[Sequence[float | None]], *, cell_titles: Sequence[Sequence[str]] | None = None) -> None:
@@ -256,9 +257,9 @@ def _heatmap(path: Path, title: str, context: str, rows: Sequence[str], columns:
     _svg(path, title, context, width, height, parts)
 
 
-def _bar_chart(path: Path, title: str, context: str, labels: Sequence[str], values: Sequence[float], *, xlabel: str) -> None:
+def _bar_chart(path: Path, title: str, context: str, labels: Sequence[str], values: Sequence[float], *, xlabel: str, render_png: bool = True) -> None:
     if not labels:
-        _empty_chart(path, title, context, "No numeric groups are available for this chart.")
+        _empty_chart(path, title, context, "No numeric groups are available for this chart.", render_png=render_png)
         return
     width, left, right, top, row_height = 1080, 335, 970, 90, 32
     height = max(220, top + len(labels) * row_height + 60)
@@ -271,7 +272,7 @@ def _bar_chart(path: Path, title: str, context: str, labels: Sequence[str], valu
                       f'<rect x="{left}" y="{y + 3}" width="{length:.3f}" height="22" rx="3" fill="{_COLORS[i % len(_COLORS)]}"/>',
                       _text(left + length + 8, y + 20, _fmt(value, 3), size=11)])
     parts.append(_text((left + right) / 2, height - 15, xlabel, size=13, anchor="middle"))
-    _svg(path, title, context, width, height, parts)
+    _svg(path, title, context, width, height, parts, render_png=render_png)
 
 
 def _grouped(records: Sequence[MeasurementRecord]) -> tuple[dict[tuple[str, ...], list[MeasurementRecord]], dict[tuple[str, ...], dict[str, float]]]:
