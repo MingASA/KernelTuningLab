@@ -11,7 +11,7 @@
       "options": {
         "configs": [
           {
-            "BLOCK_M": 32,
+            "BLOCK_M": 16,
             "BLOCK_N": 32,
             "BLOCK_K": 32,
             "num_warps": 4,
@@ -49,6 +49,14 @@
             "num_warps": 8,
             "num_stages": 2,
             "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
           }
         ]
       }
@@ -64,7 +72,7 @@
   ],
   "budgets": [
     {
-      "max_evaluations": 5,
+      "max_evaluations": 6,
       "max_wall_time_s": 180
     }
   ],
@@ -91,6 +99,7 @@
           "asset": "triton/t1_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
+              16,
               32,
               64,
               128
@@ -136,6 +145,7 @@
           "asset": "triton/t1_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
+              16,
               32,
               64,
               128
@@ -181,6 +191,7 @@
           "asset": "triton/t1_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
+              16,
               32,
               64,
               128
@@ -226,6 +237,7 @@
           "asset": "triton/t1_gemm@1.0.0",
           "space": {
             "BLOCK_M": [
+              16,
               32,
               64,
               128

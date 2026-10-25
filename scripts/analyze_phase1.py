@@ -19,7 +19,7 @@ import statistics as st
 from html import escape
 
 from kernel_tuning_lab.analysis.report import _bar_chart, _heatmap, _line_chart, _table, _svg, _text
-from kernel_tuning_lab.l3 import PerformanceMatrix, OracleLimitError, greedy, greedy_local_swap, oracle
+from kernel_tuning_lab.l3 import PerformanceMatrix, OracleLimitError, ShapeDispatcher, greedy, greedy_local_swap, oracle
 from kernel_tuning_lab.models import KernelConfig, SearchBudget, ShapeSpec, WorkloadDistribution, canonical_json
 from kernel_tuning_lab.replay import run_replay
 from kernel_tuning_lab.research import read_json, snapshot_directory
@@ -79,7 +79,8 @@ def correlation(left,right):
     return numerator/denominator if denominator else None
 
 
-def correlation_plot(path,labels,values):
+def correlation_plot(path,labels,values,*,title="T1 cross-Shape rank correlation",
+                     context="Spearman rho from -1 (opposite) to +1 (same); 64 finite measured configs"):
     parts=[];left,top,cell=180,160,60
     for i,name in enumerate(labels):
         parts.append(_text(left-10,top+i*cell+32,name,size=11,anchor="end"))
@@ -89,7 +90,7 @@ def correlation_plot(path,labels,values):
             color=f'rgb({int(245-180*max(v,0))},{int(245-120*mix)},{int(245-180*max(-v,0))})'
             parts += [f'<rect x="{left+j*cell}" y="{top+i*cell}" width="{cell-2}" height="{cell-2}" fill="{color}"><title>{escape(name)} / {escape(labels[j])}: {value}</title></rect>',
                 _text(left+j*cell+cell/2,top+i*cell+32,f"{value:.2f}" if value is not None else "unknown",size=11,anchor="middle")]
-    _svg(path,"T1 cross-Shape rank correlation","Spearman rho from -1 (opposite) to +1 (same); 64 finite measured configs",
+    _svg(path,title,context,
         900,top+len(labels)*cell+40,parts,render_png=False)
 
 
@@ -169,11 +170,12 @@ def describe(matrix, records, labels):
 
 
 def artifact_counts(records, selected_ids=None, assignments=None):
-    identities=set(); binaries={}; unknown=0
+    identities=set(); binaries={}; unknown=0;eligible=0
     for record in records:
         if not record.correctness_verified: continue
         if selected_ids is not None and record.config.id not in selected_ids: continue
         if assignments is not None and assignments.get(record.shape.id)!=record.config.id: continue
+        eligible+=1
         resources=record.metadata.get("correctness",{}).get("execution",{}).get("compiled_resources",{})
         if not resources: unknown+=1
         for resource in resources.values():
@@ -182,9 +184,10 @@ def artifact_counts(records, selected_ids=None, assignments=None):
             else: unknown+=1
             binary=resource.get("artifacts",{}).get("cubin")
             if binary: binaries[binary["sha256"]]=binary["bytes"]
-    return {"compiler_specializations":len(identities) if not unknown else None,"known_compiler_specializations":len(identities),
-        "distinct_cubin_artifacts":len(binaries),"deduplicated_cubin_container_bytes":sum(binaries.values()) if not unknown else None,
-        "unknown_resource_records":unknown,"size_scope":"compiler-produced cubin ELF containers; not instruction-only size, driver residency or packaged deployment size"}
+    return {"compiler_specializations":len(identities) if not unknown and eligible else None,"known_compiler_specializations":len(identities),
+        "distinct_cubin_artifacts":len(binaries),"deduplicated_cubin_container_bytes":sum(binaries.values()) if not unknown and eligible else None,
+        "unknown_resource_records":unknown,"selected_record_evidence":eligible,
+        "size_scope":"compiler-produced cubin ELF containers; not instruction-only size, driver residency or packaged deployment size"}
 
 
 def pareto_indices(rows):
@@ -215,12 +218,22 @@ def l3_study(matrix,records):
                     results.append({"weights":label,"method":name,"k":k,"status":"not_computed","reason":str(error)});continue
                 selected={c.id for c in result.configs}
                 source=reduced if name=="exact" else table
+                dispatcher=ShapeDispatcher.from_result(source,result)
                 assigned={shape.id:source.configs[j].id for shape,j in zip(workload.shapes,result.assignment_indices) if j is not None}
+                from kernel_tuning_lab.asset_space import build_effective_space
+                from kernel_tuning_lab.catalog import get_catalog
+                kernel=get_catalog().resolve('kernel',records[0].operator.implementation)
+                for shape in workload.shapes:
+                    config=dispatcher(shape)
+                    legal=build_effective_space(kernel,records[0].hardware,records[0].operator,shape,design.SPACE)
+                    if not legal.validate(config,records[0].hardware,records[0].operator,shape).valid:
+                        raise ValueError('L3 dispatcher proposes illegal measured config')
                 losses=[min(row[j] for j,c in enumerate(matrix.configs) if c.id in selected)/min(row)-1 for row in matrix.latencies_ms]
-                results.append({"weights":label,"weight_values":list(workload.normalized_weights),"method":name,"status":"passed",
-                    **result.to_dict(),"pareto_candidates":len(keep) if name=="exact" else None,
+                results.append({"weights":label,"weight_values":list(workload.normalized_weights),"status":"passed",
+                    **result.to_dict(),"method":name,"solver_method":result.method,"pareto_candidates":len(keep) if name=="exact" else None,
                     "mean_shape_relative_loss":st.mean(losses),"max_shape_relative_loss":max(losses),"shape_losses":losses,
                     "assignment_config_ids":assigned,
+                    "dispatch_legality":"passed for all finite observed Shapes",
                     "retained_all_shape_config_pairs":artifact_counts(records,selected),
                     "dispatch_only_artifacts":artifact_counts(records,assignments=assigned)})
     # A small predetermined subset also gives an exact, explicitly limited
@@ -248,6 +261,9 @@ def replay_study(records,space):
                         searcher=make_searcher(name,seed=seed,training_records=training)
                         result=run_replay(targets[case],searcher,space,SearchBudget(budget),seed=seed,target_ratio=1.05)
                         row=result.to_dict();row["measurement_seed"]=measurement_seed
+                        identities={record.config.id:record.id for record in targets[case]}
+                        for step in row['trace']:
+                            step['source_record_id']=identities.get(KernelConfig(step['config']).id)
                         row["target_10pct_evaluations"]=next((step.evaluation for step in result.trace
                             if step.best_latency_ms is not None and step.best_latency_ms<=result.oracle_best_latency_ms*1.1),None)
                         row.update(new_physical_measurements=0,source_reveals=result.evaluations,
@@ -380,6 +396,17 @@ def analyze(directory,output,library=None,simple=None,skip_replay=False):
     _heatmap(figures/"relative-loss.svg","T1 finite config matrix","Ratio to each Shape's observed best; physical RTX 5060 Ti; FP16 Graph 512",labels,
         [str(i) for i in range(len(configs))],[[v+1 for v in row] for row in structure["relative_loss"]])
     correlation_plot(figures/"rank-correlation.svg",labels,structure["spearman"])
+    correlation_plot(figures/'top10-overlap.svg',labels,structure['top_overlap']['0.1']['jaccard'],
+        title='Top-10% configuration overlap',context='Jaccard intersection/union of strict top 7 / 64 observed ranks; tiny gaps can be noise')
+    _bar_chart(figures/'factorial-main-effects.svg','Descriptive parameter importance',
+        'Mean fraction of within-Shape log-latency variance, balanced two-level design; interaction terms retained in JSON',
+        list(design.SPACE),[100*st.mean(next(t['log_variance_fraction'] or 0 for t in value['terms'] if t['parameters']==[key])
+            for value in structure['factorial_effects'].values()) for key in design.SPACE],
+        xlabel='Mean main-effect fraction (%)',render_png=False)
+    _line_chart(figures/'repeat-variation.svg','Independent run variation',
+        '3 input-seed run medians per config; median/P90 across 64 configs, not confidence intervals',
+        {label:[(i,100*quantile([v for v in structure['repeat_cv'][name] if v is not None],q)) for i,name in enumerate(labels)]
+         for label,q in [('median CV',.5),('P90 CV',.9)]},'Shape index','Coefficient of variation (%)',render_png=False)
     sensitivity_series={key:[(i,100*(next(s for s in structure["sensitivity"] if s["shape"]==name and s["parameter"]==key)["paired_geomean_high_over_low"]-1))
         for i,name in enumerate(labels)] for key in design.SPACE}
     _line_chart(figures/"sensitivity.svg","Matched parameter sensitivity","Change high vs low, geometric mean across 32 matched pairs; indices in shape-design.json",

@@ -64,6 +64,8 @@ def generate(directory):
     # Pilot: beyond-L2 decode averaged 5.3 s/candidate (64 * 5.3 > 180 s).
     # Preserve sample quality; only increase the explicit admission deadline.
     outputs["matrix.json"]["budgets"][0]["max_wall_time_s"]=600
+    outputs['train-only.json']=json.loads(json.dumps(outputs['matrix.json']))
+    outputs['train-only.json']['cases']=[c for c in outputs['train-only.json']['cases'] if c['split']=='train']
     for filename, value in outputs.items():
         (directory / filename).write_text(json.dumps(value,indent=2)+'\n')
     anchors=[configs()[0], configs()[-1]]
@@ -84,11 +86,11 @@ def generate(directory):
     (directory/'online.json').write_text(json.dumps(value,indent=2)+'\n')
     # Independent middle-tile quality check. Keep it separate from the complete
     # 64-config factorial so missing cells are never silently filled or pooled.
-    expert_space={**SPACE,'BLOCK_M':[32,64,128],'BLOCK_N':[32,64,128]}
-    experts=[configs()[0]]+[
+    expert_space={**SPACE,'BLOCK_M':[16,32,64,128],'BLOCK_N':[32,64,128]}
+    experts=[{'BLOCK_M':16,'BLOCK_N':32,'BLOCK_K':32,'num_warps':4,'num_stages':2,'GROUP_M':1}]+[
         {'BLOCK_M':bm,'BLOCK_N':bn,'BLOCK_K':bk,'num_warps':warps,'num_stages':stages,'GROUP_M':group}
-        for bm,bn,bk,warps,stages,group in [(64,64,32,4,3,8),(64,128,64,4,3,8),(128,64,64,4,3,8),(64,64,64,8,2,1)]]
-    value=spec('t1-middle-tile-check-v1',[case(SHAPES[i],space=expert_space) for i in (0,2,5,8)],count=5,
+        for bm,bn,bk,warps,stages,group in [(64,64,32,4,3,8),(64,128,64,4,3,8),(128,64,64,4,3,8),(64,64,64,8,2,1),(16,64,64,4,3,1)]]
+    value=spec('t1-middle-tile-check-v1',[case(SHAPES[i],space=expert_space) for i in (0,2,5,8)],count=6,
         algorithms=[{'asset':'phase1/cohort@1.0.0','options':{'configs':experts}}])
     (directory/'expert-probe.json').write_text(json.dumps(value,indent=2)+'\n')
     (directory / "shape-design.json").write_text(json.dumps({"schema_version":1,"candidate_space":SPACE,

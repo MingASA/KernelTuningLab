@@ -1,5 +1,6 @@
 """Supplemental cost/drift, W4 and online-vs-Replay checks; no CUDA execution."""
 import argparse
+import hashlib
 from collections import defaultdict
 import json
 from pathlib import Path
@@ -119,6 +120,31 @@ def online_check(primary_directory,online_directory):
         'notice':'Random/Heuristic can reproduce proposed config sequences; adaptive Surrogate can branch differently on fresh noisy measurements. GPU timings are fresh observations, Replay timings are prior measured labels.'}
 
 
+def prediction_quality(primary,prior,replay):
+    training=[r for r in primary if r.split=='train']
+    digest=hashlib.sha256(core.canonical_json(sorted(r.id for r in training)).encode()).hexdigest()
+    if prior['source_record_ids_sha256']!=digest: raise ValueError('frozen training prior does not match selected source records')
+    selected=prior['ranking'][0]['config_id'];groups=defaultdict(list)
+    for row in replay['results']:
+        if row['split']=='test' and row['budget']==4:
+            first=row['trace'][0]
+            if first['latency_ms'] is not None:
+                groups[row['algorithm']].append(first['latency_ms']/row['oracle_best_latency_ms']-1)
+    cases=defaultdict(list)
+    for record in primary:
+        if record.split=='test':cases[record.case_id,record.seed].append(record)
+    for records in cases.values():
+        chosen=next(r for r in records if r.config.id==selected)
+        groups['frozen_train_constant'].append(chosen.median_ms/min(r.median_ms for r in records)-1)
+    return {'scope':'First proposal quality with empty target history; evaluated offline using measured held-out labels. No new GPU execution for prediction.',
+        'frozen_prior_created_utc':prior['created_utc'],'frozen_config':prior['ranking'][0]['config'],
+        'historical_training_records':len(training),'historical_training_source_cost_s':sum(r.wall_time_s for r in training),
+        'methods':[{'method':name,'evaluated_outcomes':len(values),'mean_regret':st.mean(values),'median_regret':st.median(values),
+            'p90_regret':core.quantile(values,.9),'within_5pct_fraction':st.mean(v<=.05 for v in values),
+            'within_10pct_fraction':st.mean(v<=.1 for v in values)} for name,values in groups.items()],
+        'notice':'4 test Shapes x 3 physical replicates; existing searchers also have 10 RNG seeds. Deterministic seed repeats are not additional independent experiments. Surrogate has a random cold start. Prior acquisition cost is conditional historical knowledge, not free cold-start tuning.'}
+
+
 def main(root,output):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     result={'protocol':'supplemental analyses are stored separately from the primary full matrix','studies':{}}
@@ -136,6 +162,9 @@ def main(root,output):
         result['w4_summary']=[{'kernel':r['kernel'],'complete':all(v is not None for row in r['matrix']['latencies_ms'] for v in row),
             'records':r['research_records'],'compiled_artifacts':r['compiled_artifacts']} for r in w4['implementations']]
     if all((root/label/'summary.json').is_file() for label in ('matrix','online')):result['online_check']=online_check(root/'matrix',root/'online')
+    if (root/'pretest/training-prior.json').is_file() and (output/'replay.json').is_file():
+        prediction=prediction_quality(core.current_records(root/'matrix'),core.read_json(root/'pretest/training-prior.json'),core.read_json(output/'replay.json'))
+        core.write(output/'prediction.json',prediction)
     core.write(output/'followups.json',result)
     print(json.dumps({label:study['status'] for label,study in result['studies'].items()},indent=2))
 

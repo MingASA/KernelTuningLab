@@ -57,3 +57,21 @@ def test_baseline_comparison_rejects_dtype_and_protocol_mixing():
         analysis.require_baseline_compatible(record,replace(record,operator=replace(record.operator,dtype='bfloat16')))
     with pytest.raises(ValueError,match='protocol mismatch'):
         analysis.require_baseline_compatible(record,replace(record,metadata={'protocol':{'cuda_graph':{'calls_per_replay':128}}}))
+
+
+def test_l3_research_report_keeps_all_solver_series_and_validates_dispatch():
+    configs=tuple(KernelConfig(c) for c in analysis.design.configs()[:4])
+    shapes=tuple(ShapeSpec(dict(zip(('M','N','K'),s[2]))) for s in analysis.design.SHAPES)
+    matrix=PerformanceMatrix(WorkloadDistribution(shapes,tuple([1]*10)),configs,
+        tuple(tuple(1.+(i+j)%4 for j in range(4)) for i in range(10)),'mock')
+    # Clearly labelled synthetic fixture for report semantics, never GPU data.
+    record=MeasurementRecord(HardwareSpec('unit',architecture='sm_120',smem_per_block=101376),
+        OperatorSpec('gemm',kind='gemm',implementation='triton/t1_gemm@1.0.0',dtype='float16',version='1.0.0'),
+        shapes[0],configs[0],RecordStatus.SUCCESS,runtime_samples_ms=(1.,),provenance='mock',
+        metadata={'correctness_verified':True,'correctness':{'verified_on_cpu':True}})
+    result=analysis.l3_study(matrix,[record])
+    for weight in ('uniform','synthetic_decode_skew'):
+        for k in (1,2,4,8):
+            rows=[r for r in result['results'] if r['weights']==weight and r['k']==k]
+            assert {r['method'] for r in rows}=={'greedy','local_swap','exact'}
+            assert all(r['dispatch_legality'].startswith('passed') for r in rows)
