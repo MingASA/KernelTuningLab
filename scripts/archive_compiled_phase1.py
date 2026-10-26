@@ -36,6 +36,19 @@ def text_sections(blob):
 DEFAULT_STUDIES=('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4','simple','expert-probe')
 
 
+def cache_binaries(cache):
+    """Prefer rg; minimal GPU servers need no extra system package to archive."""
+    try:
+        result=subprocess.run(['rg','--files','--hidden','--no-ignore',str(cache),'-g','*.cubin'],capture_output=True,text=True)
+    except FileNotFoundError:
+        def fail(error):raise error
+        if not cache.is_dir():raise ValueError('compiler cache directory is missing: '+str(cache))
+        return [str(Path(directory)/name) for directory,_,files in os.walk(cache,onerror=fail,followlinks=False)
+                for name in files if name.endswith('.cubin') and not (Path(directory)/name).is_symlink()]
+    if result.returncode not in (0,1):raise ValueError('compiler cache scan failed: '+result.stderr.strip())
+    return result.stdout.splitlines()
+
+
 def archive(root,output,studies_to_scan=DEFAULT_STUDIES,cache_dirs=None):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     wanted={};studies={};wanted_ptx=set()
@@ -54,9 +67,7 @@ def archive(root,output,studies_to_scan=DEFAULT_STUDIES,cache_dirs=None):
     caches=[Path(p) for p in cache_dirs] if cache_dirs else [Path(os.environ.get('TRITON_CACHE_DIR',Path.home()/'.triton/cache'))]
     filenames=set()
     for cache in caches:
-        result=subprocess.run(['rg','--files','--hidden','--no-ignore',str(cache),'-g','*.cubin'],capture_output=True,text=True)
-        if result.returncode not in (0,1):raise ValueError('compiler cache scan failed: '+result.stderr.strip())
-        filenames.update(result.stdout.splitlines())
+        filenames.update(cache_binaries(cache))
     matched={}
     for filename in sorted(filenames):
         path=Path(filename);blob=path.read_bytes();identity=hashlib.sha256(blob).hexdigest()
