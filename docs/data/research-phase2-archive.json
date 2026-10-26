@@ -1,0 +1,20 @@
+{
+  "archive": "artifacts/research-phase2-evidence-20261026-v2.tar.gz",
+  "sha256": "84c057ff1a592e06df4d9a65f8898893025e7ed343d90d27ec91b3ac6f4c4ed4",
+  "bytes": 59911403,
+  "verified_file_count": 8614,
+  "uncompressed_file_bytes": 343786746,
+  "inventory_sha256": "296ed9e84c8b5a994a7ac903236aab0ed7bec9c515e2735f4bf1bc289f5c34bc",
+  "source_bundle_sha256": "ccf678c85e81a4b0f636a55b0bbf52cf164a31a8abcba815f7762281727eca22",
+  "source_commit": "8a8f16382c14897e0d979450cd10b2feddf3b807",
+  "sqlite_quick_check_files": 95,
+  "archive_stream_verified": true,
+  "created_utc": "2026-10-26T07:10:33.573402+00:00",
+  "external_backup": "not_performed; no destination supplied",
+  "scope": "Local raw SQLite/JSONL/samples/logs/first attempts/compiler artifacts/portable configs/onboarding evidence/source bundles. No venv or external project checkout included.",
+  "superseded_local_archive": {
+    "archive": "artifacts/research-phase2-evidence-20261026.tar.gz",
+    "sha256": "7116867ab039988eeaccb7b9b1f10d964d14a3ccee59a4d3ec7738fa68e65c32",
+    "reason": "First archive stream verified, but the live inventory included two transient SQLite sidecars removed when the last connection closed. V2 explicitly closes every connection before inventory; no scientific records changed. Original archive retained."
+  }
+}
