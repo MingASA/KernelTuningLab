@@ -1,12 +1,12 @@
 # 交给目标GPU执行者的检查单
 
-目前只有RTX 5060 Ti实测。H20/H200/H800/4090配置、静态计划和本页都不是这些设备的验证证据。[跨GPU Anchor报告](CROSS_GPU_PHASE1.md)记录新的冻结规格、4090/H800只读验收和待确认的使用门禁。不要传输5060Ti的PTX、CUBIN或Triton编译缓存作为其他架构的可复用实现。
+已在5060 Ti、4090、H800完成同一C16×6 Shape×2输入run的FP16 Anchor；4090/H800另有T1 FP16/BF16/tail和原四类十组合严格Smoke。[跨GPU报告](CROSS_GPU_PHASE1.md)给出准确commit、原始证据、权限门禁及有限覆盖。H20/H200仍未执行，静态计划不代表其GPU验证。不要传输5060Ti的PTX、CUBIN或Triton编译缓存作为其他架构的可复用实现。
 
 ## 1. 准备源码与环境
 
 1. 检出双方约定的commit，记录干净状态/改动、Kernel和参考源码指纹、实验JSON SHA256。使用独立分支与独立Python环境。
 2. 记录可用CPU/RAM/swap/磁盘、GPU型号/实际资源、驱动、Torch/CUDA Runtime、Triton及编译器。先probe再分配大输入；系统nvcc不代替Torch runtime支持。
-3. 5060Ti的[固定依赖](data/5060ti-requirements.txt)是已验证本地栈。目标服务器先核实驱动兼容性；无法保持相同栈时，单列软件差异，不将差距全部归因于硬件。不升级全局驱动或覆盖其他项目venv。
+3. 5060Ti的[固定依赖](data/5060ti-requirements.txt)是已验证本地栈；4090/H800本轮验证了[cu124关键组件约束](data/crossgpu-cu124-constraints.txt)（Python3.11.11、Torch2.6.0、Triton3.2.0）。目标服务器先核实驱动兼容性；无法保持相同栈时，单列软件差异，不将差距全部归因于硬件。不升级全局驱动或覆盖其他项目venv。
 4. 先确认当前用户获准的单卡索引/UUID、调度/容器/交互方式、时间与CPU/RAM配额、workspace。GPU空闲和SSH登录不等于分配；不明确时停止GPU执行并请求确认。每张物理卡使用独立输出目录，通过允许的机制申请资源并检查无性能任务冲突。只有服务器规则允许时，才设置 `CUDA_VISIBLE_DEVICES` 限定获准卡，不能绕过调度器分配。本平台没有跨输出目录的GPU调度器。
 
 ## 2. 静态准备与最小实测
@@ -32,11 +32,11 @@ KT_PYTHON_BIN=.venv/bin/python bash scripts/run_gpu_smoke.sh H200 artifacts/h200
 
 ## 3. 同协议研究复测
 
-从 `examples/research_phase2/matrix.json` 复制一份，调整明确的硬件选择，保留T1源码、Shape定义、dtype、C48、输入seed、warmup10、31样本和Graph512。先write-only检查总量，再Pilot、训练分区、冻结先验、验证/测试分区。当前模板的C48固定GROUP1/stage3，不等于192候选全空间，也不是C64超集。
+首轮建议先复用 `examples/crossgpu_anchor/pilot.json` 与 `anchor.json`，按报告固定6ec源码，不立即重复2304条矩阵。更大研究可从 `examples/research_phase2/matrix.json` 复制一份，调整明确的硬件选择，保留T1源码、Shape定义、dtype、C48、输入seed、warmup10、31样本和Graph512。先write-only检查总量，再Pilot、训练分区、冻结先验、验证/测试分区。当前模板的C48固定GROUP1/stage3，不等于192候选全空间，也不是C64超集。
 
 实际硬件约束可能排除候选，保留invalid/unsupported/compile/numerical/runtime/missing状态。共同合法集合应取各卡**已编译且正确性通过的Shape/config格子交集**；额外硬件专属空间另设有标识的cohort，不删除其他架构可用配置。不要用缺失预测填充完整实测表。
 
-跨硬件按相同实现/内容、语义、dtype、布局和measurement scope连接，各GPU矩阵分别保存。在共同已测集合上计算源卡Top配置的目标迁移损失、Spearman、Top重叠、近最优覆盖及失败/缺失率。存在多卡真实数据后才做Leave-One-GPU-Out；单张5060Ti不构成多硬件训练集。
+跨硬件按相同实现/内容、语义、dtype、布局和measurement scope连接，各GPU矩阵分别保存。在共同已测集合上计算源卡Top配置的目标迁移损失、Spearman、Top重叠、近最优覆盖及失败/缺失率。现有三卡数据可做有限的硬件留出，但同Shape历史迁移不等于Shape/GPU双重泛化。H20/H200仍必须采新数据，当前数据不能冒充它们的训练集。相同CUDA RNG seed本轮没有生成跨卡相同字节，后续须冻结确定性输入字节协议或保留该混杂。
 
 ## 4. 原始结果回传与验收
 

@@ -25,6 +25,15 @@
 - **两机GPU成功后的SSH后处理超时**：原20秒元数据deadline不足。先读原始guard与测量记录，确认exit0、eligible且物理UUID吻合，再幂等补写相同字节的sidecar；不启动CUDA、不重跑已有观测。控制状态区分postprocessing_pending与测量失败，后处理允许有界重试。不能只改成功标志而没有原receipt证据。
 - **4090 Pilot噪声门槛**：首次24条数值正确，但一处tail cell两run CV6.51%超过预设5%。保留全部样本，冻结两轮各24条的独立同协议稳定性诊断；两轮都通过才继续Anchor。不删除首轮、不挑最快样本、不放宽正确性或噪声门槛。频率/输入等原因尚未证实。
 
+## 已完成后的补充与证据限制
+
+- 两机最小T1、十组合80条严格core、24条Pilot、192条正式Anchor和36次在线观测均已完成，主数据使用6ec，外层guard使用cbccd9d；不要重复执行已有有效证据。
+- 两机没有`rg`：原编译归档脚本报FileNotFoundError。523486b helper增加仅扫描指定自有cache、拒绝跟随symlink的标准库fallback，两端均95/95真实CUBIN保存。归档修复不需要重测GPU或系统安装。
+- cbccd9d guard原receipt未序列化command，分析器不能假定字段存在。保留原字节，只为确切旧SHA派生单独control binding：原driver state、原console/manifest.run_id、原guard SHA全部核对。新guard记录command/cwd；不能把新字段伪装回填进旧观测。
+- SQLite封存顺序必须是quick_check→checkpoint→显式close→枚举清单→tar。4090追加noise的首个脚本反序枚举，close后WAL消失导致FileNotFoundError；首份错误保留，修复后仅重做CPU封存，不重测。
+- 三卡相同CUDA随机seed的实际输入hash不同；同Torch2.6的4090/H800也不保证相同。源码在CUDA上randn，保留真实hash，不宣称输入字节或纯架构因素已隔离。
+- 主4090矩阵仍有4/96 cell CV>5%。追加12观测只作诊断，tail一处仍5.50%；保留原样本及不确定性。不要无限复测、挑稳定/最快一次或改写主矩阵。
+
 ## 用户提供的H800历史线索
 
 以下由用户在其他实验中验证或观察，**本轮尚未复现**，需要遇到相应症状后再核对，不自动套用所有参数。

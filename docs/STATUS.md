@@ -20,13 +20,18 @@
 ## Validation boundary
 
 The cross-GPU follow-up is documented in [CROSS_GPU_PHASE1.md](CROSS_GPU_PHASE1.md):
-a newly frozen final-runtime 5060 Ti Anchor has 192 verified observations
-(6 Shapes × 16 configs × 2 input runs) and 1,440 cold offline Replays.
-Current CPU regression is 373 passed / 11 opt-in skipped, including seven
-idle-GPU admission and own-process cleanup regressions. RTX 4090/H800 idle
-single-GPU use is now explicitly authorized; isolated deployment is in progress.
-There are no paired GPU results or hardware-transfer conclusions yet. Off-host
-backup awaits an authorized destination and does not block experiments.
+5060 Ti, RTX 4090 and H800 each have 192 verified FP16 Anchor observations
+(6 Shapes × 16 configs × 2 input runs), with 48 independent acceptance measurements
+per GPU and the full 16-config measured intersection. Both remote GPUs passed
+T1 FP16/BF16/tail and the 80-record strict core gate. Six transfer directions,
+8,160 offline Replay trajectories / 30,600 reveals, and 18 real online trajectories
+were audited. Online totals are 54 new physical measurements, 18 cache observations
+and 72 independent acceptance measurements. Current CPU regression is 386 passed /
+11 opt-in skipped. Software and actual RNG input bytes differ across devices;
+4090 has four cells above 5% repeat CV, retained with bounded diagnostic evidence.
+These finite results are not production, architecture-only or 1%-budget claims.
+H20/H200, target-GPU Shape-generic and MoE TMA remain unexecuted. Off-host backup
+awaits an authorized destination; prior sealed evidence remains intact.
 
 The readiness follow-up is documented in [RESEARCH_PHASE2.md](RESEARCH_PHASE2.md):
 24 Shapes × 48 configs × 2 input runs, a complete 2,304-observation FP16 matrix,

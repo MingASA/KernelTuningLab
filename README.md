@@ -56,8 +56,8 @@ flowchart LR
 | RTX 5060 Ti 16GB / WSL2 | 原四类十阶段严格gate、新八类有限验证；[GPU报告](docs/5060TI_RESULTS.md) |
 | T1 GEMM / L2 / L3 | C64的10 Shape×64配置×3输入seed真实矩阵；[第一阶段研究](docs/RESEARCH_PHASE1.md) |
 | 扩展tile、Shape-generic、交付审计 | [第二阶段研究与验收](docs/RESEARCH_PHASE2.md)逐项标注通过、部分通过、未执行与限制 |
-| 最终代码Anchor与跨GPU准备 | [新192观测Anchor](docs/CROSS_GPU_PHASE1.md)已在5060 Ti实测；4090/H800仅只读检查，GPU权限待确认 |
-| H20/H200/H800/4090 | [可复用迁移检查单](docs/GPU_MIGRATION.md)，本轮未在这些GPU执行 |
+| 真实跨GPU Anchor / 迁移 | [5060 Ti / 4090 / H800](docs/CROSS_GPU_PHASE1.md)各192条FP16观测，8160条离线Replay及18条真实在线轨迹；有限16候选与软件差异有明确边界 |
+| H20/H200及更广Hopper路径 | [迁移检查单](docs/GPU_MIGRATION.md)；H20/H200未执行，H800的MoE TMA/完整proposal-suite仍未验证 |
 | Mock / Replay | Mock是合成性能；Replay揭示已有标签，均不产生新GPU测量 |
 
 已接入GEMM、BMM、Softmax、LayerNorm、W4/W3/W2反量化与量化GEMM、连续Attention、MoE Grouped GEMM。[算子文档](docs/PROPOSAL_OPERATORS.md)给出语义边界；canonical bitstream、连续Attention、局部MoE不代表GPTQ/AWQ、paged KV或完整生产推理。

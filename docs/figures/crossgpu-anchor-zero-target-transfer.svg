@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Source Top1, zero target measurements</title>
+<desc id="desc">Source ranking only; target finite optimum used for scoring, not candidate selection</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Source Top1, zero target measurements</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Source ranking only; target finite optimum used for scoring, not candidate selection</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >16.3</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >32.5</text>
+<line x1="100" x2="810" y1="232.99999999999997" y2="232.99999999999997" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >48.8</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >65</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >81.3</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="242.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="384.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >3</text>
+<text x="526.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="668.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >5</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >6</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Shape index / frozen order (1-6)</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Target finite-set regret (%)</text>
+<polyline points="100.00,440.00 242.00,437.81 384.00,432.63 526.00,428.39 668.00,414.97 810.00,374.33" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="440.00" r="3" fill="#2563eb"><title>4090 to 5060ti: 1, 0</title></circle>
+<circle cx="242.00" cy="437.81" r="3" fill="#2563eb"><title>4090 to 5060ti: 2, 0.516</title></circle>
+<circle cx="384.00" cy="432.63" r="3" fill="#2563eb"><title>4090 to 5060ti: 3, 1.736</title></circle>
+<circle cx="526.00" cy="428.39" r="3" fill="#2563eb"><title>4090 to 5060ti: 4, 2.736</title></circle>
+<circle cx="668.00" cy="414.97" r="3" fill="#2563eb"><title>4090 to 5060ti: 5, 5.897</title></circle>
+<circle cx="810.00" cy="374.33" r="3" fill="#2563eb"><title>4090 to 5060ti: 6, 15.47</title></circle>
+<g><title>4090 to 5060ti</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >4090 to 5060ti</text>
+</g>
+<polyline points="100.00,409.49 242.00,427.57 384.00,396.72 526.00,440.00 668.00,390.90 810.00,354.61" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="409.49" r="3" fill="#d97706"><title>4090 to H800: 1, 7.188</title></circle>
+<circle cx="242.00" cy="427.57" r="3" fill="#d97706"><title>4090 to H800: 2, 2.928</title></circle>
+<circle cx="384.00" cy="396.72" r="3" fill="#d97706"><title>4090 to H800: 3, 10.2</title></circle>
+<circle cx="526.00" cy="440.00" r="3" fill="#d97706"><title>4090 to H800: 4, 0</title></circle>
+<circle cx="668.00" cy="390.90" r="3" fill="#d97706"><title>4090 to H800: 5, 11.57</title></circle>
+<circle cx="810.00" cy="354.61" r="3" fill="#d97706"><title>4090 to H800: 6, 20.12</title></circle>
+<g><title>4090 to H800</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >4090 to H800</text>
+</g>
+<polyline points="100.00,440.00 242.00,369.93 384.00,197.37 526.00,407.02 668.00,389.96 810.00,401.50" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="440.00" r="3" fill="#059669"><title>5060ti to 4090: 1, 0</title></circle>
+<circle cx="242.00" cy="369.93" r="3" fill="#059669"><title>5060ti to 4090: 2, 16.51</title></circle>
+<circle cx="384.00" cy="197.37" r="3" fill="#059669"><title>5060ti to 4090: 3, 57.17</title></circle>
+<circle cx="526.00" cy="407.02" r="3" fill="#059669"><title>5060ti to 4090: 4, 7.771</title></circle>
+<circle cx="668.00" cy="389.96" r="3" fill="#059669"><title>5060ti to 4090: 5, 11.79</title></circle>
+<circle cx="810.00" cy="401.50" r="3" fill="#059669"><title>5060ti to 4090: 6, 9.072</title></circle>
+<g><title>5060ti to 4090</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >5060ti to 4090</text>
+</g>
+<polyline points="100.00,409.49 242.00,228.62 384.00,371.36 526.00,337.61 668.00,284.46 810.00,355.77" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="409.49" r="3" fill="#dc2626"><title>5060ti to H800: 1, 7.188</title></circle>
+<circle cx="242.00" cy="228.62" r="3" fill="#dc2626"><title>5060ti to H800: 2, 49.8</title></circle>
+<circle cx="384.00" cy="371.36" r="3" fill="#dc2626"><title>5060ti to H800: 3, 16.17</title></circle>
+<circle cx="526.00" cy="337.61" r="3" fill="#dc2626"><title>5060ti to H800: 4, 24.12</title></circle>
+<circle cx="668.00" cy="284.46" r="3" fill="#dc2626"><title>5060ti to H800: 5, 36.64</title></circle>
+<circle cx="810.00" cy="355.77" r="3" fill="#dc2626"><title>5060ti to H800: 6, 19.84</title></circle>
+<g><title>5060ti to H800</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >5060ti to H800</text>
+</g>
+<polyline points="100.00,286.91 242.00,176.43 384.00,434.07 526.00,440.00 668.00,335.84 810.00,421.62" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="286.91" r="3" fill="#7c3aed"><title>H800 to 4090: 1, 36.07</title></circle>
+<circle cx="242.00" cy="176.43" r="3" fill="#7c3aed"><title>H800 to 4090: 2, 62.1</title></circle>
+<circle cx="384.00" cy="434.07" r="3" fill="#7c3aed"><title>H800 to 4090: 3, 1.397</title></circle>
+<circle cx="526.00" cy="440.00" r="3" fill="#7c3aed"><title>H800 to 4090: 4, 0</title></circle>
+<circle cx="668.00" cy="335.84" r="3" fill="#7c3aed"><title>H800 to 4090: 5, 24.54</title></circle>
+<circle cx="810.00" cy="421.62" r="3" fill="#7c3aed"><title>H800 to 4090: 6, 4.329</title></circle>
+<g><title>H800 to 4090</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >H800 to 4090</text>
+</g>
+<polyline points="100.00,120.56 242.00,438.78 384.00,403.76 526.00,428.39 668.00,434.94 810.00,306.05" fill="none" stroke="#0891b2" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#0891b2"><title>H800 to 5060ti: 1, 75.26</title></circle>
+<circle cx="242.00" cy="438.78" r="3" fill="#0891b2"><title>H800 to 5060ti: 2, 0.2875</title></circle>
+<circle cx="384.00" cy="403.76" r="3" fill="#0891b2"><title>H800 to 5060ti: 3, 8.539</title></circle>
+<circle cx="526.00" cy="428.39" r="3" fill="#0891b2"><title>H800 to 5060ti: 4, 2.736</title></circle>
+<circle cx="668.00" cy="434.94" r="3" fill="#0891b2"><title>H800 to 5060ti: 5, 1.193</title></circle>
+<circle cx="810.00" cy="306.05" r="3" fill="#0891b2"><title>H800 to 5060ti: 6, 31.56</title></circle>
+<g><title>H800 to 5060ti</title><line x1="840" x2="858" y1="205" y2="205" stroke="#0891b2" stroke-width="3"/>
+<text x="865.00" y="209.00" font-size="11" fill="#334155" text-anchor="start" >H800 to 5060ti</text>
+</g>
+</g></svg>
