@@ -38,6 +38,12 @@ def audit(root):
         datasets[label]={'records':len(rows),'verified_cells':sum(c['verified'] for c in dataset['coverage']),
             'dataset_id':exported['dataset_id'],'sqlite_quick_check':'ok','compiler_cubin_sha256_checked':artifacts}
     replay=core.read_json(analysis/'replay.json');reveals=0
+    common=tuple(core.KernelConfig(c) for c in summary['common_configs'])
+    if common:
+        tables={label:study.pooled_table([r for r in rows.values() if r.config.id in {c.id for c in common}],common)
+                for label,rows in all_rows.items()}
+        for pair in summary['pairs']:
+            assert pair['metrics']==study.paired_metrics(tables[pair['source']].latencies_ms,tables[pair['target']].latencies_ms,common)
     for trial in replay['results']:
         trace=trial['trace'];rows=all_rows[trial['target']]
         assert len(trace)==trial['budget']==trial['evaluations']

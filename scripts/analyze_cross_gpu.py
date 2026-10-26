@@ -172,6 +172,9 @@ def paired_metrics(source,target,configs):
     """Target-relative scores only; the Top-K minimum is evaluator coverage."""
     if len(source)!=len(target) or any(len(row)!=len(configs) for row in (*source,*target)):
         raise ValueError('inconsistent paired finite matrices')
+    # A single fixed configuration is chosen using only the source workload's
+    # mean normalized latency, separately from a source winner for each Shape.
+    global_choice=min(range(len(configs)),key=lambda j:(st.mean(row[j]/min(row) for row in source),configs[j].id))
     result=[]
     for i,(left,right) in enumerate(zip(source,target)):
         order=sorted(range(len(configs)),key=lambda j:(left[j],configs[j].id));best=min(right)
@@ -181,6 +184,7 @@ def paired_metrics(source,target,configs):
             overlaps[str(fraction)]={'count':n,'intersection':len(a&b),'jaccard':len(a&b)/len(a|b)}
         result.append({'shape_id':SHAPES[i].id,'spearman':core.correlation(left,right),'top_overlap':overlaps,
             'source_top1_config':dict(configs[order[0]].params),'source_top1_target_regret':right[order[0]]/best-1,
+            'source_global_config':dict(configs[global_choice].params),'source_global_target_regret':right[global_choice]/best-1,
             'source_topk_target_coverage':[{'k':k,'regret':min(right[j] for j in order[:k])/best-1}
                 for k in (1,2,4,8) if k<=len(configs)],
             'notice':'Top-K target minimum is oracle evaluation coverage, not a zero-target-measurement selector.'})
@@ -215,6 +219,21 @@ def replay_case(rows,searcher,configs,budget,rng):
     result=core.run_replay(rows,searcher,finite_space(configs),core.SearchBudget(budget),seed=rng).to_dict()
     originals={r.config.id:r.metadata.get('hardware_holdout_fold',{}).get('source_record_id',r.id) for r in rows}
     for step in result['trace']:step['original_source_record_id']=originals[core.KernelConfig(step['config']).id]
+    return result
+
+
+def threshold_statistics(group):
+    result={}
+    for pct in (5,10):
+        hits=[next((step['evaluation'] for step in trial['trace'] if step['best_latency_ms'] is not None
+                   and step['best_latency_ms']<=trial['oracle_best_latency_ms']*(1+pct/100)),None) for trial in group]
+        observed=[hit for hit in hits if hit is not None]
+        result['mean_observations_to_'+str(pct)+'pct_when_reached']=st.mean(observed) if observed else None
+        result['not_reached_'+str(pct)+'pct']=len(hits)-len(observed)
+    cells=defaultdict(list)
+    for trial in group:
+        if trial['regret'] is not None:cells[trial['shape_id'],trial['input_seed']].append(trial['regret'])
+    result['mean_rng_regret_std_within_shape_input']=st.mean(st.pstdev(v) for v in cells.values()) if cells else None
     return result
 
 
@@ -305,6 +324,67 @@ def export_dataset(dataset,output):
     return report
 
 
+def analyze_online(anchors,inputs,output):
+    """Audit real v2 online traces; score choices on the earlier target Anchor.
+
+    New online latency can be below an old finite minimum due to noise. That
+    cross-run point difference is deliberately not named search regret.
+    """
+    anchors=dict(anchors);trials=[];devices=[]
+    for label,path in inputs:
+        path=Path(path);anchor=load_dataset(label,anchors[label]);rows=core.current_records(path)
+        admission=resource_admission(path,rows,required=True)
+        oracle={(r.shape.id,r.config.id,r.seed):r for r in anchor['records']}
+        by_id={r.id:r for r in rows};manifest=core.read_json(path/'research_manifest.json')
+        if manifest['git_commit']!=RUNTIME['frozen_experiment_commit']:raise ValueError('online Kernel source commit changed')
+        for job in manifest['jobs']:
+            snapshot=core.snapshot_directory(path,job)
+            if snapshot is None:raise ValueError('online job not executed')
+            for trial in core.read_json(snapshot/'trials.json'):
+                observed=[by_id[identity] for identity in trial['record_ids']]
+                if not (trial['status']=='passed' and len(observed)==4 and len({r.config.id for r in observed})==4
+                        and trial['observations']==trial['physical_evaluations']+trial['cache_hits']==4
+                        and all(r.correctness_verified for r in observed)):
+                    raise ValueError('online trajectory lacks four verified revealed observations')
+                original=[oracle[r.shape.id,r.config.id,r.seed] for r in observed]
+                for new,old in zip(observed,original):core.require_baseline_compatible(old,new)
+                best=by_id[trial['best_verified_record_id']]
+                if best not in observed or best.median_ms!=min(r.median_ms for r in observed):
+                    raise ValueError('online recommendation is not the observed verified best')
+                selected=oracle[best.shape.id,best.config.id,best.seed]
+                optimum=min(r.median_ms for r in anchor['records'] if r.shape.id==best.shape.id and r.seed==best.seed)
+                traces=trial['observation_trace'];seen=[]
+                for step,record in zip(traces,observed):
+                    if step['record_id']!=record.id:raise ValueError('online trace source identity changed')
+                    seen.append(record.median_ms)
+                    if step['best_verified_latency_ms']!=min(seen):raise ValueError('online best includes unrevealed data')
+                if len(traces)!=4:raise ValueError('online trace is incomplete')
+                if sum(not step['cache_hit'] for step in traces)!=trial['physical_evaluations']:
+                    raise ValueError('online cache and physical measurement counts disagree')
+                trials.append({'gpu':label,'shape':dict(best.shape.dims),'method':trial['algorithm_options']['method'],
+                    'seed':best.seed,'budget':4,'budget_fraction':4/len(CONFIGS),'status':'passed',
+                    'config':dict(best.config.params),'source_record_ids':trial['record_ids'],
+                    'observed_configs':[dict(r.config.params) for r in observed],
+                    'best_latency_ms':best.median_ms,'prior_target_anchor_best_ms':optimum,
+                    'point_delta_to_prior_anchor_best':best.median_ms/optimum-1,
+                    'selected_config_anchor_regret':selected.median_ms/optimum-1,
+                    'revealed_set_anchor_regret':min(r.median_ms for r in original)/optimum-1,
+                    'new_gpu_measurements':trial['physical_evaluations'],'cache_observations':trial['cache_hits'],
+                    'wall_s':trial['wall_time_s'],'physical_compile_ms':trial['physical_compile_time_ms'],
+                    'physical_measurement_wall_s':trial['physical_measurement_wall_time_s'],
+                    'new_trace_source_verified':True})
+        summary=core.read_json(path/'summary.json')
+        devices.append({'gpu':label,'kernel_commit':manifest['git_commit'],'resource_admission':admission,
+            **{k:summary[k] for k in ('observations','research_evaluations','cache_hits','validation_evaluations',
+                'job_wall_time_s','physical_measurement_wall_time_s','known_physical_compile_time_ms','failed_measurement_observations')}})
+    result={'status':'passed','devices':devices,'trials':trials,
+        'source_history':'Frozen 5060ti Anchor matrix; its acquisition cost is separately reported in the main summary, not free training data.',
+        'notice':'Real online execution; independent fresh output but shared compatible cache across algorithms. One RNG/input seed, three Shapes per target. Selection regret is scored on previous Anchor labels; current latency point delta is a different metric. Neither is an independent cold-start wall comparison.'}
+    core.write(Path(output)/'online-checks.json',result)
+    print(core.canonical_json({'online_status':result['status'],'trials':len(trials),
+        'new_gpu_measurements':sum(d['research_evaluations'] for d in devices)}))
+
+
 def analyze(inputs,output,skip_replay=False):
     output=Path(output);figures=output/'figures';figures.mkdir(parents=True,exist_ok=True)
     datasets=[load_dataset(label,path) for label,path in inputs];available=[d for d in datasets if d['records']]
@@ -372,7 +452,8 @@ def analyze(inputs,output,skip_replay=False):
             'within_5pct':st.mean(r['regret'] is not None and r['regret']<=.05 for r in group),
             'within_10pct':st.mean(r['regret'] is not None and r['regret']<=.1 for r in group),
             'failed_or_missing':sum(r['failed_evaluations']+r['missing_evaluations'] for r in group),
-            'mean_known_target_source_cost_s':st.mean(r['known_measurement_cost_s'] for r in group)})
+            'mean_known_target_source_cost_s':st.mean(r['known_measurement_cost_s'] for r in group),
+            **threshold_statistics(group)})
     core.write(output/'replay.json',{'results':replays,'training_costs':training_costs,'aggregates':aggregates,'not_applicable':not_applicable})
     result={'schema_version':1,'cohort_id':DESIGN['cohort_id'],'status':'paired' if pairs else 'blocked_no_paired_gpu',
         'devices':public,'datasets':dataset_exports,'matrix_exports':matrix_exports,
@@ -409,7 +490,14 @@ def analyze(inputs,output,skip_replay=False):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--dataset',action='append',required=True,help='label=existing research root; no SSH or GPU execution')
     parser.add_argument('--output',required=True);parser.add_argument('--skip-replay',action='store_true')
+    parser.add_argument('--online-dataset',action='append',default=[],help='label=real online journal to audit against the Anchor')
+    parser.add_argument('--online-only',action='store_true',help='audit online journals without recomputing finite-matrix Replay')
     args=parser.parse_args();inputs=[item.split('=',1) for item in args.dataset]
     if any(len(item)!=2 for item in inputs) or len({item[0] for item in inputs})!=len(inputs):raise ValueError('distinct label=path inputs required')
     if any(not label.replace('-','').isalnum() for label,_ in inputs):raise ValueError('labels must be alphanumeric with optional hyphens')
-    analyze(inputs,args.output,args.skip_replay)
+    if args.online_only and not args.online_dataset:parser.error('--online-only needs --online-dataset')
+    if not args.online_only:analyze(inputs,args.output,args.skip_replay)
+    if args.online_dataset:
+        online=[item.split('=',1) for item in args.online_dataset]
+        if any(len(item)!=2 or item[0] not in dict(inputs) for item in online):parser.error('online labels need a matching Anchor dataset')
+        analyze_online(inputs,online,args.output)

@@ -31,6 +31,8 @@ def summarize(root,docs):
     result['frozen_source']=core.read_json(root/'baseline/frozen-source.json')
     result['deployment_source']=core.read_json(root/'deploy/manifest.json')
     result['audit']=core.read_json(root/'audit.json')
+    if (analysis/'online-checks.json').is_file():result['online_checks']=core.read_json(analysis/'online-checks.json')
+    if (analysis/'noise-diagnosis.json').is_file():result['noise_diagnosis']=core.read_json(analysis/'noise-diagnosis.json')
     result['compiler_archive']={}
     for device in result['devices']:
         path=root/device['label']/'compiled/index.json'
