@@ -28,3 +28,16 @@ def test_phase2_prior_cannot_be_frozen_after_test_acquisition(tmp_path):
     with pytest.raises(ValueError,match='retrospective'):
         analysis.freeze_prior(tmp_path)
     assert not (tmp_path/'pretest/prior.json').exists()
+
+
+def test_gpu_research_spec_parameter_names_match_cpu_discoverable_sdk_contracts():
+    """Catch configuration typos before scheduling physical GPU collections."""
+    from kernel_tuning_lab.catalog import get_catalog
+    catalog=get_catalog()
+    for path in (ROOT/'examples/research_phase2').glob('*.json'):
+        spec=json.loads(path.read_text())
+        if spec.get('kind')!='research':continue
+        for case in spec['cases']:
+            for item in case['kernels']:
+                kernel=catalog.resolve('kernel',item['asset'])
+                assert set(item.get('space',{}))<=set(kernel.space.parameters), (path.name,kernel.ref)

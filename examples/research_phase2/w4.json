@@ -98,7 +98,7 @@
               2,
               4
             ],
-            "DEQUANT_BLOCK": [
+            "DEQUANT_BLOCK_SIZE": [
               512
             ]
           }

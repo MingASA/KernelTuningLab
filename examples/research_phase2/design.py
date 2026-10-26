@@ -80,7 +80,7 @@ def generate(directory):
             'num_stages':[2],'GROUP_M':[1,8],'SPLIT_K':[1,2,4]}
     w4=spec('phase2-w4-unseen-v1',[{'name':'w4-unseen','operator':'w4a16_gemm@1.0.0','split':'test',
         'kernels':[{'asset':'triton/w4a16_gemm@1.0.0','space':wspace},
-                   {'asset':'triton_pipeline/w4a16_gemm@1.0.0','space':{**wspace,'DEQUANT_BLOCK':[512]}}],
+                   {'asset':'triton_pipeline/w4a16_gemm@1.0.0','space':{**wspace,'DEQUANT_BLOCK_SIZE':[512]}}],
         'shapes':[dict(zip(('M','N','K'),dims)) for dims in ((4,2048,2048),(64,2048,2048),(257,1031,1025))]}],12)
     outputs={'matrix':primary,'train':train,'validation':validation,'test':test,'pilot':pilot,
         'repeat':repeat,'controls':group_stage,'generic':generic,'generic-correctness':correctness,'bf16':bf16,'online':online,'w4':w4}
