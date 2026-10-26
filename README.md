@@ -11,8 +11,9 @@
 Python ≥3.10，核心包无第三方运行依赖；CPU路径不需要Torch/Triton。
 
 ```bash
-git clone https://github.com/MingASA/KernelTuningLab.git
+git clone --branch research/5060ti-readiness https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
+git checkout --detach 35ac36ed66becf19271c9ed3e97950fb67a03d87
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 .venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/first-study
@@ -21,6 +22,8 @@ python3 -m venv .venv
 打开 `artifacts/first-study/report.md` 查看搜索曲线、已验证性能、成本、失败和覆盖。相同命令恢复；`--write-only` 预览预算，`--report-only` 重建报告，`--quiet` 关闭stderr进度。若Python缺少ensurepip，可使用已有uv：`uv venv --python 3.12 --seed .venv`。
 
 完整安装、wheel、GPU最小实验、恢复与数据导出见 **[QUICKSTART.md](docs/QUICKSTART.md)**。
+
+当前 `main` 尚未包含这套验证交付；上述命令固定到已验证源码。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
 
 ## 添加实现或算法
 

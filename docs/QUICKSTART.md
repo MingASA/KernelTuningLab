@@ -5,8 +5,9 @@ Python ≥3.10。CPU流程无需Torch、Triton、Matplotlib或GPU，SVG报告使
 ## 源码安装与CPU实验
 
 ```bash
-git clone https://github.com/MingASA/KernelTuningLab.git
+git clone --branch research/5060ti-readiness https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
+git checkout --detach 35ac36ed66becf19271c9ed3e97950fb67a03d87
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 .venv/bin/python -m pytest -q
@@ -16,6 +17,8 @@ python3 -m venv .venv
 ```
 
 若系统Python缺少ensurepip，使用本机完整Python或已有 `uv venv --python 3.12 --seed .venv`，再执行pip安装；无需修改其他CUDA环境。本轮实际复现过这个WSL问题。
+
+这是固定的5060 Ti交付基线；main尚未合并相关成果。需修改源码时先创建自己的开发分支。4090/H800的安装与实验必须使用[跨GPU报告](CROSS_GPU_PHASE1.md)声明的准确实验commit，并先确认服务器GPU、调度、时长及workspace授权；不要把5060 Ti的cu132锁文件直接套到旧驱动服务器。
 
 `probe`默认只检查CPU环境；`--gpu`才加载CUDA。CPU测试跳过需GPU项目，设置 `KT_RUN_GPU_TESTS=1` 才启用物理GPU回归。
 

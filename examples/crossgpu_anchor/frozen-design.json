@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "cohort_id": "0bf1376584fecd9c4ea19b0ba5027209c7a905ec875790f6b4f4e9dc380a1f16",
+  "runtime_base_commit": "35ac36ed66becf19271c9ed3e97950fb67a03d87",
+  "operator": "gemm@1.0.0",
+  "kernel": "triton/t1_gemm@1.0.0",
+  "shapes": [
+    {
+      "name": "decode-small",
+      "dims": {
+        "M": 1,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Low M, 8 MiB B; tile utilization and CTA count"
+    },
+    {
+      "name": "decode-weight64m",
+      "dims": {
+        "M": 4,
+        "N": 8192,
+        "K": 4096
+      },
+      "hypothesis": "Low M, 64 MiB B exceeds measured 5060 Ti L2; compare with actual target cache sizes"
+    },
+    {
+      "name": "tile-edge33",
+      "dims": {
+        "M": 33,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Just above BM32, below BM64; additional M tile versus padding"
+    },
+    {
+      "name": "medium",
+      "dims": {
+        "M": 512,
+        "N": 1024,
+        "K": 1024
+      },
+      "hypothesis": "Medium compute and multi-CTA scheduling"
+    },
+    {
+      "name": "compute-large",
+      "dims": {
+        "M": 1024,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Larger compute workload and pipeline/tile tradeoffs"
+    },
+    {
+      "name": "tail",
+      "dims": {
+        "M": 63,
+        "N": 1031,
+        "K": 1025
+      },
+      "hypothesis": "Irregular strides and tails on all axes, near M64"
+    }
+  ],
+  "configs": [
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 2,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    }
+  ],
+  "protocol": {
+    "dtype": "float16",
+    "warmup": 10,
+    "repetitions": 31,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 512,
+    "input_seed_role": "independent physical input/run repeats; search RNG is separate in Replay",
+    "layout": "contiguous row-major A[M,K], B[K,N], C[M,N]",
+    "correctness": "platform reference, input integrity, repeated invocation and final timed output; no claims"
+  },
+  "seeds": [
+    7,
+    19
+  ],
+  "prior_information": "5060 Ti exploratory shapes/configs; frozen before any 4090/H800 latency observations",
+  "candidate_count": 16,
+  "raw_cartesian_domain_count": 192,
+  "acquisition": "Existing cohort SDK plugin visits only the listed configs; independent acceptance can sample the broader declared SDK domain and is excluded from the matrix.",
+  "fold_protocol": "Keep physical records unchanged. Hardware-holdout Replay derives explicit train/test views with original record IDs; no target labels in training.",
+  "metrics": [
+    "target-relative regret",
+    "Spearman",
+    "Top-5/10/20% overlaps",
+    "source Top-K target coverage (oracle scoring only)",
+    "B0 fixed source Top1",
+    "B1/2/4/8 observed search",
+    "failures/missing/common subset",
+    "source and target costs separately"
+  ],
+  "search_rng_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "search_budgets": [
+    0,
+    1,
+    2,
+    4,
+    8
+  ],
+  "budget_per_gpu": {
+    "pilot_observations": 24,
+    "pilot_acceptance_allowance": 24,
+    "pilot_wall_cap_s": 600,
+    "main_observations": 192,
+    "main_acceptance_allowance": 48,
+    "main_wall_cap_s": 1200,
+    "estimated_main_wall_s": [
+      480,
+      720
+    ],
+    "gpu_memory_admission_budget_bytes": 2147483648,
+    "host_memory_admission_budget_bytes": 2147483648,
+    "compiler_workers": 1,
+    "main_timed_complete_plan_calls": 3047424,
+    "notice": "Wall estimates calibrated after local pilot. Runtime/allocator contexts vary; stop rather than exceed authorized server limits."
+  }
+}
