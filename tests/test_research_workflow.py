@@ -66,6 +66,7 @@ def test_research_cli_executes_multiple_cases_and_resumes_without_extra_measurem
     output = tmp_path / "study"
     result = run_cli("research", "--spec", spec, "--output", output)
     assert result.returncode == 0, result.stdout + result.stderr
+    assert 'Research: 4 jobs' in result.stderr and '[1/4]' in result.stderr
     report = json.loads((output / "summary.json").read_text())
     assert report["status"] == "passed"
     assert report["trial_count"] == 6

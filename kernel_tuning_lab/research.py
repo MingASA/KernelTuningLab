@@ -176,7 +176,7 @@ def _report(output):
         return result
 
 
-def run_research(spec_path, output_dir, *, write_only=False, report_only=False, plugins=()):
+def run_research(spec_path, output_dir, *, write_only=False, report_only=False, plugins=(), progress=None):
     output = Path(output_dir).resolve()
     try:
         with OutputLease(output) as lease:
@@ -210,10 +210,16 @@ def run_research(spec_path, output_dir, *, write_only=False, report_only=False, 
             for job in manifest["jobs"]:
                 AssetExperiment.from_dict(job["experiment"]).save(output / job["spec"])
             _write(output / "research_manifest.json", manifest)
+            if progress is not None:
+                progress({"event": "plan", **manifest["planned"]})
             if not write_only:
-                for job in manifest["jobs"]:
+                for index, job in enumerate(manifest["jobs"], 1):
                     job["status"] = "running"
                     _write(output / "research_manifest.json", manifest)
+                    if progress is not None:
+                        progress({"event": "job", "index": index, "jobs": len(manifest["jobs"]),
+                                  "case": job["case"], "kernel": job["kernel"], "algorithm": job["algorithm"],
+                                  "dtype": job["dtype"], "seed": job["seed"], "status": "running"})
                     started = time.perf_counter()
                     try:
                         result = execute_asset_experiment(output / job["spec"], output / job["output"],
@@ -227,6 +233,9 @@ def run_research(spec_path, output_dir, *, write_only=False, report_only=False, 
                     job.update(result=result, status=_job_status(output / job["output"], result),
                                run_id=result.get("run_id"), wall_time_s=time.perf_counter() - started)
                     _write(output / "research_manifest.json", manifest)
+                    if progress is not None:
+                        progress({"event": "job", "index": index, "jobs": len(manifest["jobs"]),
+                                  "case": job["case"], "status": job["status"], "wall_time_s": job["wall_time_s"]})
                     if result["status"] == "interrupted":
                         break
                 manifest["status"] = "finished"

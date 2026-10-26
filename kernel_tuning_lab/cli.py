@@ -426,13 +426,23 @@ def build_parser() -> argparse.ArgumentParser:
     research = sub.add_parser("research", help="search and compare multiple asset cases, dtypes, seeds and budgets; write reports")
     research.add_argument("--spec", help="kind=research matrix experiment JSON")
     research.add_argument("--output", default="artifacts/research")
+    research.add_argument("--quiet", action="store_true", help="suppress progress on stderr; JSON result remains on stdout")
     research_mode = research.add_mutually_exclusive_group()
     research_mode.add_argument("--write-only", action="store_true", help="validate/expand specs and budgets without importing plugins or CUDA")
     research_mode.add_argument("--report-only", action="store_true", help="regenerate current attempt reports without importing plugins or CUDA")
     def execute_research(args):
         from .research import run_research
+        def progress(event):
+            if event['event']=='plan':
+                text=f"Research: {event['jobs']} jobs, {event['trials']} trials, up to {event['max_observations']} observations + {event['max_validation_evaluations']} acceptance attempts"
+            else:
+                text=f"[{event['index']}/{event['jobs']}] {event['case']}: {event['status']}"
+                if 'kernel' in event:
+                    text+=f" | {event['kernel']} | {event['algorithm']} | {event['dtype']} | seed={event['seed']}"
+                if 'wall_time_s' in event:text+=f" ({event['wall_time_s']:.2f}s)"
+            print(text,file=sys.stderr,flush=True)
         return run_research(args.spec, args.output, write_only=args.write_only,
-                            report_only=args.report_only, plugins=tuple(args.plugin))
+                            report_only=args.report_only, plugins=tuple(args.plugin), progress=None if args.quiet else progress)
     research.set_defaults(handler=execute_research)
     assets = sub.add_parser("assets", help="discover registered versioned operators, Kernels and algorithms")
     assets.add_argument("assets_action", choices=("list", "show"))
