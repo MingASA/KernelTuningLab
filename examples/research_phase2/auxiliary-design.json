@@ -1,0 +1,7 @@
+{
+  "role": "auxiliary exploratory studies, not a new blind primary cohort or tuned test policy",
+  "reason_group": "Predeclared controls mostly fit B in L2; M256/N8192/K4096 adds multi-tile reuse above 32 MiB L2 to test whether weak GROUP effect extends there. Hypothesis, no counters.",
+  "group_measurements": 16,
+  "torch_measurements": 12,
+  "torch_purpose": "Matched fixed-library baseline for the six generic POC geometries, unchanged layout/dtype/input seeds/Graph512; stability guard suppresses unstable speedup ratios."
+}

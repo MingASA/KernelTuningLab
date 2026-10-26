@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "phase2-matched-torch-exploratory",
+  "algorithms": [
+    "grid@1.0.0"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7,
+    19
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 1,
+      "max_wall_time_s": 600
+    }
+  ],
+  "defaults": {
+    "warmup": 10,
+    "repetitions": 31,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 512,
+    "preflight_seconds": 60,
+    "validation": {
+      "max_configs": 6,
+      "max_cases": 0,
+      "max_wall_time_s": 90,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "torch-matched",
+      "split": "test",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        {
+          "asset": "torch/mm@1.0.0"
+        }
+      ],
+      "shapes": [
+        {
+          "M": 1,
+          "N": 2048,
+          "K": 2048
+        },
+        {
+          "M": 257,
+          "N": 769,
+          "K": 513
+        },
+        {
+          "M": 1024,
+          "N": 2048,
+          "K": 2048
+        },
+        {
+          "M": 2,
+          "N": 2048,
+          "K": 2048
+        },
+        {
+          "M": 33,
+          "N": 2048,
+          "K": 2048
+        },
+        {
+          "M": 63,
+          "N": 1031,
+          "K": 1025
+        }
+      ]
+    }
+  ]
+}
