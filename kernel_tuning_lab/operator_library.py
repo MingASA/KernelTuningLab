@@ -11,6 +11,7 @@ import random
 import struct
 from typing import Any
 
+from .torch_context import strict_fp32_reference
 from .kernel_runtime import ExecutionContext
 from .models import ShapeSpec
 from .space import ValidationResult, gemm_constraint, reduction_constraint
@@ -73,13 +74,9 @@ def _reference_gemm(ctx: ExecutionContext):
     a, b = ctx.inputs["a"], ctx.inputs["b"]
     if ctx.runtime == "cuda":
         torch = ctx.torch
-        previous = torch.backends.cuda.matmul.allow_tf32
-        try:
-            torch.backends.cuda.matmul.allow_tf32 = False
+        with strict_fp32_reference(torch):
             accumulation = torch.float64 if ctx.operator.dtype == "float64" else torch.float32
             return {"out": (a.to(accumulation) @ b.to(accumulation)).to(getattr(torch, ctx.operator.dtype))}
-        finally:
-            torch.backends.cuda.matmul.allow_tf32 = previous
     aa, bb = (a, b) if ctx.operator.kind == "batched_gemm" else ([a], [b])
     result = []
     for lhs, rhs in zip(aa, bb):
@@ -269,6 +266,7 @@ def register_builtin_assets(catalog) -> None:
                                       generate_inputs=_generate_gemm_inputs if gemm else _generate_reduction_inputs,
                                       reference=_reference_gemm if gemm else _reference_reduction,
                                       tolerances=tolerances, validation_shapes=validation_shapes,
+                                      source_files=("torch_context.py",) if gemm else (),
                                       parameters=parameters, validate=_validate_gemm if gemm else _validate_reduction,
                                       metadata={"description": "Contiguous independent matrices" if gemm else "Non-affine row reduction",
                                                 "validation_seeds": [0, 104729, 130363],

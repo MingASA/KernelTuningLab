@@ -12,6 +12,7 @@ import math
 import random
 import struct
 
+from ..torch_context import strict_fp32_reference
 from ..assets import KernelDefinition, OperatorDefinition, ParameterSpec, SpaceContext, SpaceDefinition
 from ..kernel_runtime import ExecutionContext, ExecutionPlan, ExecutionStep
 from ..models import KernelConfig, ShapeSpec
@@ -439,17 +440,13 @@ def _reference_cuda(ctx):
             stop = min(start + chunk, k)
             result[start:stop].copy_(_reference_cuda_weights(ctx, start, stop))
         return {"out": result}
-    previous = torch.backends.cuda.matmul.allow_tf32
-    try:
-        torch.backends.cuda.matmul.allow_tf32 = False
+    with strict_fp32_reference(torch):
         result = torch.zeros((m, n), device=ctx.inputs["a"].device, dtype=torch.float32)
         for start in range(0, k, chunk):
             stop = min(start + chunk, k)
             weights = _reference_cuda_weights(ctx, start, stop)
             result.add_(ctx.inputs["a"][:, start:stop].float() @ weights.float())
         return {"out": result.to(getattr(torch, ctx.operator.dtype))}
-    finally:
-        torch.backends.cuda.matmul.allow_tf32 = previous
 
 
 def _reference(ctx):
@@ -618,7 +615,7 @@ def register_assets(catalog):
     pipeline_space = SpaceDefinition({**gemm_parameters, "DEQUANT_BLOCK_SIZE": ParameterSpec(_DEQUANT_BLOCKS,
                                       description="Materialized dequantization tile independent of GEMM BLOCK_K", unit="elements")},
                                      constraints=(_pipeline_constraint,), name="triton_dequantize_gemm_pipeline_v1", resolver=_pipeline_resolver)
-    shared_sources = ("../quantization.py",)
+    shared_sources = ("../quantization.py", "../torch_context.py")
     gpu_sources = (*shared_sources, "../backends/_triton_quantized.py")
     for name, bits in _BITS.items():
         gemm = name.endswith("a16_gemm")

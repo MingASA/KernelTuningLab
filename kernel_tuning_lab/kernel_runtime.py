@@ -422,7 +422,9 @@ class AssetKernelAdapter:
                         self._driver_version = next(iter(versions))
                 except (OSError, subprocess.TimeoutExpired):
                     pass
+            from .torch_context import torch_execution_context
             result.update({"torch": torch.__version__, "cuda_runtime": torch.version.cuda, "device_index": self.device,
+                           "torch_execution_context": torch_execution_context(torch),
                            "nvidia_driver": self._driver_version,
                            "gpu": actual.name, "torch_compiled_arches": list(torch.cuda.get_arch_list())})
             if self._triton is not None:

@@ -10,6 +10,7 @@ import platform
 import subprocess
 from typing import Any, Callable
 
+from ..torch_context import strict_fp32_reference, torch_execution_context
 from .base import BackendUnavailableError
 from .compatibility import validate_triton_runtime
 from ..models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec
@@ -76,6 +77,7 @@ class TritonGemmAdapter:
                             max_threads_per_block=getattr(props, "max_threads_per_block", 1024),
                             features=("tensor_cores", "cuda_events"),
                             metadata={"source": "torch.cuda.get_device_properties", "device_index": self.device,
+                                      "device_uuid": str(props.uuid) if getattr(props, "uuid", None) is not None else None,
                                       "unknown_fields": ["compute_tflops", "bandwidth_gbps"]})
 
     def environment(self) -> dict[str, Any]:
@@ -95,7 +97,7 @@ class TritonGemmAdapter:
                                  "gpu": self.torch.cuda.get_device_name(self.device), "device_index": self.device,
                                  "adapter_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                                  "kernel_source_sha256": hashlib.sha256(Path(__file__).with_name("_triton_kernel.py").read_bytes()).hexdigest()}
-        return dict(self._environment)
+        return {**self._environment, "torch_execution_context": torch_execution_context(self.torch)}
 
     def protocol_metadata(self) -> dict[str, Any]:
         return {"atol": self.atol, "rtol": self.rtol, "reference": "torch.float32_matmul_cast_to_output",
@@ -136,12 +138,8 @@ class TritonGemmAdapter:
         b = torch.randn((*batch_prefix, k, n), device=f"cuda:{self.device}", dtype=dtype, generator=generator) * 0.25
         c = torch.empty((*batch_prefix, m, n), device=f"cuda:{self.device}", dtype=dtype)
         # Disable TF32 explicitly for the reference and restore caller state.
-        previous = torch.backends.cuda.matmul.allow_tf32
-        try:
-            torch.backends.cuda.matmul.allow_tf32 = False
+        with strict_fp32_reference(torch):
             reference = (a.float() @ b.float()).to(dtype)
-        finally:
-            torch.backends.cuda.matmul.allow_tf32 = previous
         torch.cuda.synchronize(self.device)
         return PreparedGemm(a, b, c, reference, shape)
 

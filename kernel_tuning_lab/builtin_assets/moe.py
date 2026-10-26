@@ -13,6 +13,7 @@ import random
 import re
 import struct
 
+from ..torch_context import strict_fp32_reference
 from ..sdk import (ExecutionPlan, ExecutionStep, KernelDefinition, OperatorDefinition,
                    ParameterSpec, ShapeSpec, SpaceDefinition)
 
@@ -153,9 +154,7 @@ def _reference(ctx):
     torch = ctx.torch
     host_offsets = validate_group_offsets(offsets.cpu().tolist(), m, groups)
     output = torch.empty((m, n), dtype=getattr(torch, ctx.operator.dtype), device=f"cuda:{ctx.device}")
-    previous = torch.backends.cuda.matmul.allow_tf32
-    try:
-        torch.backends.cuda.matmul.allow_tf32 = False
+    with strict_fp32_reference(torch):
         for expert in range(groups):
             start, stop = host_offsets[expert:expert + 2]
             if start == stop:
@@ -164,8 +163,6 @@ def _reference(ctx):
             for row in range(start, stop, 128):
                 end = min(stop, row + 128)
                 output[row:end] = (a[row:end].float() @ weight).to(output.dtype)
-    finally:
-        torch.backends.cuda.matmul.allow_tf32 = previous
     return {"out": output}
 
 
@@ -336,6 +333,7 @@ def register_assets(catalog):
         {"float16": (0.02, 0.02), "bfloat16": (0.03, 0.03), "float32": (1e-5, 1e-4), "float64": (1e-10, 1e-9)},
         validation_shapes=_validation_cases({}, ()), parameters={"distribution": "balanced", "group_sizes": None},
         validate=_validate, validation_case_factory=_validation_cases,
+        source_files=("../torch_context.py",),
         metadata={"input_names": ["a", "b", "group_offsets"], "output_names": ["out"],
                   "validation_seeds": [0, 104729, 130363], "proposal_family": "MoEGroupedGEMM",
                   "smoke_shapes": [{"M": 7, "N": 13, "K": 35, "Groups": 4},

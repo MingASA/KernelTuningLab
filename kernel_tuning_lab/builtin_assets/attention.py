@@ -14,6 +14,7 @@ import struct
 from itertools import product
 from typing import TYPE_CHECKING
 
+from ..torch_context import strict_fp32_reference
 from ..sdk import (HardwareSpec, KernelConfig, KernelDefinition, OperatorDefinition,
                    OperatorSpec, ParameterSpec, ShapeSpec, SpaceDefinition)
 
@@ -240,9 +241,7 @@ def _reference_cuda(ctx: ExecutionContext):
     chunk_rows = _reference_chunk_rows(sk)
     ctx.metadata["reference_query_chunk"] = chunk_rows
     result = torch.empty_like(q)
-    previous = torch.backends.cuda.matmul.allow_tf32
-    try:
-        torch.backends.cuda.matmul.allow_tf32 = False
+    with strict_fp32_reference(torch):
         with torch.no_grad():
             keys = torch.arange(sk, device=q.device)
             # Never repeat K/V across GQA heads or form a full Sq-by-Sk matrix.
@@ -268,8 +267,6 @@ def _reference_cuda(ctx: ExecutionContext):
                             if causal:
                                 output.masked_fill_(~has_keys[:, None], 0.0)
                             result[batch, head, begin:end].copy_(output)
-    finally:
-        torch.backends.cuda.matmul.allow_tf32 = previous
     return {"out": result}
 
 
@@ -396,6 +393,7 @@ def register_assets(catalog) -> None:
         id="attention", version="1.0.0", shape_dims=_DIMS,
         dtypes=("float16", "bfloat16", "float32", "float64"),
         generate_inputs=_generate_inputs, reference=_reference, validate=_validate_attention,
+        source_files=("../torch_context.py",),
         tolerances={"float16": (0.02, 0.02), "bfloat16": (0.03, 0.03),
                     "float32": (1e-5, 1e-4), "float64": (1e-10, 1e-9)},
         parameters=_DEFAULTS,
