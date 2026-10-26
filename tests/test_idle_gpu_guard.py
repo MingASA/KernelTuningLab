@@ -69,6 +69,61 @@ def test_busy_gpu_never_launches_a_command(tmp_path,monkeypatch):
     assert guard.run(args)==75
 
 
+def test_only_proven_terminated_own_pid_can_be_ignored_in_retiring_nvml_list(monkeypatch):
+    monkeypatch.setattr(guard,'proc_identity',lambda pid:None)
+    monkeypatch.setattr(guard,'proc_info',lambda pid:None)
+    def absent(pid,signum):
+        assert signum==0
+        raise ProcessLookupError
+    monkeypatch.setattr(guard.os,'kill',absent)
+    assert guard.foreign_pids([123,456],10,100,{123:200})==[456]
+    monkeypatch.setattr(guard.os,'kill',lambda pid,sig:None)
+    assert guard.foreign_pids([123],10,100,{123:200})==[123]
+
+
+def test_matching_owned_zombie_is_retired_but_reused_pid_is_not(monkeypatch):
+    monkeypatch.setattr(guard,'proc_identity',lambda pid:None)
+    monkeypatch.setattr(guard,'proc_info',lambda pid:(10,200,'Z'))
+    assert guard.foreign_pids([123],10,100,{123:200})==[]
+    assert guard.foreign_pids([123],10,100,{123:100})==[123]
+
+
+@pytest.mark.skipif(not Path('/proc/self/stat').is_file(),reason='Linux owned process tracker')
+def test_short_lived_owned_worker_retirement_does_not_look_like_foreign_gpu_job(tmp_path,monkeypatch):
+    marker=tmp_path/'pid'
+    child='import os,pathlib,time; pathlib.Path('+repr(str(marker))+').write_text(str(os.getpid())); time.sleep(.4)'
+    parent='import subprocess,sys,time; subprocess.run([sys.executable,"-c",'+repr(child)+']); time.sleep(.3)'
+    def fake_nvml(gpu_uuid=None):
+        pids=[int(marker.read_text())] if marker.exists() else []
+        return {'unit':device(pids=pids)}
+    monkeypatch.setattr(guard,'snapshot',fake_nvml);monkeypatch.delenv('CUDA_VISIBLE_DEVICES',raising=False)
+    receipt=tmp_path/'receipt.json'
+    args=SimpleNamespace(receipt=str(receipt),timeout=10,ready_samples=2,interval=.03,
+        gpu='auto',expected_model='',select_only=False,command=[sys.executable,'-c',parent],cwd=None)
+    assert guard.run(args)==0
+    import json
+    result=json.loads(receipt.read_text())
+    assert result['status']=='passed' and result['eligible']
+    assert result['external_processes_observed']==0 and result['retired_owned_nvml_entries']>0
+
+
+@pytest.mark.skipif(not Path('/proc/self/stat').is_file(),reason='Linux sessions')
+def test_cleanup_promptly_stops_owned_session_even_when_bash_ignores_sigint(tmp_path):
+    marker=tmp_path/'child.pid';unrelated=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'])
+    root=subprocess.Popen(['bash','-c','trap "" INT; sleep 30 & child=$!; echo "$child" > "$1"; wait',
+        'unit-owned-session',str(marker)],start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    known={root.pid:guard.proc_identity(root.pid)[1]}
+    try:
+        deadline=time.monotonic()+5
+        while not marker.exists() and time.monotonic()<deadline:time.sleep(.02)
+        assert marker.exists();child=int(marker.read_text());guard.collect_owned(root.pid,known)
+        start=time.monotonic();guard.stop_owned(root,known)
+        assert time.monotonic()-start<3 and root.poll() is not None and guard.proc_identity(child) is None
+        assert unrelated.poll() is None
+    finally:
+        guard.stop_owned(root,known);unrelated.terminate();unrelated.wait(timeout=5)
+
+
 @pytest.mark.skipif(not Path('/proc/self/stat').is_file(),reason='Linux process resource metadata')
 def test_cleanup_stops_only_its_own_cpu_tree_and_leaves_unrelated_fixture_alive(tmp_path):
     marker=tmp_path/'child.pid'

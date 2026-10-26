@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import threading
 import time
 import xml.etree.ElementTree as ET
 
@@ -19,8 +20,9 @@ class ResourceUnavailable(RuntimeError):
     pass
 
 
-def snapshot():
-    result=subprocess.run(['nvidia-smi','-q','-x'],capture_output=True,text=True,timeout=8)
+def snapshot(gpu_uuid=None):
+    command=['nvidia-smi','-q','-x']+(['-i',gpu_uuid] if gpu_uuid else [])
+    result=subprocess.run(command,capture_output=True,text=True,timeout=8)
     if result.returncode:raise ResourceUnavailable('nvidia-smi inspection failed')
     devices={}
     try:
@@ -53,13 +55,26 @@ def choose_idle(samples,requested='auto',expected_model=''):
     return min(allowed,key=lambda uuid:samples[-1][uuid]['index'])
 
 
-def proc_identity(pid):
+def proc_info(pid):
     """Only kernel process metadata, never another task's cmdline or files."""
     try:
         fields=Path('/proc',str(pid),'stat').read_text().rsplit(')',1)[1].split()
-        if fields[0]=='Z':return None
-        return int(fields[1]),int(fields[19])
+        return int(fields[1]),int(fields[19]),fields[0]
     except (FileNotFoundError,ProcessLookupError,PermissionError,IndexError):return None
+
+
+def proc_identity(pid):
+    info=proc_info(pid)
+    return info[:2] if info is not None and info[2] not in ('Z','X') else None
+
+
+def retired_owned(pid,started):
+    info=proc_info(pid)
+    if info is not None:return info[1]==started and info[2] in ('Z','X')
+    try:os.kill(pid,0)
+    except ProcessLookupError:return True
+    except PermissionError:return False
+    return False
 
 
 def descendant(pid,root_pid,root_start):
@@ -99,26 +114,57 @@ def signal_owned(known,signum):
         except ProcessLookupError:pass
 
 
-def foreign_pids(pids,root_pid,root_start,known):
+def foreign_pids(pids,root_pid,root_start,known,retired=None):
     foreign=[]
     for pid in pids:
         identity=proc_identity(pid)
-        if identity is None or not (known.get(pid)==identity[1] or descendant(pid,root_pid,root_start)):
-            foreign.append(pid)
+        if identity is None:
+            if pid not in known or not retired_owned(pid,known[pid]):foreign.append(pid)
+            elif retired is not None:retired.append({'pid':pid,'proven_start_ticks':known[pid]})
+        elif known.get(pid)==identity[1] or descendant(pid,root_pid,root_start):known[pid]=identity[1]
+        else:foreign.append(pid)
     return foreign
+
+
+def terminate_owned(known,root_pid,signum):
+    groups=set();individual={}
+    for pid,started in list(known.items()):
+        identity=proc_identity(pid)
+        if identity is None or identity[1]!=started:continue
+        try:
+            # Only sessions created by this task: never the caller's shared
+            # terminal/session group. The GPU command uses start_new_session.
+            sid,pgid=os.getsid(pid),os.getpgid(pid)
+            if sid in (root_pid,pid):groups.add(pgid)
+            else:individual[pid]=started
+        except ProcessLookupError:pass
+    for group in groups:
+        try:os.killpg(group,signum)
+        except ProcessLookupError:pass
+    signal_owned(individual,signum)
 
 
 def stop_owned(process,known):
     # Capture descendants before the parent can exit/reparent them. A reused PID
     # never inherits ownership. No pkill, global process-group or device reset.
+    identity=proc_identity(process.pid);frozen=False
+    if identity is not None and known.get(process.pid)==identity[1]:
+        try:os.kill(process.pid,signal.SIGSTOP);frozen=True
+        except ProcessLookupError:pass
     collect_owned(process.pid,known)
-    if process.poll() is None:process.send_signal(signal.SIGINT)
-    try:process.wait(timeout=10)
+    # Bash can ignore a parent-only SIGINT and launch another Python child.
+    # Stop the proven owned sessions immediately, including newborn children.
+    terminate_owned(known,process.pid,signal.SIGTERM)
+    if frozen:
+        identity=proc_identity(process.pid)
+        if identity is not None and known.get(process.pid)==identity[1]:
+            try:os.kill(process.pid,signal.SIGCONT)
+            except ProcessLookupError:pass
+    try:process.wait(timeout=2)
     except subprocess.TimeoutExpired:pass
-    signal_owned(known,signal.SIGTERM)
     remaining=[(pid,proc_identity(pid)) for pid in known]
     if any(info is not None and info[1]==known[pid] for pid,info in remaining):
-        time.sleep(1);signal_owned(known,signal.SIGKILL)
+        time.sleep(.1);terminate_owned(known,process.pid,signal.SIGKILL)
     try:process.wait(timeout=5)
     except subprocess.TimeoutExpired:pass
 
@@ -129,8 +175,9 @@ def run(args):
     # Never replace an earlier failed attempt's resource evidence.
     with receipt.open('x') as stream:stream.write('{}\n')
     result={'schema_version':1,'status':'checking','eligible':False,'guard_source_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        'wall_cap_s':args.timeout,'conflict_checks':0,'external_processes_observed':0,'initial_samples':[]}
-    started=time.monotonic();process=None;known={};cancel=[]
+        'wall_cap_s':args.timeout,'conflict_checks':0,'external_processes_observed':0,'initial_samples':[],
+        'retired_owned_nvml_entries':0,'retired_owned_examples':[]}
+    started=time.monotonic();process=None;known={};cancel=[];collector=None;collector_stop=threading.Event()
     def interrupt(signum,frame):cancel.append(signum)
     previous={sig:signal.signal(sig,interrupt) for sig in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP)}
     code=75
@@ -150,20 +197,33 @@ def run(args):
             if not command:raise ValueError('an explicit bounded command is required')
             # Fresh observation immediately before Popen closes the preparation
             # interval; monitoring remains necessary on a shared server.
-            if not idle(snapshot()[uuid]):raise ResourceUnavailable('GPU became busy before launch')
+            if not idle(snapshot(uuid)[uuid]):raise ResourceUnavailable('GPU became busy before launch')
             if cancel:raise ResourceUnavailable('cancelled before launch')
             process=subprocess.Popen(command,cwd=args.cwd,env={**os.environ,'CUDA_VISIBLE_DEVICES':uuid},start_new_session=True)
             identity=proc_identity(process.pid)
             if identity is not None:known[process.pid]=identity[1]
+            def track_children():
+                # NVML can return a PID after a short-lived worker has exited.
+                # Track ownership independently of slow driver inspection.
+                while not collector_stop.is_set():
+                    collect_owned(process.pid,known)
+                    collector_stop.wait(.05)
+            collector=threading.Thread(target=track_children,daemon=True);collector.start()
             result.update(status='running',command_pid=process.pid,process_start_ticks=known.get(process.pid))
             receipt.write_text(json.dumps(result,indent=2)+'\n')
             while process.poll() is None:
                 collect_owned(process.pid,known)
-                state=snapshot()[uuid]
-                foreign=foreign_pids(state['pids'],process.pid,known.get(process.pid),known)
+                state=snapshot(uuid)[uuid]
+                retired=[]
+                foreign=foreign_pids(state['pids'],process.pid,known.get(process.pid),known,retired)
+                result['retired_owned_nvml_entries']+=len(retired)
+                result['retired_owned_examples']=(result['retired_owned_examples']+retired)[:16]
                 result['conflict_checks']+=1
                 if foreign:
                     result['external_processes_observed']+=len(foreign)
+                    result['conflict_evidence']={'gpu':state,'unattributed_pids':foreign,
+                        'known_pid_start_ticks':dict(known),
+                        'process_info':{pid:proc_info(pid) for pid in state['pids']}}
                     raise ResourceUnavailable('another task appeared; stopping only this wrapper\'s command')
                 if cancel:raise ResourceUnavailable('wrapper interrupted; stopping our command')
                 if time.monotonic()-started>=args.timeout:
@@ -175,6 +235,8 @@ def run(args):
     except (ResourceUnavailable,subprocess.TimeoutExpired,OSError,ValueError,KeyError) as exc:
         result.update(status='resource_unavailable' if process is None else 'aborted',reason=str(exc));code=75
     finally:
+        collector_stop.set()
+        if collector is not None:collector.join(timeout=2)
         if process is not None:
             if code or process.poll() is None:stop_owned(process,known)
             else:

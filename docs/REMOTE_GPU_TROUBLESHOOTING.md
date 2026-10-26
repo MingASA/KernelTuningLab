@@ -12,6 +12,9 @@
 | RTX4090 / 默认Python | Python3.6不满足项目≥3.10要求，PATH无合适解释器 | 在私有数据盘workspace安装新的独立Python，显式使用venv解释器；不升级系统Python、不复制旧venv |
 | H800 / 默认环境和磁盘 | 默认Python3.9低于要求；系统home盘可用空间少 | 使用登录入口对应的私有数据盘目录，缓存/环境均留在此处。另有系统Python3.10可作为只读引导备选，不修改它 |
 | 两机 / 源码bundle | clone bundle提示remote HEAD不可用 | 随后显式checkout目标commit，核对HEAD与clean状态；提示本身不代表源码丢失。未来增量fetch须先确认目标已有基commit |
+| RTX4090 / pip | Network unreachable后显示No matching distribution | 后者是网络失败的次级错误，不能误判Torch版本不存在。IPv4也失败后停止重复直连pip；只读寻找已有运行时组件，不绕过文件访问控制 |
+| H800 / 资源监测 | 严格core阶段被未归属PID拦截，未完成整gate | 保留首份partial与guard日志，不计通过。原现场不足以完全归因；已CPU复现并修复NVML退役PID与忽略父级SIGINT的边界：独立追踪自己子进程、仅忽略已证实退役的自己PID、停止已证实自己的session，补充冲突现场。未知PID仍拒绝 |
+| 本地 / 控制进度 | 两个非GPU阶段并发写小JSON，成功状态被旧快照覆盖 | 原stdout/receipt可证明成功，不重跑GPU。控制元数据改为文件锁、只合并本阶段字段与原子replace；原错误快照保留。不是测量数据库损坏 |
 
 当前共同环境候选为Python3.12.12、Torch2.5.1/cu121及配套Triton；**安装完成、CUDA可用、编译通过是三个独立状态**。不能将环境候选写成GPU验收通过。驱动535/550不套用5060 Ti的cu132依赖锁，参考[官方PyTorch版本](https://pytorch.org/get-started/previous-versions/)和[NVIDIA兼容性](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html)。实际版本以各次原始记录为准。
 
