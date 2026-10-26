@@ -220,9 +220,11 @@ CPU回归覆盖资源准入/清理、旧凭据换run拒绝、离线无rg扫描�
 | `research-phase1-evidence-20261025.tar.gz` | `1fbc2625417723030545c1ff5855558376bda671a3a713a86a0bdbce2420b12f` |
 | `research-phase2-evidence-20261026-v2.tar.gz` | `84c057ff1a592e06df4d9a65f8898893025e7ed343d90d27ec91b3ac6f4c4ed4` |
 
-早期仅5060 Ti的本轮封存保留：[旧Anchor封存证明](data/crossgpu-anchor-archive.json)，SHA `13482d4c9634123cb65258278972b7e1aba7eabffca4ac2215e386b0f3a2ff09`。本轮三卡最终证据另封存为`cross-gpu-phase1-evidence-20261026-v2.tar.gz`；[最终封存与恢复证明](data/crossgpu-paired-archive.json)给出SHA、准确分析/交付commit、文件清单和恢复审计，不覆盖旧文件。
+早期仅5060 Ti的本轮封存保留：[旧Anchor封存证明](data/crossgpu-anchor-archive.json)，SHA `13482d4c9634123cb65258278972b7e1aba7eabffca4ac2215e386b0f3a2ff09`。本轮三卡最终证据另封存为`cross-gpu-phase1-evidence-20261026-v2.tar.gz`，21,071,931 bytes，SHA **`8e1aa08e51cb081f900ff8236ca97fecab83bbb427892f0cd3bc2110adfd9f4f`**；[最终封存与恢复证明](data/crossgpu-paired-archive.json)给出SHA、准确分析/交付commit、文件清单和恢复审计，不覆盖旧文件。
 
-两台私有结果在回传前分别封存：4090 3,598,615 bytes / SHA `9d635701497f109cec78b8fb0205b14bce998734720e0ea61ec852ac0e6f430f`；H800 3,141,191 bytes / SHA `8f91680b3d4f303500658662f211b1822dc7c68a36682fb67908ef7a4eaefda7`。接收端逐项核对1,822/1,525文件、34/28个SQLite。4090后续12观测另封存218,057 bytes / SHA `e2f098f74e19f9df404ceae8a91838da0f99eddacf4e0bf0ebe8b60612d726a0`。这些小包仅含自己的结果/日志/匹配代码，没有venv、wheels、整缓存或旧5060 Ti私人备份。
+两台私有结果在回传前分别封存：4090 3,598,615 bytes / SHA `9d635701497f109cec78b8fb0205b14bce998734720e0ea61ec852ac0e6f430f`；H800 3,141,191 bytes / SHA `8f91680b3d4f303500658662f211b1822dc7c68a36682fb67908ef7a4eaefda7`。接收端逐项核对1,822/1,525文件、34/28个SQLite。4090后续12观测另封存218,057 bytes / SHA `e2f098f74e19f9df404ceae8a91838da0f99eddacf4e0bf0ebe8b60612d726a0`。最终v2校验4,620项inventory、78个SQLite；从私有临时目录恢复后，用归档自带源码bundle的d3e6461 checkout、禁用site-packages的Python重审576条record、8,160轨迹/30,600揭示、18条在线轨迹及285个CUBIN SHA全部通过，随后移除该临时目录。原tar字节未变。源码交付d3e6461的[GitHub CI](https://github.com/MingASA/KernelTuningLab/actions/runs/40392699544)在Python3.10/3.12 CPU-only安装、测试及wheel构建通过。
+
+这些小包仅含自己的结果/日志/匹配代码，没有venv、wheels、整缓存或旧5060 Ti私人备份。
 
 **异机备份仍blocked：没有授权目的地。** 没有把共享GPU服务器当个人备份盘。有授权挂载目录后才运行：
 
@@ -273,7 +275,7 @@ python scripts/summarize_cross_gpu.py --root artifacts/cross-gpu-phase1
 | 在线复核 | passed / 有限采样 | 18轨迹、54新测/18缓存/72独立验收，单RNG/input seed |
 | 4090细微Top次序 | partial | 4主cell CV>5%，追加诊断仍一处不稳；未删记录 |
 | 全CPU回归 | passed | 386 passed / 11 opt-in skipped，64.91秒；日志进入最终封存 |
-| 新三卡证据封存/恢复 | 见最终证明 | 私有归档、SHA和恢复后只读审计；不等于异机备份 |
+| 新三卡证据封存/恢复 | passed | 4620文件/78 SQLite；归档源码独立恢复审计通过；不等于异机备份 |
 | 异机备份 | blocked | 尚无授权目标；不阻塞实验 |
 | H20/H200、目标卡完整proposal-suite/Shape-generic | not_executed | 不由T1/Core推断，H20未连接 |
 | 纯硬件因果、生产推理/AI胜出 | not_established | 输入字节/软件不完全匹配、小cohort、有限物理重复 |
@@ -285,3 +287,5 @@ python scripts/summarize_cross_gpu.py --root artifacts/cross-gpu-phase1
 3. **编译行为感知的L2/L3联合选择**。同T1在H800实际产生WGMMA，三卡各95个不同CUBIN；配置、特化身份与体积不是同一预算。研究编译资源/实际指令路径能否帮助选择高覆盖候选，先使用真实共同矩阵，不把稀疏oracle或TopK事后覆盖冒充在线收益。
 
 H20/H200后续执行：保留本T1源码、C16/Shape/FP16/Graph协议，真实probe确定资源与共同合法集合；H20不套猜测Profile。先按本页小Pilot验收，再做源Top1损失、排名、负迁移与反馈恢复；统一/明确输入与关键软件版本，另记Hopper专属扩展空间、TMA/MoE、Shape-generic及库基线。每机单张获准空卡、批次有界、冲突只停自己的任务。当前没有这些设备的新性能数据。
+
+较大矩阵本轮不启动：4090仍有双水平噪声、输入字节未跨卡一致，先解决这些可比性问题更有价值。后续可预冻结8 Shape×32共同候选×2输入run=512观测/卡，先64观测Pilot、正式单卡45分钟硬上限、1个编译worker；按本轮成本估算约20–40分钟/卡、GPU≤3 GiB/host≥4 GiB准入估计、每卡原始存储预留1 GiB，并以真实Pilot修正，明确属于未执行计划。H20/H200必须另获实际资源与环境验收，不能套用此处时间或容量作为已测事实。
