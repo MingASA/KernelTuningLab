@@ -22,11 +22,11 @@
 The cross-GPU follow-up is documented in [CROSS_GPU_PHASE1.md](CROSS_GPU_PHASE1.md):
 a newly frozen final-runtime 5060 Ti Anchor has 192 verified observations
 (6 Shapes × 16 configs × 2 input runs) and 1,440 cold offline Replays.
-Current CPU regression is 366 passed / 11 opt-in skipped. RTX 4090/H800 SSH
-read-only checks passed; deployment and GPU execution remain blocked pending
-explicit allocation, execution method, quota and workspace. There are no paired
-GPU results or hardware-transfer conclusions yet. Off-host backup also awaits
-an authorized destination.
+Current CPU regression is 373 passed / 11 opt-in skipped, including seven
+idle-GPU admission and own-process cleanup regressions. RTX 4090/H800 idle
+single-GPU use is now explicitly authorized; isolated deployment is in progress.
+There are no paired GPU results or hardware-transfer conclusions yet. Off-host
+backup awaits an authorized destination and does not block experiments.
 
 The readiness follow-up is documented in [RESEARCH_PHASE2.md](RESEARCH_PHASE2.md):
 24 Shapes × 48 configs × 2 input runs, a complete 2,304-observation FP16 matrix,

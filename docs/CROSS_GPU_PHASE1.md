@@ -1,6 +1,6 @@
 # 5060 Ti交付收尾与跨硬件Anchor
 
-本轮已完成最终代码下新的5060 Ti Anchor：**6 Shape × 16配置 × 2输入run，192/192次新观测通过GPU数值验证**。4090和H800仅完成正常SSH及只读资源检查，尚未确认单卡分配、执行规范和workspace，未部署、安装或运行GPU负载。因此当前没有配对GPU数据，没有跨硬件迁移结论。异机备份也因没有授权目的地而受阻。
+本轮已完成最终代码下新的5060 Ti Anchor：**6 Shape × 16配置 × 2输入run，192/192次新观测通过GPU数值验证**。用户随后明确授权4090/H800当前账户使用空闲单GPU，无额外固定配额；独立目录与环境部署正在进行，尚无目标GPU性能标签。配对GPU数据与跨硬件迁移结论仍待实际验收和采集。异机备份没有授权目的地，单列待办。
 
 精简结果：[summary](data/crossgpu-anchor-summary.json)、[标准有限矩阵](data/crossgpu-anchor-5060ti-matrix.json)。原始样本、完整环境、源码锁、失败/attempt日志、标准SQLite/JSONL及编译产物另行本地归档，不随Git公开。
 
@@ -62,7 +62,9 @@ KT_BACKUP_DIR=/authorized/mounted/backup bash scripts/backup_research_artifacts.
 
 补查当前用户可见的账户初始化入口，只发现目录和会话隔离逻辑，没有查得具体GPU分配或时长/资源额度。仅只读源码，未修改或另外运行这些管理脚本；仍不能据此放行GPU实验。该补查原始记录另存本地private目录。
 
-**继续远端执行前需要每台的获准单卡索引/UUID、允许的直接交互/调度/容器方式、最长任务时长和CPU/RAM额度、项目/环境/结果workspace。** GPU空闲及SSH可用都不足以替代这些信息。此门禁来自本轮任务的服务器使用要求。H20本轮未连接。
+**授权更新（2026-10-26）：用户确认当前账户可用空闲GPU，无额外明确调度或固定用量限制，允许有界单卡满负载实验。** 每台最多一张卡，选卡前连续检查显存、利用率及全部compute/graphics进程；任何他人任务都不加入。运行中监测新进程，出现冲突只停止本次启动且PID身份已核实的进程树。未知进程/可见性也拒绝放行，不靠共享账户UID认定进程属于自己。若发现明确管理员规则，以该规则为准。私有workspace采用登录入口分配的当前账户隔离目录，不使用共享服务器备份旧数据。H20本轮不连接。
+
+`scripts/with_idle_gpu.py` 是标准库与nvidia-smi的外层准入/监测包装器，不替代Runner、数据库或调度器，也不修改全局GPU状态。它记录新建的私有receipt、来源SHA和运行期限；每次启动均重新检查，选卡结果本身不构成预留。CPU回归覆盖忙卡禁止启动、graphics进程、不可见/复用PID，以及只清理自己进程树并保留无关CPU进程。上表及精简JSON的blocked状态是上次封存的只读快照，目标测量完成后重新生成。
 
 535/550驱动不能直接套用5060 Ti的cu132锁文件。先沿用获准容器/模块或只读复用已批准环境，再选独立兼容环境；不升级全局驱动、CUDA或系统Python。系统nvcc、驱动版本和Torch CUDA Runtime分别记录。CUDA minor compatibility也有PTX/新特性限制，参见[NVIDIA兼容性说明](https://docs.nvidia.com/deploy/cuda-compatibility/610/minor-version-compatibility.html)与[PyTorch官方安装版本](https://pytorch.org/get-started/previous-versions/)。本轮尚未选择或验证远端依赖版本。
 
@@ -92,7 +94,7 @@ cohort插件按 `input_seed + int(shape.id[:8],16)` 对冻结候选做可复现s
 | Anchor Pilot：3 Shape×4配置×2run | 24 | 24 | 600秒 |
 | 正式：6 Shape×16配置×2run | 192 | 48 | 1200秒 |
 
-以上是分阶段停止上限，并非已获得远端60分钟GPU配额；按服务器实际额度裁剪或另行确认。环境安装耗时/磁盘另计。正式192条record内部有 **3,047,424次计时计划调用**，单编译/测量worker、无多卡、无并发性能任务。单次workspace上限256 MiB；主机/GPU各2 GiB是本地准入估计，不是已在远端施加的OS内存硬限制。远端编译器可能不同，应先Pilot复核。
+以上是分阶段停止上限，用户没有要求固定总配额；仍遵循任何发现的管理员规则。环境安装耗时/磁盘另计。正式192条record内部有 **3,047,424次计时计划调用**，单编译/测量worker、无多卡、无并发性能任务。单次workspace上限256 MiB；主机/GPU各2 GiB是本地准入估计，不是已在远端施加的OS内存硬限制。远端编译器可能不同，应先Pilot复核。
 
 5060 Ti实际：Pilot 6/6 job、24新观测、24独立验收，131.915秒；最大单条source墙钟6.743秒，重复CV中位数0.044%、最大0.672%，据此放行原冻结矩阵。正式12/12 job、192新观测、0缓存、48独立验收，job墙钟396.122秒，外层实测396.56秒，均未触及1200秒。
 
