@@ -45,6 +45,10 @@ KT_BACKUP_DIR=/authorized/mounted/backup bash scripts/backup_research_artifacts.
 
 脚本现在优先选择Phase2 v2，仍保留旧源文件；已有错误目的文件会报校验失败，不覆盖。两个使用小型合成文件的回归测试验证这两点，不冒充真实异机备份。
 
+本轮本地Anchor另封存为 `cross-gpu-phase1-evidence-20261026.tar.gz`，4,555,208 bytes，SHA256 **`13482d4c9634123cb65258278972b7e1aba7eabffca4ac2215e386b0f3a2ff09`**。738项inventory逐一校验；10个SQLite执行quick_check、WAL checkpoint并显式关闭后再封存。归档含采集commit6ec、分析commit `3ed0d898ff5aa78872a48b35a82b631925befa75` 的完整源码bundle、Pilot/正式日志、全部原记录和匹配编译产物，另含私有只读资源日志，权限0600，未上传GitHub或共享服务器。
+
+已从该归档恢复到临时私有目录，重跑192条原记录、5400次Replay揭示和源码bundle验证通过，再删除测试临时目录；归档本身未改动。[公开封存证明](data/crossgpu-anchor-archive.json)记录SHA、准确commit及恢复校验。此过程验证可恢复性，仍不等于异机备份完成。后续目标GPU产生新数据应另做带版本的封存，不覆盖此快照。
+
 ## 3. 两台远端的只读验收
 
 使用现有SSH别名和正常主机密钥验证，以普通账户检查；未用sudo、agent forwarding、信任绕过、系统修改、其他用户文件或GPU负载。内部主机/账户、UUID、路径、资源说明及原始资源日志仅存本地private记录，不进入公开结果。
@@ -55,6 +59,8 @@ KT_BACKUP_DIR=/authorized/mounted/backup bash scripts/backup_research_artifacts.
 | H800服务器 | 可见8张H800，每卡81,559 MiB，驱动535.216.03；系统Python3.9.9，默认环境无Torch/Triton | SSH passed；只读瞬间空闲不代表已分配；允许的容器/环境、单卡和workspace未确认；部署/安装/GPU负载均0 |
 
 初始PATH未发现Slurm/PBS命令、没有分配环境变量，不能据此断言不存在调度规范。可见CPU/RAM/磁盘总量也不等于用户配额。一次无界文件系统查询超时后，改用有12秒期限的本地文件系统只读检查；未据此判断GPU故障。没有遍历他人目录。
+
+补查当前用户可见的账户初始化入口，只发现目录和会话隔离逻辑，没有查得具体GPU分配或时长/资源额度。仅只读源码，未修改或另外运行这些管理脚本；仍不能据此放行GPU实验。该补查原始记录另存本地private目录。
 
 **继续远端执行前需要每台的获准单卡索引/UUID、允许的直接交互/调度/容器方式、最长任务时长和CPU/RAM额度、项目/环境/结果workspace。** GPU空闲及SSH可用都不足以替代这些信息。此门禁来自本轮任务的服务器使用要求。H20本轮未连接。
 
@@ -180,6 +186,7 @@ python scripts/summarize_cross_gpu.py --root artifacts/cross-gpu-phase1
 | 项目 | 状态 | 证据/限制 |
 |---|---|---|
 | 本地基线、四正式旧归档SHA和清单 | passed | summary.prior_archive_checks；最终Phase2 v2，旧数据未覆盖 |
+| 本轮证据封存与恢复 | passed | 738文件/10 SQLite；临时恢复后原记录与Replay审计通过；只在本地 |
 | 异机备份 | blocked | 没有授权目的地，本地归档不等于备份完成 |
 | 新Anchor本地GPU | passed | Pilot24+正式192；主矩阵96/96 cell、2/2输入run，正式0失败/0缓存 |
 | CPU与新增回归 | passed | 366 passed / 11 opt-in skipped；11项本轮定向回归通过；GPU采集后执行 |
@@ -189,6 +196,8 @@ python scripts/summarize_cross_gpu.py --root artifacts/cross-gpu-phase1
 | 4090/H800部署、GPU Smoke、Anchor | blocked | 资源分配、规范、配额、workspace未确认 |
 | 配对GPU共同合法范围、迁移/在线对照 | not_executed | 不能把5060 Ti 16点成功推成三卡共同范围 |
 | H20/H200 | not_executed | H20本轮未连接；H200未部署，无伪造Profile或性能 |
+
+分析提交3ed0d89的[GitHub CPU CI](https://github.com/MingASA/KernelTuningLab/actions/runs/40307016749)已在Python3.10/3.12均成功。封存证明是后续纯文档提交，不改变采集或分析源码身份。
 
 下一步最值得检验的硬件感知问题是：低M的BM/warp先验是否能跨SM数量和L2变化保持；源卡固定Top配置在哪些Shape失效且B1/2/4反馈能修复多少；同源码在不同软件栈下的lowering/资源变化有多少会混入“硬件迁移”效果。目前这些都是待检验问题，只有本地Anchor及可执行协议，没有多GPU实验支持。
 
