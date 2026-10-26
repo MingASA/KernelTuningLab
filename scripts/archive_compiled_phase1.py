@@ -33,10 +33,13 @@ def text_sections(blob):
     return result
 
 
-def archive(root,output):
+DEFAULT_STUDIES=('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4','simple','expert-probe')
+
+
+def archive(root,output,studies_to_scan=DEFAULT_STUDIES,cache_dirs=None):
     root,output=Path(root),Path(output);output.mkdir(parents=True,exist_ok=True)
     wanted={};studies={};wanted_ptx=set()
-    for label in ('correctness','pilot','matrix','bf16','anchor-before','anchor-after','online','w4','simple','expert-probe'):
+    for label in studies_to_scan:
         if not (root/label/'summary.json').is_file(): continue
         needed=set()
         for record in core.current_records(root/label):
@@ -48,10 +51,14 @@ def archive(root,output):
                 if artifact:
                     identity=artifact['sha256'];wanted[identity]=artifact['bytes'];needed.add(identity)
         studies[label]=sorted(needed)
-    cache=Path(os.environ.get('TRITON_CACHE_DIR',Path.home()/'.triton/cache'))
-    result=subprocess.run(['rg','--files','--hidden','--no-ignore',str(cache),'-g','*.cubin'],capture_output=True,text=True)
+    caches=[Path(p) for p in cache_dirs] if cache_dirs else [Path(os.environ.get('TRITON_CACHE_DIR',Path.home()/'.triton/cache'))]
+    filenames=set()
+    for cache in caches:
+        result=subprocess.run(['rg','--files','--hidden','--no-ignore',str(cache),'-g','*.cubin'],capture_output=True,text=True)
+        if result.returncode not in (0,1):raise ValueError('compiler cache scan failed: '+result.stderr.strip())
+        filenames.update(result.stdout.splitlines())
     matched={}
-    for filename in result.stdout.splitlines():
+    for filename in sorted(filenames):
         path=Path(filename);blob=path.read_bytes();identity=hashlib.sha256(blob).hexdigest()
         if identity not in wanted: continue
         if len(blob)!=wanted[identity]: raise ValueError('recorded compiler binary size mismatch')
@@ -82,4 +89,6 @@ def archive(root,output):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--root',required=True);parser.add_argument('--output',required=True)
-    args=parser.parse_args();archive(args.root,args.output)
+    parser.add_argument('--studies',nargs='+',default=DEFAULT_STUDIES)
+    parser.add_argument('--cache-dirs',nargs='+',help='read-only cache roots, including an isolated cold-study cache')
+    args=parser.parse_args();archive(args.root,args.output,args.studies,args.cache_dirs)

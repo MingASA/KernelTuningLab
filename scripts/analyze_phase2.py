@@ -141,7 +141,7 @@ def l2_study(rows,prior,history):
                     for step in row['trace']:step['source_record_id']=ids.get(core.KernelConfig(step['config']).id)
                     row.update(algorithm=method,measurement_seed=measurement_seed,shape_name=entry['name'],
                         new_gpu_measurements=0,training_source=f'{"current_train" if method=="transfer_current_train" else "phase1_train"}:{measurement_seed}' if source else None,
-                        target_10pct_evaluations=next((s.evaluation for s in result.trace if s.best_latency_ms<=result.oracle_best_latency_ms*1.1),None))
+                        target_10pct_evaluations=next((s.evaluation for s in result.trace if s.best_latency_ms is not None and result.oracle_best_latency_ms is not None and s.best_latency_ms<=result.oracle_best_latency_ms*1.1),None))
                     results.append(row)
     groups=defaultdict(list)
     for row in results:groups[row['split'],row['algorithm'],row['budget']].append(row)
@@ -149,9 +149,12 @@ def l2_study(rows,prior,history):
     for (split,name,budget),group in groups.items():
         values=[r['regret'] for r in group if r['regret'] is not None]
         aggregates.append({'split':split,'algorithm':name,'budget':budget,'budget_fraction':budget/48,'trials':len(group),
+            'shape_count':len({r['shape_name'] for r in group}),'physical_input_runs':2,'search_rng_seeds':5,
             'mean_regret':st.mean(values),'median_regret':st.median(values),'p10_regret':core.quantile(values,.1),'p90_regret':core.quantile(values,.9),
             'within_5pct':st.mean(r['regret'] is not None and r['regret']<=.05 for r in group),
             'within_10pct':st.mean(r['regret'] is not None and r['regret']<=.1 for r in group),
+            'mean_observations_to_5pct_conditional':st.mean(r['target_evaluations'] for r in group if r['target_evaluations'] is not None) if any(r['target_evaluations'] is not None for r in group) else None,
+            'mean_observations_to_10pct_conditional':st.mean(r['target_10pct_evaluations'] for r in group if r['target_10pct_evaluations'] is not None) if any(r['target_10pct_evaluations'] is not None for r in group) else None,
             'failures':sum(r['failed_evaluations']+r['missing_evaluations'] for r in group),
             'mean_source_cost_s':st.mean(r['known_measurement_cost_s'] for r in group),
             'mean_cpu_replay_wall_s':st.mean(r['cpu_wall_time_s'] for r in group)})
@@ -163,8 +166,32 @@ def l2_study(rows,prior,history):
                 r=next(r for r in source if r.config.id==cid)
                 prediction.append({'method':label,'shape':entry['name'],'role':entry['role'],'split':entry['split'],'measurement_seed':seed,
                     'config_id':cid,'regret':r.median_ms/best-1,'record_id':r.id,'target_measurements_required':0})
-    return {'results':results,'aggregates':aggregates,'prediction':prediction,'training_manifests':training_manifests,
+    strata=defaultdict(list)
+    for row in results:strata[row['split'],row['algorithm'],row['budget'],row['shape_name']].append(row)
+    by_shape=[]
+    for (split,method,budget,shape),group in strata.items():
+        by_shape.append({'split':split,'algorithm':method,'budget':budget,'shape':shape,
+            'mean_regret':st.mean(r['regret'] for r in group if r['regret'] is not None),
+            'physical_runs':[{'input_seed':seed,'rng_mean_regret':st.mean(r['regret'] for r in group if r['measurement_seed']==seed and r['regret'] is not None),
+                'rng_sd_regret':st.pstdev(r['regret'] for r in group if r['measurement_seed']==seed and r['regret'] is not None)} for seed in design.SEEDS]})
+    return {'results':results,'aggregates':aggregates,'by_shape':by_shape,'prediction':prediction,'training_manifests':training_manifests,
         'notice':'2 physical input runs x 5 search RNG seeds. Historical source acquisition is separate, not free cold-start data. Offline new GPU executions=0.'}
+
+
+def historical_overlap(rows,history):
+    """Pair old/new labels as a drift diagnostic, never merge their oracles."""
+    old={(r.shape.id,r.config.id,r.seed):r for r in history if r.correctness_verified}
+    groups=defaultdict(list)
+    for r in rows:
+        previous=old.get((r.shape.id,r.config.id,r.seed))
+        if previous is None:continue
+        core.require_baseline_compatible(r,previous)
+        groups[r.shape.id].append(r.median_ms/previous.median_ms)
+    return {'scope':'Repeated historical Shape/config/input-seed intersections; descriptive drift, not an expanded mixed-protocol oracle',
+        'pairs':sum(map(len,groups.values())),
+        'by_shape':[{'shape':entry['name'],'pairs':len(groups[SHAPES[i].id]),
+            'median_new_over_old':st.median(groups[SHAPES[i].id]),'p10_new_over_old':core.quantile(groups[SHAPES[i].id],.1),
+            'p90_new_over_old':core.quantile(groups[SHAPES[i].id],.9)} for i,entry in enumerate(design.SHAPES) if SHAPES[i].id in groups]}
 
 
 def config_l3(table,rows):
@@ -204,6 +231,8 @@ def analyze(root,skip_replay=False):
     if coverage['missing_successes']:raise ValueError('incomplete C48; exported all observations and missing statuses, no complete analysis claim')
     table=matrix_for(rows);core.write(out/'matrix.json',table.to_dict())
     structure=structures(table,rows);core.write(out/'structure.json',structure)
+    history=core.current_records(core.ROOT/'artifacts/research-phase1/matrix')
+    core.write(out/'historical-overlap.json',historical_overlap(rows,history))
     core._heatmap(figures/'relative-loss.svg','C48 measured relative latency','24 Shapes; historical training versus new held-out geometry explicitly separated',
         [s['name'] for s in design.SHAPES],[str(i) for i in range(48)],[[v/min(row) for v in row] for row in table.latencies_ms])
     prior=core.read_json(root/'pretest/prior.json')
@@ -215,7 +244,6 @@ def analyze(root,skip_replay=False):
             {method:[(r['k'],100*r['relative_loss']) for r in l3['results'] if r['weights']==weights and r['method']==method and r['status']=='passed']
              for method in ('greedy','local_swap','exact')},'Maximum config dictionaries K','Weighted latency loss (%)',render_png=False)
     if not skip_replay:
-        history=core.current_records(core.ROOT/'artifacts/research-phase1/matrix')
         replay=l2_study(rows,prior,history);core.write(out/'replay.json',replay)
         for split in ('validation','test'):
             names=sorted({r['algorithm'] for r in replay['aggregates']})
