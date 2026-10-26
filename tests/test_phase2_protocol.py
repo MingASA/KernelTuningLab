@@ -41,3 +41,18 @@ def test_gpu_research_spec_parameter_names_match_cpu_discoverable_sdk_contracts(
             for item in case['kernels']:
                 kernel=catalog.resolve('kernel',item['asset'])
                 assert set(item.get('space',{}))<=set(kernel.space.parameters), (path.name,kernel.ref)
+
+
+def test_missing_or_changed_reference_history_is_not_a_transfer_training_source(tmp_path):
+    from dataclasses import replace
+    from tests.test_core import case,ProbeAdapter
+    from kernel_tuning_lab.runner import BenchmarkRunner
+    from kernel_tuning_lab.models import KernelConfig
+    from kernel_tuning_lab.space import ConfigSpace
+    assert analysis.optional_history(tmp_path)==()
+    hardware,operator,shape=case()
+    record=BenchmarkRunner(ProbeAdapter(),repetitions=1).measure(hardware,operator,shape,
+        KernelConfig({'mode':'success'}),ConfigSpace({'mode':['success']}),resume=False)
+    assert analysis.compatible_history([record],operator)==[record]
+    changed=replace(operator,metadata={'operator_asset_fingerprint':'changed reference content'})
+    assert analysis.compatible_history([record],changed)==[]

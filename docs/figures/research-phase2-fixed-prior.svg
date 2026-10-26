@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="918" viewBox="0 0 1080 918" role="img" aria-labelledby="title desc">
+<title id="title">Frozen train-only prior in C48</title>
+<desc id="desc">Historical train10 / new validation3 / new test11; pooled physical labels; not C64 global regret</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Frozen train-only prior in C48</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Historical train10 / new validation3 / new test11; pooled physical labels; not C64 global regret</text>
+<g><title>decode-l2</title>
+<text x="325.00" y="111.00" font-size="11" fill="#334155" text-anchor="end" >decode-l2</text>
+<rect x="335" y="93.0" width="635.000" height="22" rx="3" fill="#2563eb"/>
+<text x="978.00" y="110.00" font-size="11" fill="#334155" text-anchor="start" >153</text>
+</g>
+<g><title>small-tokens</title>
+<text x="325.00" y="143.00" font-size="11" fill="#334155" text-anchor="end" >small-tokens</text>
+<rect x="335" y="125.0" width="153.569" height="22" rx="3" fill="#d97706"/>
+<text x="496.57" y="142.00" font-size="11" fill="#334155" text-anchor="start" >36.9</text>
+</g>
+<g><title>balanced-medium</title>
+<text x="325.00" y="175.00" font-size="11" fill="#334155" text-anchor="end" >balanced-medium</text>
+<rect x="335" y="157.0" width="2.884" height="22" rx="3" fill="#059669"/>
+<text x="345.88" y="174.00" font-size="11" fill="#334155" text-anchor="start" >0.693</text>
+</g>
+<g><title>tall</title>
+<text x="325.00" y="207.00" font-size="11" fill="#334155" text-anchor="end" >tall</text>
+<rect x="335" y="189.0" width="0.130" height="22" rx="3" fill="#dc2626"/>
+<text x="343.13" y="206.00" font-size="11" fill="#334155" text-anchor="start" >0.0311</text>
+</g>
+<g><title>decode-beyond-l2</title>
+<text x="325.00" y="239.00" font-size="11" fill="#334155" text-anchor="end" >decode-beyond-l2</text>
+<rect x="335" y="221.0" width="2.272" height="22" rx="3" fill="#7c3aed"/>
+<text x="345.27" y="238.00" font-size="11" fill="#334155" text-anchor="start" >0.546</text>
+</g>
+<g><title>irregular</title>
+<text x="325.00" y="271.00" font-size="11" fill="#334155" text-anchor="end" >irregular</text>
+<rect x="335" y="253.0" width="87.277" height="22" rx="3" fill="#0891b2"/>
+<text x="430.28" y="270.00" font-size="11" fill="#334155" text-anchor="start" >21</text>
+</g>
+<g><title>few-tokens-wide</title>
+<text x="325.00" y="303.00" font-size="11" fill="#334155" text-anchor="end" >few-tokens-wide</text>
+<rect x="335" y="285.0" width="195.392" height="22" rx="3" fill="#be185d"/>
+<text x="538.39" y="302.00" font-size="11" fill="#334155" text-anchor="start" >46.9</text>
+</g>
+<g><title>prefill</title>
+<text x="325.00" y="335.00" font-size="11" fill="#334155" text-anchor="end" >prefill</text>
+<rect x="335" y="317.0" width="7.416" height="22" rx="3" fill="#475569"/>
+<text x="350.42" y="334.00" font-size="11" fill="#334155" text-anchor="start" >1.78</text>
+</g>
+<g><title>compute-large</title>
+<text x="325.00" y="367.00" font-size="11" fill="#334155" text-anchor="end" >compute-large</text>
+<rect x="335" y="349.0" width="0.000" height="22" rx="3" fill="#2563eb"/>
+<text x="343.00" y="366.00" font-size="11" fill="#334155" text-anchor="start" >0</text>
+</g>
+<g><title>wide-k-small</title>
+<text x="325.00" y="399.00" font-size="11" fill="#334155" text-anchor="end" >wide-k-small</text>
+<rect x="335" y="381.0" width="1.812" height="22" rx="3" fill="#d97706"/>
+<text x="344.81" y="398.00" font-size="11" fill="#334155" text-anchor="start" >0.435</text>
+</g>
+<g><title>low-2</title>
+<text x="325.00" y="431.00" font-size="11" fill="#334155" text-anchor="end" >low-2</text>
+<rect x="335" y="413.0" width="555.367" height="22" rx="3" fill="#059669"/>
+<text x="898.37" y="430.00" font-size="11" fill="#334155" text-anchor="start" >133</text>
+</g>
+<g><title>low-4</title>
+<text x="325.00" y="463.00" font-size="11" fill="#334155" text-anchor="end" >low-4</text>
+<rect x="335" y="445.0" width="554.095" height="22" rx="3" fill="#dc2626"/>
+<text x="897.10" y="462.00" font-size="11" fill="#334155" text-anchor="start" >133</text>
+</g>
+<g><title>low-8</title>
+<text x="325.00" y="495.00" font-size="11" fill="#334155" text-anchor="end" >low-8</text>
+<rect x="335" y="477.0" width="488.184" height="22" rx="3" fill="#7c3aed"/>
+<text x="831.18" y="494.00" font-size="11" fill="#334155" text-anchor="start" >117</text>
+</g>
+<g><title>low-16</title>
+<text x="325.00" y="527.00" font-size="11" fill="#334155" text-anchor="end" >low-16</text>
+<rect x="335" y="509.0" width="420.717" height="22" rx="3" fill="#0891b2"/>
+<text x="763.72" y="526.00" font-size="11" fill="#334155" text-anchor="start" >101</text>
+</g>
+<g><title>low-32</title>
+<text x="325.00" y="559.00" font-size="11" fill="#334155" text-anchor="end" >low-32</text>
+<rect x="335" y="541.0" width="294.365" height="22" rx="3" fill="#be185d"/>
+<text x="637.37" y="558.00" font-size="11" fill="#334155" text-anchor="start" >70.7</text>
+</g>
+<g><title>low-64</title>
+<text x="325.00" y="591.00" font-size="11" fill="#334155" text-anchor="end" >low-64</text>
+<rect x="335" y="573.0" width="13.943" height="22" rx="3" fill="#475569"/>
+<text x="356.94" y="590.00" font-size="11" fill="#334155" text-anchor="start" >3.35</text>
+</g>
+<g><title>edge-31</title>
+<text x="325.00" y="623.00" font-size="11" fill="#334155" text-anchor="end" >edge-31</text>
+<rect x="335" y="605.0" width="275.914" height="22" rx="3" fill="#2563eb"/>
+<text x="618.91" y="622.00" font-size="11" fill="#334155" text-anchor="start" >66.3</text>
+</g>
+<g><title>edge-33</title>
+<text x="325.00" y="655.00" font-size="11" fill="#334155" text-anchor="end" >edge-33</text>
+<rect x="335" y="637.0" width="7.456" height="22" rx="3" fill="#d97706"/>
+<text x="350.46" y="654.00" font-size="11" fill="#334155" text-anchor="start" >1.79</text>
+</g>
+<g><title>edge-65</title>
+<text x="325.00" y="687.00" font-size="11" fill="#334155" text-anchor="end" >edge-65</text>
+<rect x="335" y="669.0" width="106.533" height="22" rx="3" fill="#059669"/>
+<text x="449.53" y="686.00" font-size="11" fill="#334155" text-anchor="start" >25.6</text>
+</g>
+<g><title>edge-129</title>
+<text x="325.00" y="719.00" font-size="11" fill="#334155" text-anchor="end" >edge-129</text>
+<rect x="335" y="701.0" width="66.121" height="22" rx="3" fill="#dc2626"/>
+<text x="409.12" y="718.00" font-size="11" fill="#334155" text-anchor="start" >15.9</text>
+</g>
+<g><title>working-set-16m</title>
+<text x="325.00" y="751.00" font-size="11" fill="#334155" text-anchor="end" >working-set-16m</text>
+<rect x="335" y="733.0" width="605.033" height="22" rx="3" fill="#7c3aed"/>
+<text x="948.03" y="750.00" font-size="11" fill="#334155" text-anchor="start" >145</text>
+</g>
+<g><title>working-set-64m</title>
+<text x="325.00" y="783.00" font-size="11" fill="#334155" text-anchor="end" >working-set-64m</text>
+<rect x="335" y="765.0" width="2.958" height="22" rx="3" fill="#0891b2"/>
+<text x="345.96" y="782.00" font-size="11" fill="#334155" text-anchor="start" >0.711</text>
+</g>
+<g><title>new-tail</title>
+<text x="325.00" y="815.00" font-size="11" fill="#334155" text-anchor="end" >new-tail</text>
+<rect x="335" y="797.0" width="420.110" height="22" rx="3" fill="#be185d"/>
+<text x="763.11" y="814.00" font-size="11" fill="#334155" text-anchor="start" >101</text>
+</g>
+<g><title>new-compute</title>
+<text x="325.00" y="847.00" font-size="11" fill="#334155" text-anchor="end" >new-compute</text>
+<rect x="335" y="829.0" width="3.259" height="22" rx="3" fill="#475569"/>
+<text x="346.26" y="846.00" font-size="11" fill="#334155" text-anchor="start" >0.783</text>
+</g>
+<text x="652.50" y="903.00" font-size="13" fill="#334155" text-anchor="middle" >Relative finite-C48 latency loss (%)</text>
+</g></svg>

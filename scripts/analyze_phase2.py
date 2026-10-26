@@ -24,6 +24,17 @@ SHAPES=tuple(core.ShapeSpec(s['shape']) for s in design.SHAPES)
 OLD_CONSTANT=core.KernelConfig(dict(BLOCK_M=32,BLOCK_N=128,BLOCK_K=32,num_warps=4,num_stages=3,GROUP_M=1))
 
 
+def optional_history(directory=None):
+    path=Path(directory) if directory else core.ROOT/'artifacts/research-phase1/matrix'
+    return core.current_records(path) if (path/'research_manifest.json').is_file() else ()
+
+
+def compatible_history(records,operator):
+    from kernel_tuning_lab.search import _transfer_operator_identity
+    identity=_transfer_operator_identity(operator)
+    return [r for r in records if _transfer_operator_identity(r.operator)==identity]
+
+
 def matrix_for(rows,shapes=SHAPES,configs=CONFIGS):
     return core.PerformanceMatrix.from_records(core.WorkloadDistribution(tuple(shapes),tuple([1]*len(shapes)),name='phase2 finite observed workload'),configs,rows)
 
@@ -120,12 +131,14 @@ def structures(table,rows):
 
 
 def l2_study(rows,prior,history):
-    results=[];training_manifests={};space=core.ConfigSpace(design.SPACE,name='frozen phase2 C48')
+    results=[];training_manifests={};not_applicable=[];space=core.ConfigSpace(design.SPACE,name='frozen phase2 C48')
     target_shapes={SHAPES[i].id for i,s in enumerate(design.SHAPES) if s['role']=='new_heldout'}
     for measurement_seed in design.SEEDS:
         current=[r for r in rows if r.seed==measurement_seed]
         training=[r for r in current if r.split=='train']
-        historical=[r for r in history if r.seed==measurement_seed and r.split=='train']
+        historical=compatible_history([r for r in history if r.seed==measurement_seed and r.split=='train'],current[0].operator)
+        if not historical:not_applicable.append({'method':'transfer_phase1','input_seed':measurement_seed,
+            'reason':'no historical train labels matching this implementation/reference content; not scored as a cold heuristic fallback'})
         for label,source in [('current_train',training),('phase1_train',historical)]:
             require_training_records(source,forbidden_shape_ids=target_shapes)
             training_manifests[f'{label}:{measurement_seed}']=training_record_manifest(source)
@@ -133,6 +146,7 @@ def l2_study(rows,prior,history):
             if entry['role']!='new_heldout':continue
             target=[r for r in current if r.shape.id==SHAPES[i].id]
             for method in ('random','grid','heuristic','surrogate','transfer_current_train','transfer_phase1'):
+                if method=='transfer_phase1' and not historical:continue
                 source=training if method=='transfer_current_train' else historical if method=='transfer_phase1' else ()
                 name='transfer' if method.startswith('transfer_') else method
                 for seed,budget in itertools.product(range(5),(4,8,16,32)):
@@ -174,20 +188,23 @@ def l2_study(rows,prior,history):
             'mean_regret':st.mean(r['regret'] for r in group if r['regret'] is not None),
             'physical_runs':[{'input_seed':seed,'rng_mean_regret':st.mean(r['regret'] for r in group if r['measurement_seed']==seed and r['regret'] is not None),
                 'rng_sd_regret':st.pstdev(r['regret'] for r in group if r['measurement_seed']==seed and r['regret'] is not None)} for seed in design.SEEDS]})
-    return {'results':results,'aggregates':aggregates,'by_shape':by_shape,'prediction':prediction,'training_manifests':training_manifests,
+    return {'results':results,'aggregates':aggregates,'by_shape':by_shape,'prediction':prediction,'training_manifests':training_manifests,'not_applicable':not_applicable,
         'notice':'2 physical input runs x 5 search RNG seeds. Historical source acquisition is separate, not free cold-start data. Offline new GPU executions=0.'}
 
 
 def historical_overlap(rows,history):
     """Pair old/new labels as a drift diagnostic, never merge their oracles."""
     old={(r.shape.id,r.config.id,r.seed):r for r in history if r.correctness_verified}
-    groups=defaultdict(list)
+    groups=defaultdict(list);incompatible=Counter()
     for r in rows:
         previous=old.get((r.shape.id,r.config.id,r.seed))
         if previous is None:continue
-        core.require_baseline_compatible(r,previous)
+        try:core.require_baseline_compatible(r,previous)
+        except ValueError as error:
+            incompatible[str(error)]+=1;continue
         groups[r.shape.id].append(r.median_ms/previous.median_ms)
     return {'scope':'Repeated historical Shape/config/input-seed intersections; descriptive drift, not an expanded mixed-protocol oracle',
+        'status':'passed' if groups else 'not_compared','incompatible_pairs':dict(incompatible),
         'pairs':sum(map(len,groups.values())),
         'by_shape':[{'shape':entry['name'],'pairs':len(groups[SHAPES[i].id]),
             'median_new_over_old':st.median(groups[SHAPES[i].id]),'p10_new_over_old':core.quantile(groups[SHAPES[i].id],.1),
@@ -218,7 +235,7 @@ def config_l3(table,rows):
         'small_exact':[core.oracle(small,k).to_dict() for k in (1,2,4,8)]}
 
 
-def analyze(root,skip_replay=False):
+def analyze(root,skip_replay=False,history_root=None):
     root=Path(root);out=root/'analysis';figures=out/'figures';figures.mkdir(parents=True,exist_ok=True)
     rows=physical_records(root);coverage=check_coverage(rows,design.SHAPES);core.write(out/'coverage.json',coverage)
     dataset_id=hashlib.sha256(core.canonical_json(sorted(r.id for r in rows)).encode()).hexdigest()
@@ -231,7 +248,7 @@ def analyze(root,skip_replay=False):
     if coverage['missing_successes']:raise ValueError('incomplete C48; exported all observations and missing statuses, no complete analysis claim')
     table=matrix_for(rows);core.write(out/'matrix.json',table.to_dict())
     structure=structures(table,rows);core.write(out/'structure.json',structure)
-    history=core.current_records(core.ROOT/'artifacts/research-phase1/matrix')
+    history=optional_history(history_root)
     core.write(out/'historical-overlap.json',historical_overlap(rows,history))
     core._heatmap(figures/'relative-loss.svg','C48 measured relative latency','24 Shapes; historical training versus new held-out geometry explicitly separated',
         [s['name'] for s in design.SHAPES],[str(i) for i in range(48)],[[v/min(row) for v in row] for row in table.latencies_ms])
@@ -245,6 +262,10 @@ def analyze(root,skip_replay=False):
              for method in ('greedy','local_swap','exact')},'Maximum config dictionaries K','Weighted latency loss (%)',render_png=False)
     if not skip_replay:
         replay=l2_study(rows,prior,history);core.write(out/'replay.json',replay)
+        import subprocess
+        core.write(out/'replay-source-version.json',{'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=core.ROOT,text=True).strip(),
+            'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            'replay_sha256':hashlib.sha256((out/'replay.json').read_bytes()).hexdigest()})
         for split in ('validation','test'):
             names=sorted({r['algorithm'] for r in replay['aggregates']})
             core._line_chart(figures/('l2-'+split+'.svg'),'C48 offline Replay',split+'; source data costs separate; no new GPU execution',
@@ -259,6 +280,7 @@ def analyze(root,skip_replay=False):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--root',required=True)
     parser.add_argument('--freeze-prior',action='store_true');parser.add_argument('--skip-replay',action='store_true')
+    parser.add_argument('--history-root',help='optional prior research root; missing/incompatible history is explicitly not applicable')
     args=parser.parse_args()
     if args.freeze_prior:freeze_prior(args.root)
-    else:analyze(args.root,args.skip_replay)
+    else:analyze(args.root,args.skip_replay,args.history_root)

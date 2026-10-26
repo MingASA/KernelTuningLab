@@ -19,6 +19,20 @@
 
 ## Validation boundary
 
+The readiness follow-up is documented in [RESEARCH_PHASE2.md](RESEARCH_PHASE2.md):
+24 Shapes × 48 configs × 2 input runs, a complete 2,304-observation FP16 matrix,
+3,360 offline replays and nine matched online trajectories. A runtime-shape T1
+control actually reused four compiler identities across six Shapes, versus 24
+specialized identities, with measured latency costs. The original L3 solver
+still constrains config dictionaries; physical-identity selection is a finite
+POC. Clean CPU source/wheel and installed SDK-plugin GPU workflows passed.
+CPU regression is 355 passed / 11 opt-in skipped (the earlier clean installation
+ran 354 tests, followed by one added history-compatibility regression); the separate opt-in suite has
+11 actual GPU cases plus seven CPU state checks, and the ten-stage strict core
+gate has 80 fresh successful records. Reference precision/autocast and mutable
+Torch-state cache identity fixes use a separate measurement context from the
+sealed research matrix. Other GPU targets remain physically unvalidated.
+
 The 2026-10-25 physical RTX 5060 Ti 16GB WSL run passed the ten-stage strict core
 gate (80 records) and the repaired default proposal suite (16 jobs, 576 research
 observations and 140 acceptance attempts). Actual compilation, numerical behavior

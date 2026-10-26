@@ -49,6 +49,32 @@ def resources(record):
 def pooled(records):return st.median(v for r in records for v in r.runtime_samples_ms)
 
 
+def online_check(root,rows):
+    primary=phase.physical_records(root);manifest=core.read_json(root/'online/research_manifest.json');reports=[]
+    for job in manifest['jobs']:
+        snapshot=core.snapshot_directory(root/'online',job)
+        for trial in core.read_json(snapshot/'trials.json'):
+            shape=core.ShapeSpec(trial['shape']);target=[r for r in primary if r.shape.id==shape.id and r.seed==trial['seed']]
+            by_config={r.config.id:r for r in target};method=trial['algorithm_ref'].split('@')[0]
+            reference=core.run_replay(target,core.make_searcher(method,seed=trial['seed']),core.ConfigSpace(phase.design.SPACE),
+                core.SearchBudget(trial['budget']['max_evaluations']),seed=trial['seed'])
+            online_ids=[s['config_id'] for s in trial['observation_trace']];offline_ids=[s.config.id for s in reference.trace]
+            prefix=0
+            for left,right in zip(online_ids,offline_ids):
+                if left!=right:break
+                prefix+=1
+            ratios=[s['latency_ms']/by_config[s['config_id']].median_ms for s in trial['observation_trace']]
+            reports.append({'shape':dict(shape.dims),'algorithm':method,'input_and_search_seed':trial['seed'],
+                'same_candidate_sequence':online_ids==offline_ids,'matching_prefix_observations':prefix,
+                'observations':trial['observations'],'physical_evaluations':trial['physical_evaluations'],'cache_hits':trial['cache_hits'],
+                'matrix_scored_selected_regret':min(by_config[c].median_ms for c in online_ids)/min(r.median_ms for r in target)-1,
+                'online_best_over_matrix_best_minus_one':trial['best_verified_latency_ms']/min(r.median_ms for r in target)-1,
+                'median_paired_online_over_matrix_latency':st.median(ratios),
+                'trial_wall_s':trial['wall_time_s'],'physical_compile_time_ms':trial['physical_compile_time_ms'],
+                'physical_measurement_wall_s':trial['physical_measurement_wall_time_s']})
+    return {'trials':reports,'notice':'Fresh online seed7 compared with an additional offline seed7 replay. Signed independent latency differences include noise/drift. Shared cache and warm compiler mean job/trial costs are not independent cold-start tuning time.'}
+
+
 def generic_study(rows,compiled_index=None):
     implementations=sorted({r.operator.implementation for r in rows})
     generic=next(i for i in implementations if 'generic' in i)
@@ -144,21 +170,23 @@ def analyze(root):
         manifest=core.read_json(path);rows=core.current_records(root/label);all_rows[label]=rows
         attempts={m['run_id']:m for m in [manifest]+[core.read_json(p) for p in (root/label/'attempts').glob('*/research_manifest.json')]}
         reports[label]={'jobs':len(manifest['jobs']),'job_statuses':dict(core.Counter(j['status'] for j in manifest['jobs'])),
-            'observations':len(rows),'success':sum(r.correctness_verified for r in rows),
+            'observations':sum(j.get('result',{}).get('observations',0) for j in manifest['jobs']),
+            'unique_source_records':len(rows),'success':sum(r.correctness_verified for r in rows),
             'job_wall_s':sum(j.get('wall_time_s',0) for j in manifest['jobs']),
             'new_evaluations':sum(j.get('result',{}).get('evaluations',0) for j in manifest['jobs']),
             'cache_hits':sum(j.get('result',{}).get('cache_hits',0) for j in manifest['jobs']),
-            'validation_evaluations':sum(j.get('validation_evaluations',0) for j in manifest['jobs']),
+            'validation_evaluations':sum(j.get('result',{}).get('validation_evaluations',0) for j in manifest['jobs']),
             'source_measurement_wall_s':sum(r.wall_time_s for r in rows),
             'compile_ms':sum(r.compile_time_ms or 0 for r in rows),
             'all_attempts':[{'run_id':m['run_id'],'job_statuses':dict(core.Counter(j['status'] for j in m['jobs'])),
                 'new_evaluations':sum(j.get('result',{}).get('evaluations',0) for j in m['jobs']),
                 'cache_hits':sum(j.get('result',{}).get('cache_hits',0) for j in m['jobs']),
-                'validation_evaluations':sum(j.get('validation_evaluations',0) for j in m['jobs']),
+                'validation_evaluations':sum(j.get('result',{}).get('validation_evaluations',0) for j in m['jobs']),
                 'job_wall_s':sum(j.get('wall_time_s',0) for j in m['jobs'])} for m in attempts.values()]}
     core.write(out/'supplement-costs.json',reports)
     index=core.read_json(root/'compiled/index.json') if (root/'compiled/index.json').is_file() else None
     if 'generic' in all_rows:core.write(out/'generic.json',generic_study(all_rows['generic'],index))
+    if 'online' in all_rows:core.write(out/'online-check.json',online_check(root,all_rows['online']))
     for label in ('controls','group-beyond-l2','w4','bf16','repeat'):
         if label not in all_rows:continue
         rows=all_rows[label];groups=defaultdict(list)

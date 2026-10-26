@@ -1,0 +1,128 @@
+{
+  "baseline_commit": "522e66fa02b4bcf416085fa404801b1c8584b3dd",
+  "core_fix_commit": "676a8045c2ab0b4905c824399ee6910c07524562",
+  "packaged_source_commit": "1534d4b8afd5ee1d2784841418d3288c8a7a31a6",
+  "git_identity": {
+    "name": "MingASA",
+    "email": "mingasa7@gmail.com"
+  },
+  "cpu_suite": {
+    "passed": 355,
+    "gpu_skipped": 11,
+    "isolated_python": "3.10",
+    "optional_torch_triton_matplotlib_installed": false
+  },
+  "clean_source_wheel_workflows": {
+    "steps": 28,
+    "source_suite_passed": 354,
+    "all_passed": true,
+    "wheel": {
+      "sha256": "5235a8d1ef131cf72500566e02fc52a858ee90eb20e1107d6c2442879f4bafbb",
+      "name": "kernel_tuning_lab-0.1.0-py3-none-any.whl"
+    },
+    "installed_entry_point_searcher": true
+  },
+  "fresh_gpu_wheel": {
+    "steps": [
+      {
+        "step": "gpu-wheel-install",
+        "exit_code": 0,
+        "seconds": 0.7683226109948009
+      },
+      {
+        "step": "gpu-pip-check",
+        "exit_code": 0,
+        "seconds": 0.24144930503098294
+      },
+      {
+        "step": "gpu-wheel-location",
+        "exit_code": 0,
+        "seconds": 1.747929855948314
+      },
+      {
+        "step": "gpu-probe",
+        "exit_code": 0,
+        "seconds": 2.172117266978603
+      },
+      {
+        "step": "gpu-minimal",
+        "exit_code": 0,
+        "seconds": 6.122271326021291
+      },
+      {
+        "step": "gpu-research",
+        "exit_code": 0,
+        "seconds": 9.878421213012189
+      },
+      {
+        "step": "gpu-research-resume",
+        "exit_code": 0,
+        "seconds": 8.02452874201117
+      },
+      {
+        "step": "gpu-report-only",
+        "exit_code": 0,
+        "seconds": 0.10748455999419093
+      }
+    ],
+    "wheel_sha256": "5235a8d1ef131cf72500566e02fc52a858ee90eb20e1107d6c2442879f4bafbb",
+    "source_directory_imported": false,
+    "cached_resume_new_evaluations": 0,
+    "cached_resume_observations": 4
+  },
+  "installed_plugin_gpu_research": {
+    "status": "passed",
+    "jobs": 3,
+    "physical_gpu_validated": true
+  },
+  "strict_core_smoke": {
+    "status": "passed",
+    "total_records": 80,
+    "passed_stages": 10,
+    "cache_hits": 0
+  },
+  "gpu_opt_in_suite": {
+    "passed": 18,
+    "physical_gpu_cases": 11,
+    "cpu_state_cases": 7
+  },
+  "migration_execute_5060ti": {
+    "status": "passed",
+    "physical_gpu_validated": true
+  },
+  "other_gpus": {
+    "H20": "not_executed",
+    "H200": "not_executed",
+    "H800": "not_executed",
+    "RTX4090": "not_executed"
+  },
+  "reference_and_cache_reproduction": {
+    "before": {
+      "label": "before",
+      "git_commit": "2fb17914784cdb43bb5816832c4ab3fd439833b5",
+      "precision_before": "medium",
+      "precision_after_reference": "ERROR:PyTorch is checking the matmul precision without a specific backend name,Current status indicate that you have used mix of the legacy and new APIs to set the matmul precision. We suggest only using the new API for matmul precision. See also: https://pytorch.org/docs/main/notes/cuda.html#tensorfloat-32-tf32-on-ampere-and-later-devices",
+      "autocast_reference_matches_strict": false,
+      "autocast_reference_max_absolute_error": 0.09375,
+      "environment_changed_after_reduction_flag": false,
+      "changed_flag_reused_cache": true,
+      "first_record_id": "a13690e976e48dedb18a0028",
+      "second_record_id": "a13690e976e48dedb18a0028",
+      "both_correctness_verified": true
+    },
+    "after_committed": {
+      "label": "committed",
+      "git_commit": "676a8045c2ab0b4905c824399ee6910c07524562",
+      "precision_before": "medium",
+      "precision_after_reference": "medium",
+      "autocast_reference_matches_strict": true,
+      "autocast_reference_max_absolute_error": 0.0,
+      "environment_changed_after_reduction_flag": true,
+      "changed_flag_reused_cache": false,
+      "first_record_id": "8d5e2d1d36d03dfefc7076f8",
+      "second_record_id": "77bbb60cf0f2d04b1bf98460",
+      "both_correctness_verified": true
+    }
+  },
+  "raw_evidence": "artifacts/research-phase2; original attempts, source specs and source IDs retained"
+}

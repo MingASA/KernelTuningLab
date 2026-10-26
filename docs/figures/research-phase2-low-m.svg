@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">M tile boundaries at fixed N=K=2048</title>
+<desc id="desc">Other params fixed: BN64/BK64/w4/stage3/G1; descriptive measured curves</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >M tile boundaries at fixed N=K=2048</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Other params fixed: BN64/BK64/w4/stage3/G1; descriptive measured curves</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >10.2</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >20.4</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >30.6</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >40.7</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >50.9</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >0</text>
+<text x="188.75" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >0.876</text>
+<text x="277.50" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1.75</text>
+<text x="366.25" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2.63</text>
+<text x="455.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >3.51</text>
+<text x="543.75" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4.38</text>
+<text x="632.50" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >5.26</text>
+<text x="721.25" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >6.13</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >7.01</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >log2(M)</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Hot Graph512 latency (us)</text>
+<polyline points="100.00,359.63 201.27,378.41 302.53,384.40 403.80,386.49 505.06,386.54 601.69,357.40 606.33,358.29 610.83,324.12 707.60,288.47 709.86,235.14 808.86,141.09 810.00,120.56" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="359.63" r="3" fill="#2563eb"><title>BM=16: 0, 11.86</title></circle>
+<circle cx="201.27" cy="378.41" r="3" fill="#2563eb"><title>BM=16: 1, 9.091</title></circle>
+<circle cx="302.53" cy="384.40" r="3" fill="#2563eb"><title>BM=16: 2, 8.207</title></circle>
+<circle cx="403.80" cy="386.49" r="3" fill="#2563eb"><title>BM=16: 3, 7.899</title></circle>
+<circle cx="505.06" cy="386.54" r="3" fill="#2563eb"><title>BM=16: 4, 7.892</title></circle>
+<circle cx="601.69" cy="357.40" r="3" fill="#2563eb"><title>BM=16: 4.954, 12.19</title></circle>
+<circle cx="606.33" cy="358.29" r="3" fill="#2563eb"><title>BM=16: 5, 12.06</title></circle>
+<circle cx="610.83" cy="324.12" r="3" fill="#2563eb"><title>BM=16: 5.044, 17.11</title></circle>
+<circle cx="707.60" cy="288.47" r="3" fill="#2563eb"><title>BM=16: 6, 22.37</title></circle>
+<circle cx="709.86" cy="235.14" r="3" fill="#2563eb"><title>BM=16: 6.022, 30.24</title></circle>
+<circle cx="808.86" cy="141.09" r="3" fill="#2563eb"><title>BM=16: 7, 44.12</title></circle>
+<circle cx="810.00" cy="120.56" r="3" fill="#2563eb"><title>BM=16: 7.011, 47.16</title></circle>
+<g><title>BM=16</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >BM=16</text>
+</g>
+<polyline points="100.00,312.23 201.27,354.25 302.53,369.60 403.80,374.87 505.06,374.65 601.69,374.98 606.33,376.92 610.83,329.84 707.60,331.13 709.86,286.05 808.86,240.65 810.00,187.70" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="312.23" r="3" fill="#d97706"><title>BM=32: 0, 18.86</title></circle>
+<circle cx="201.27" cy="354.25" r="3" fill="#d97706"><title>BM=32: 1, 12.66</title></circle>
+<circle cx="302.53" cy="369.60" r="3" fill="#d97706"><title>BM=32: 2, 10.39</title></circle>
+<circle cx="403.80" cy="374.87" r="3" fill="#d97706"><title>BM=32: 3, 9.614</title></circle>
+<circle cx="505.06" cy="374.65" r="3" fill="#d97706"><title>BM=32: 4, 9.648</title></circle>
+<circle cx="601.69" cy="374.98" r="3" fill="#d97706"><title>BM=32: 4.954, 9.598</title></circle>
+<circle cx="606.33" cy="376.92" r="3" fill="#d97706"><title>BM=32: 5, 9.312</title></circle>
+<circle cx="610.83" cy="329.84" r="3" fill="#d97706"><title>BM=32: 5.044, 16.26</title></circle>
+<circle cx="707.60" cy="331.13" r="3" fill="#d97706"><title>BM=32: 6, 16.07</title></circle>
+<circle cx="709.86" cy="286.05" r="3" fill="#d97706"><title>BM=32: 6.022, 22.73</title></circle>
+<circle cx="808.86" cy="240.65" r="3" fill="#d97706"><title>BM=32: 7, 29.43</title></circle>
+<circle cx="810.00" cy="187.70" r="3" fill="#d97706"><title>BM=32: 7.011, 37.24</title></circle>
+<g><title>BM=32</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >BM=32</text>
+</g>
+<polyline points="100.00,219.63 201.27,301.45 302.53,326.07 403.80,332.93 505.06,333.06 601.69,333.42 606.33,333.35 610.83,332.77 707.60,333.37 709.86,247.18 808.86,245.24 810.00,159.57" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="219.63" r="3" fill="#059669"><title>BM=64: 0, 32.53</title></circle>
+<circle cx="201.27" cy="301.45" r="3" fill="#059669"><title>BM=64: 1, 20.45</title></circle>
+<circle cx="302.53" cy="326.07" r="3" fill="#059669"><title>BM=64: 2, 16.82</title></circle>
+<circle cx="403.80" cy="332.93" r="3" fill="#059669"><title>BM=64: 3, 15.81</title></circle>
+<circle cx="505.06" cy="333.06" r="3" fill="#059669"><title>BM=64: 4, 15.79</title></circle>
+<circle cx="601.69" cy="333.42" r="3" fill="#059669"><title>BM=64: 4.954, 15.73</title></circle>
+<circle cx="606.33" cy="333.35" r="3" fill="#059669"><title>BM=64: 5, 15.74</title></circle>
+<circle cx="610.83" cy="332.77" r="3" fill="#059669"><title>BM=64: 5.044, 15.83</title></circle>
+<circle cx="707.60" cy="333.37" r="3" fill="#059669"><title>BM=64: 6, 15.74</title></circle>
+<circle cx="709.86" cy="247.18" r="3" fill="#059669"><title>BM=64: 6.022, 28.46</title></circle>
+<circle cx="808.86" cy="245.24" r="3" fill="#059669"><title>BM=64: 7, 28.75</title></circle>
+<circle cx="810.00" cy="159.57" r="3" fill="#059669"><title>BM=64: 7.011, 41.4</title></circle>
+<g><title>BM=64</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >BM=64</text>
+</g>
+<polyline points="100.00,394.50 201.27,394.01 302.53,393.33 403.80,391.32 505.06,386.54 601.69,374.98 606.33,376.92 610.83,332.77 707.60,333.37 709.86,286.79 808.86,251.31 810.00,198.54" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="394.50" r="3" fill="#dc2626"><title>finite C48 best: 0, 6.716</title></circle>
+<circle cx="201.27" cy="394.01" r="3" fill="#dc2626"><title>finite C48 best: 1, 6.789</title></circle>
+<circle cx="302.53" cy="393.33" r="3" fill="#dc2626"><title>finite C48 best: 2, 6.889</title></circle>
+<circle cx="403.80" cy="391.32" r="3" fill="#dc2626"><title>finite C48 best: 3, 7.186</title></circle>
+<circle cx="505.06" cy="386.54" r="3" fill="#dc2626"><title>finite C48 best: 4, 7.892</title></circle>
+<circle cx="601.69" cy="374.98" r="3" fill="#dc2626"><title>finite C48 best: 4.954, 9.598</title></circle>
+<circle cx="606.33" cy="376.92" r="3" fill="#dc2626"><title>finite C48 best: 5, 9.312</title></circle>
+<circle cx="610.83" cy="332.77" r="3" fill="#dc2626"><title>finite C48 best: 5.044, 15.83</title></circle>
+<circle cx="707.60" cy="333.37" r="3" fill="#dc2626"><title>finite C48 best: 6, 15.74</title></circle>
+<circle cx="709.86" cy="286.79" r="3" fill="#dc2626"><title>finite C48 best: 6.022, 22.62</title></circle>
+<circle cx="808.86" cy="251.31" r="3" fill="#dc2626"><title>finite C48 best: 7, 27.85</title></circle>
+<circle cx="810.00" cy="198.54" r="3" fill="#dc2626"><title>finite C48 best: 7.011, 35.64</title></circle>
+<g><title>finite C48 best</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >finite C48 best</text>
+</g>
+</g></svg>
