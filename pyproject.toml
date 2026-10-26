@@ -19,6 +19,9 @@ dev = ["pytest>=8"]
 [project.scripts]
 ktlab = "kernel_tuning_lab.cli:main"
 
+[tool.setuptools]
+license-files = ["third_party/triton-tutorial-LICENSE"]
+
 [tool.setuptools.packages.find]
 include = ["kernel_tuning_lab*"]
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import hashlib
 import math
 import random
 from typing import Iterable
@@ -123,6 +124,28 @@ def require_training_records(
         if record.case_id in cases or record.hardware.id in hardware or record.shape.id in shapes:
             raise ValueError("training data overlaps a held-out evaluation group")
     return rows
+
+
+def training_record_manifest(records: Iterable[MeasurementRecord]) -> dict:
+    """Content-bind exposed historical data, preserving duplicate weighting.
+
+    Paths are not dataset identities. Acquisition cost is deduplicated by source
+    record ID and remains separate from the target observation budget.
+    """
+    from collections import Counter
+    from .measurement_context import source_context_id
+    from .models import canonical_json
+    rows = require_training_records(records)
+    identities = sorted(record.id for record in rows)
+    unique = {record.id: record for record in rows}
+    known = [r for r in unique.values() if r.wall_time_s > 0 or r.metadata.get("measurement_cost_known") is True]
+    return {"records": len(rows), "unique_records": len(unique), "record_ids": identities,
+            "record_ids_sha256": hashlib.sha256(canonical_json(identities).encode()).hexdigest(),
+            "source_context_ids": sorted({source_context_id(r) for r in rows}),
+            "provenance_counts": dict(Counter(r.provenance for r in rows)),
+            "unique_source_wall_s": sum(r.wall_time_s for r in known),
+            "source_cost_coverage": len(known) / len(unique) if unique else 1.0,
+            "cost_scope": "historical acquisition; excluded from target observations and target wall time"}
 
 
 def case_id(hardware, operator, shape) -> str:

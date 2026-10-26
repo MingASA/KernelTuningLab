@@ -60,12 +60,15 @@ def _trial(output, job, raw, store, directory):
     comparable = len(contexts) == len(cases) == 1
     context = next(iter(contexts)) if comparable else None
     first = records[0] if records else None
-    series_id = stable_id([job["algorithm"], raw.get("algorithm_ref"), raw.get("algorithm_fingerprint"), raw.get("options", {})])
+    training = raw.get("training_data")
+    series_id = stable_id([job["algorithm"], raw.get("algorithm_ref"), raw.get("algorithm_fingerprint"), raw.get("options", {}),
+                           training.get("record_ids_sha256") if training else None])
     info = {"job_id": job["id"], "case": job["case"], "trial_id": raw["trial_id"],
         "operator": first.operator.kind if first else job["operator"].split("@")[0],
         "operator_parameters": dict(first.operator.parameters) if first else job["experiment"]["parameters"],
         "kernel": raw.get("kernel_ref", job["kernel"]), "algorithm": raw.get("algorithm_ref", job["algorithm"]),
         "algorithm_fingerprint": raw.get("algorithm_fingerprint"), "algorithm_options": raw.get("options", {}),
+        "training_data": training,
         "algorithm_selector": job["experiment"]["algorithms"][0],
         "series_id": series_id, "shape": raw["shape"], "dtype": job["dtype"], "seed": job["seed"],
         "budget": job["budget"], "status": raw.get("status", "interrupted"),
@@ -212,7 +215,8 @@ def generate_research_report(output_dir):
         for (seed, budget), rows in sorted(curves.items()):
             token = stable_id([identity, seed, budget])
             labels = {t["series_id"]: t["algorithm"] + " [" + t["algorithm_fingerprint"][:6] + "]" + (" [partial]" if t["status"] != "passed" else "") +
-                      (" " + canonical_json(t["algorithm_options"]) if t["algorithm_options"] else "") for t in rows}
+                      (" " + canonical_json(t["algorithm_options"]) if t["algorithm_options"] else "") +
+                      (" [train:" + t["training_data"]["record_ids_sha256"][:6] + "]" if t["training_data"] else "") for t in rows}
             for xkey, suffix, xlabel in (("observation", "search", "Revealed observations (failures/cache included)"),
                                         ("elapsed_wall_time_s", "wall", "Actual trial elapsed time (s; shared caches)")):
                 filename = f"{suffix}-{token}.svg"
@@ -227,6 +231,7 @@ def generate_research_report(output_dir):
             values = sorted(t["best_verified_latency_ms"] for t in eligible)
             comparison["aggregates"].append({"algorithm": rows[0]["algorithm"], "series_id": series,
                 "algorithm_options": rows[0]["algorithm_options"], "algorithm_fingerprint": rows[0]["algorithm_fingerprint"],
+                "training_data": rows[0]["training_data"],
                 "algorithm_selector": rows[0]["algorithm_selector"],
                 "budget": json.loads(budget), "successful_seeds": [t["seed"] for t in eligible],
                 "attempted_seeds": [t["seed"] for t in rows], "n": len(values),
@@ -248,6 +253,7 @@ def generate_research_report(output_dir):
                 selected = json.loads(selector)
                 missing = {"algorithm": selected["asset"], "algorithm_selector": selected,
                     "algorithm_options": selected["options"], "algorithm_fingerprint": None,
+                    "training_data": None,
                     "series_id": stable_id([selector, identity]), "budget": json.loads(budget),
                     "successful_seeds": [], "attempted_seeds": [], "n": 0,
                     "median_best_verified_ms": None, "min_best_verified_ms": None, "max_best_verified_ms": None}

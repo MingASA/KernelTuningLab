@@ -10,6 +10,7 @@ import time
 from typing import Any
 
 from .acceptance import create_searcher, request_candidates
+from .datasets import training_record_manifest
 from .models import MeasurementRecord, RecordStatus, SearchBudget, canonical_json, stable_id
 from .runner import BenchmarkRunner
 from .search import SearchHistory
@@ -118,6 +119,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "operator_ref": case.operator_definition.ref,
                   "algorithm_ref": algorithm_definition.ref, "algorithm_fingerprint": identity["algorithm_fingerprint"],
                   "algorithm_options": options, "options": options, "seed": seed,
+                  "training_data": identity.get("training_data"),
                   "shape": dict(case.shape.dims), "dtype": case.operator.dtype,
                   "record_ids": [record.id for record in records], "evaluations": evaluations,
                   "observations": len(records),
@@ -160,6 +162,17 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
     try:
         notify({"event": "algorithm_factory"})
         searcher = create_searcher(algorithm_definition, options, seed)
+        # Built-in Transfer and opt-in plugins expose their actual historical
+        # records. Bind content after loading; a database path can change in
+        # place while algorithm code/options remain identical.
+        training = getattr(searcher, "training_records", None)
+        if training is not None:
+            identity["training_data"] = training_record_manifest(training)
+            trial_id = stable_id(identity)
+            _save_json(output / "trial.json", {**identity, "trial_id": trial_id, "status": "running",
+                "kernel_ref": case.kernel.ref, "operator_ref": case.operator_definition.ref,
+                "shape": dict(case.shape.dims), "dtype": case.operator.dtype, "trace_schema_version": 1})
+            notify({"event": "algorithm_ready", "training_data_sha256": identity["training_data"]["record_ids_sha256"]})
     except Exception as exc:
         status, stop_reason = "failed", "algorithm_contract_error"
         contract_failures += 1
