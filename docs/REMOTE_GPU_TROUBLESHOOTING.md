@@ -16,7 +16,14 @@
 | H800 / 资源监测 | 严格core阶段被未归属PID拦截，未完成整gate | 保留首份partial与guard日志，不计通过。原现场不足以完全归因；已CPU复现并修复NVML退役PID与忽略父级SIGINT的边界：独立追踪自己子进程、仅忽略已证实退役的自己PID、停止已证实自己的session，补充冲突现场。未知PID仍拒绝 |
 | 本地 / 控制进度 | 两个非GPU阶段并发写小JSON，成功状态被旧快照覆盖 | 原stdout/receipt可证明成功，不重跑GPU。控制元数据改为文件锁、只合并本阶段字段与原子replace；原错误快照保留。不是测量数据库损坏 |
 
-当前共同环境候选为Python3.12.12、Torch2.5.1/cu121及配套Triton；**安装完成、CUDA可用、编译通过是三个独立状态**。不能将环境候选写成GPU验收通过。驱动535/550不套用5060 Ti的cu132依赖锁，参考[官方PyTorch版本](https://pytorch.org/get-started/previous-versions/)和[NVIDIA兼容性](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html)。实际版本以各次原始记录为准。
+当前两台主实验环境已分别安装并通过probe、T1及原四类严格Smoke：Python3.11.11、Torch2.6.0+cu124、Triton3.2.0、NumPy2.2.2。4090采用既有官方镜像组件的私有离线拷贝；H800采用新私有venv。早期H800的2.5/cu121验证及失败保留在独立目录，不混入主矩阵。**安装完成、CUDA可用、编译通过是三个独立状态**。驱动535/550不套用5060 Ti的cu132依赖锁，参考[官方PyTorch版本](https://pytorch.org/get-started/previous-versions/)和[NVIDIA兼容性](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html)。实际版本以各次原始记录为准。
+
+## 本轮补充问题
+
+- **4090完全离线的依赖恢复**：获用户只读复用授权后，从本地缓存的官方PyTorch镜像创建自己的未启动、无GPU/网络临时容器，将运行时复制到私有目录，核对Python ABI与pip安装前缀后在宿主运行。只删除自己的这个临时容器；原镜像、共享环境和他人容器不变。没有通过访问被拒绝的`/proc`文件绕过权限，也不把cp311扩展塞到cp312环境。
+- **H800安装ENOSPC**：仅指定PIP_CACHE_DIR不改变pip的`/tmp`暂存。保留首份失败，将TMPDIR/TEMP/TMP设为自己的大盘临时目录后，同一版本安装成功；不清理共享/tmp。
+- **两机GPU成功后的SSH后处理超时**：原20秒元数据deadline不足。先读原始guard与测量记录，确认exit0、eligible且物理UUID吻合，再幂等补写相同字节的sidecar；不启动CUDA、不重跑已有观测。控制状态区分postprocessing_pending与测量失败，后处理允许有界重试。不能只改成功标志而没有原receipt证据。
+- **4090 Pilot噪声门槛**：首次24条数值正确，但一处tail cell两run CV6.51%超过预设5%。保留全部样本，冻结两轮各24条的独立同协议稳定性诊断；两轮都通过才继续Anchor。不删除首轮、不挑最快样本、不放宽正确性或噪声门槛。频率/输入等原因尚未证实。
 
 ## 用户提供的H800历史线索
 

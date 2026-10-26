@@ -94,3 +94,24 @@ def test_publication_rejects_changed_or_nonlocal_matrix(tmp_path):
         publication_matrix(tmp_path,device,{'unit':{'file':path.name,'sha256':'wrong'}})
     with pytest.raises(ValueError,match='local'):
         publication_matrix(tmp_path,device,{'unit':{'file':'../matrix.json','sha256':'wrong'}})
+
+
+def test_resource_admission_requires_completed_conflict_free_command_and_physical_identity(tmp_path):
+    path=tmp_path/'anchor';path.mkdir();records=rows('source',[1])
+    with pytest.raises(ValueError,match='lacks resource'):
+        analysis.resource_admission(path,records,required=True)
+    assert analysis.resource_admission(path,records)['status']=='not_required_local_desktop'
+    receipt={'status':'passed','eligible':True,'exit_code':0,'external_processes_observed':0,
+             'conflict_checks':3,'guard_source_sha256':'a'*64,'gpu':{'uuid':'GPU-PRIVATE'},
+             'command':['/private/bin/python','collect_phase1.py','--output','/private/anchor'],
+             'initial_samples':{'private_other_user':'do not publish'}}
+    proof=tmp_path/'anchor-resource-guard.json'
+    def check(value):
+        proof.write_text(json.dumps(value));return analysis.resource_admission(path,records,required=True)
+    public=check(receipt)
+    assert public['physical_identity_matched']
+    assert '/private' not in json.dumps(public) and 'GPU-PRIVATE' not in json.dumps(public)
+    for change in ({'status':'aborted'},{'eligible':False},{'exit_code':75},
+                   {'external_processes_observed':1},{'gpu':{'uuid':'GPU-another'}},
+                   {'command':['python','--output','/private/another-study']}):
+        with pytest.raises(ValueError):check({**receipt,**change})

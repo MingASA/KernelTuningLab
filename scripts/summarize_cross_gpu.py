@@ -60,6 +60,9 @@ def summarize(root,docs):
         if (analysis/'figures'/('l2-'+label+'.svg')).is_file():
             shutil.copyfile(analysis/'figures'/('l2-'+label+'.svg'),figures/('crossgpu-anchor-'+label+'-l2.svg'))
     result['best_by_shape']=best
+    if result['pairs']:
+        for name in ('zero-target-transfer','paired-ranks','topk-oracle-coverage'):
+            shutil.copyfile(analysis/'figures'/(name+'.svg'),figures/('crossgpu-anchor-'+name+'.svg'))
     result['scope_notice']='One current GPU is a new local source Anchor, not cross-hardware transfer evidence. Original sample/cost/protocol records are in the standard private journal.' if not result['pairs'] else result['notice']
     core.write(data/'crossgpu-anchor-summary.json',result)
     print(core.canonical_json({'status':result['status'],'published_devices':[d['label'] for d in result['devices'] if d.get('records')],

@@ -27,6 +27,38 @@ CONFIGS=tuple(core.KernelConfig(c) for c in DESIGN['configs'])
 SHAPES=tuple(core.ShapeSpec(s['dims']) for s in DESIGN['shapes'])
 
 
+def resource_admission(path,rows,required=False):
+    """Bind the external admission receipt to this physical GPU and command.
+
+    Never publish the receipt itself: it includes private paths and snapshots of
+    other GPUs. Local desktop measurements predate the shared-server wrapper.
+    """
+    path=Path(path);proof_path=path.with_name(path.name+'-resource-guard.json')
+    if not proof_path.is_file():
+        if required:raise ValueError('shared-server dataset lacks resource admission receipt')
+        return {'status':'not_required_local_desktop'}
+    proof=core.read_json(proof_path)
+    if not (proof.get('status')=='passed' and proof.get('eligible') is True
+            and proof.get('exit_code')==0 and proof.get('external_processes_observed')==0
+            and proof.get('conflict_checks',0)>0 and len(proof.get('guard_source_sha256',''))==64):
+        raise ValueError('resource admission did not pass for the complete measurement command')
+    normalize=lambda value:str(value or '').removeprefix('GPU-').lower()
+    expected=normalize(proof.get('gpu',{}).get('uuid'))
+    if not expected or not rows or any(normalize(r.hardware.metadata.get('device_uuid'))!=expected for r in rows):
+        raise ValueError('resource receipt and measured physical GPU identities differ')
+    command=proof.get('command',[])
+    if not isinstance(command,list) or '--output' not in command:
+        raise ValueError('resource receipt lacks measurement output identity')
+    output=command[command.index('--output')+1:command.index('--output')+2]
+    if not output or Path(output[0]).name!=path.name:
+        raise ValueError('resource receipt belongs to another measurement command')
+    return {'status':'passed','guard_source_sha256':proof['guard_source_sha256'],
+        'conflict_checks':proof['conflict_checks'],'external_processes_observed':0,
+        'wall_cap_s':proof.get('wall_cap_s'),'wall_s':proof.get('wall_s'),
+        'retired_owned_nvml_entries':proof.get('retired_owned_nvml_entries',0),
+        'physical_identity_matched':True}
+
+
 def finite_space(configs):
     if not configs:raise ValueError('a nonempty observed common cohort is required')
     ids=frozenset(c.id for c in configs)
@@ -100,9 +132,11 @@ def load_dataset(label,path):
         status=found[0].status.value if len(found)==1 else 'not_measured' if not found else 'duplicate'
         verified=len(found)==1 and found[0].correctness_verified
         coverage.append({'shape_id':shape.id,'config_id':config.id,'seed':seed,'status':status,'verified':verified})
+    admission=resource_admission(path,rows,required=label in ('4090','H800'))
     return {'label':label,'status':'passed' if all(c['verified'] for c in coverage) else 'partial',
         'records':rows,'coverage':coverage,'manifest':manifest,
-        'text_sources':next(iter(source_signatures),None),'pairing_protocol':next(iter(protocols),None)}
+        'text_sources':next(iter(source_signatures),None),'pairing_protocol':next(iter(protocols),None),
+        'resource_admission':admission}
 
 
 def pooled_table(rows,configs):
@@ -179,11 +213,28 @@ def public_device(dataset):
     execution=deepcopy(env.get('torch_execution_context',{}));overrides=execution.pop('compiler_overrides',{})
     execution['compiler_override_names']=sorted(overrides)
     execution['compiler_overrides_sha256']=hashlib.sha256(core.canonical_json(overrides).encode()).hexdigest()
+    cells=defaultdict(list)
+    for record in rows:cells[record.shape.id,record.config.id].append(record)
+    repeat_quality=[]
+    for (sid,cid),group in cells.items():
+        values=[r.median_ms for r in group]
+        cv=st.stdev(values)/st.mean(values) if len(values)>1 else None
+        repeat_quality.append({'shape_id':sid,'config_id':cid,'physical_input_runs':len(group),
+            'sample_run_cv':cv,'run_medians_ms':values,
+            'within_run_p10_p90_relative_width_max':max((r.quantile_ms(.9)-r.quantile_ms(.1))/r.median_ms for r in group),
+            'run_cv_above_5pct':cv is not None and cv>.05})
+    cvs=[r['sample_run_cv'] for r in repeat_quality if r['sample_run_cv'] is not None]
+    quality={'cell_count':len(cells),'sample_run_cv_median':st.median(cvs) if cvs else None,
+        'sample_run_cv_p90':core.quantile(cvs,.9),'sample_run_cv_max':max(cvs,default=None),
+        'cells_above_5pct':sum(r['run_cv_above_5pct'] for r in repeat_quality),'cells':repeat_quality,
+        'notice':'Two physical input runs per cell; internal Event samples and algorithm RNG seeds are not independent physical repetitions. CV flags uncertainty, not a significance test; no records excluded for being slow.'}
     return {'label':dataset['label'],'status':dataset['status'],'hardware':{'name':hw.name,'architecture':hw.architecture,
         'sm_count':hw.sm_count,'memory_bytes':hw.memory_bytes,'l2_bytes':hw.l2_bytes,'smem_per_block':hw.smem_per_block},
         'software':{k:env.get(k) for k in ('python','torch','triton','cuda_runtime','nvidia_driver','runtime_source_sha256')},
         'execution_controls':execution,
         'experiment_commit':dataset['manifest'].get('git_commit'),'records':len(rows),'costs':costs,
+        'resource_admission':dataset.get('resource_admission',{'status':'not_provided'}),
+        'repeat_quality':quality,
         'record_statuses':dict(Counter(r.status.value for r in rows)),
         'missing_or_failed':sum(not c['verified'] for c in dataset['coverage']),
         'source_record_ids_sha256':hashlib.sha256(core.canonical_json(sorted(r.id for r in rows)).encode()).hexdigest()}
@@ -309,6 +360,18 @@ def analyze(inputs,output,skip_replay=False):
         'replay_trials':len(replays),'replay_aggregates':aggregates,'training_costs':training_costs,
         'notice':'Only verified physical records; Replay creates no GPU measurements. B8 of 16 is 50%, not a 1%-cost result. RNG repeats are not independent physical runs.'}
     core.write(output/'summary.json',result)
+    if pairs:
+        zero={p['source']+' to '+p['target']:[(i+1,r['source_top1_target_regret']*100) for i,r in enumerate(p['metrics'])] for p in pairs}
+        ranks={p['source']+' / '+p['target']:[(i+1,r['spearman']) for i,r in enumerate(p['metrics']) if r['spearman'] is not None]
+            for p in pairs if p['source']<p['target']}
+        coverage={p['source']+' to '+p['target']:[(k,st.mean(next(c['regret'] for c in m['source_topk_target_coverage'] if c['k']==k) for m in p['metrics'])*100)
+            for k in (1,2,4,8) if k<=len(configs)] for p in pairs}
+        for name,series,ylabel,title,context in (
+            ('zero-target-transfer',zero,'Target finite-set regret (%)','Source Top1, zero target measurements','Source ranking only; target finite optimum used for scoring, not candidate selection'),
+            ('paired-ranks',ranks,'Spearman rho','Paired GPU configuration ranks','Per-Shape ranks over the actually verified common cohort; no architectural causality inferred'),
+            ('topk-oracle-coverage',coverage,'Target finite-set regret (%)','Source TopK oracle coverage','Post-hoc target best within source TopK; not a zero-observation selector')):
+            core._line_chart(figures/(name+'.svg'),title,context,series,
+                'Source TopK' if name=='topk-oracle-coverage' else 'Shape index / frozen order (1-6)',ylabel,render_png=False)
     for target in {r['target'] for r in aggregates}:
         rows=[r for r in aggregates if r['target']==target]
         series={str(source or 'cold')+'/'+method:[(r['budget'],r['mean_regret']*100) for r in rows if r['source']==source and r['method']==method and r['mean_regret'] is not None]

@@ -1,0 +1,19 @@
+{
+  "frozen_before_target_online_trajectories": true,
+  "uses_target_anchor_oracle_in_search": false,
+  "source": "5060ti finite Anchor only",
+  "source_matrix_sha256": "1d1d94be18b97468206281993b88dcac5e80d33c01bdfdb987e986ad87674bf5",
+  "input_seed": 7,
+  "search_rng_seed_notice": "Existing research schema uses same seed for input and searcher; one online trajectory each, not multiple independent algorithm seeds.",
+  "cases": [
+    "decode-weight64m",
+    "compute-large",
+    "tail"
+  ],
+  "budget": 4,
+  "candidate_count": 16,
+  "max_new_search_observations_per_gpu": 36,
+  "max_independent_acceptance_per_gpu": 36,
+  "outer_wall_s": 1200,
+  "cache": "Fresh online output; algorithms share compatible v2 measurement cache, each charged4revealed observations. Report newGPU/cache/sourcecost separately, not independent cold start wall."
+}
