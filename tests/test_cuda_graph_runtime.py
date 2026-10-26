@@ -15,6 +15,7 @@ pytestmark = pytest.mark.skipif(os.environ.get("KT_RUN_GPU_TESTS") != "1", reaso
 
 @pytest.mark.parametrize("kernel_ref,shape,restrictions", [
     ("triton/gemm", {"M": 37, "N": 71, "K": 65}, {}),
+    ("triton/attention", {"Batch": 1, "Heads": 2, "KVHeads": 1, "SeqQ": 17, "SeqKV": 33, "D": 17}, {}),
     ("triton_pipeline/w4a16_gemm", {"M": 7, "N": 33, "K": 129}, {"SPLIT_K": (2,)}),
     ("triton/moe_grouped_gemm", {"M": 19, "N": 32, "K": 128, "Groups": 4},
      {"SPLIT_K": (2,), "SCHEDULE": ("persistent",), "USE_TMA": (False,)}),
