@@ -1,0 +1,13 @@
+{
+  "runtime_base_commit": "35ac36ed66becf19271c9ed3e97950fb67a03d87",
+  "frozen_experiment_commit": "6ecde2ed6c6778bec4c68be0c326a3320212f43c",
+  "sha256": {
+    "kernel_tuning_lab/backends/_triton_t1.py": "f60c0241cca4ff4c2da9df1789723858ef40f06f67ac4f9c2862289522f0627c",
+    "kernel_tuning_lab/builtin_assets/t1_gemm.py": "49348087967a4454cc236cdabcd0e6ea31b0cd14d9b07006ff221c813bd75784",
+    "kernel_tuning_lab/kernel_runtime.py": "da6f217fdca328c484c804814a085fadcbdf3d0f114025f88b7c67168a1c1a14",
+    "kernel_tuning_lab/operator_library.py": "b96d47886ee4ec5add13f275b35004ff6dfee41e2a663e954eb0a92dccee9765",
+    "kernel_tuning_lab/torch_context.py": "d4a73ffcf891b555ba8f7ccba514aad7b51dd297540ccb44ae83d854d24efdc5",
+    "kernel_tuning_lab/runner.py": "65b11d2daa2c426e22f45f768938d8ca30537eb7704d7708615d23bd08e146bf"
+  },
+  "notice": "Source bytes already fixed by the baseline and experiment commits; digest ledger does not alter the frozen candidate/Shape/protocol design."
+}

@@ -56,6 +56,7 @@ flowchart LR
 | RTX 5060 Ti 16GB / WSL2 | 原四类十阶段严格gate、新八类有限验证；[GPU报告](docs/5060TI_RESULTS.md) |
 | T1 GEMM / L2 / L3 | C64的10 Shape×64配置×3输入seed真实矩阵；[第一阶段研究](docs/RESEARCH_PHASE1.md) |
 | 扩展tile、Shape-generic、交付审计 | [第二阶段研究与验收](docs/RESEARCH_PHASE2.md)逐项标注通过、部分通过、未执行与限制 |
+| 最终代码Anchor与跨GPU准备 | [新192观测Anchor](docs/CROSS_GPU_PHASE1.md)已在5060 Ti实测；4090/H800仅只读检查，GPU权限待确认 |
 | H20/H200/H800/4090 | [可复用迁移检查单](docs/GPU_MIGRATION.md)，本轮未在这些GPU执行 |
 | Mock / Replay | Mock是合成性能；Replay揭示已有标签，均不产生新GPU测量 |
 

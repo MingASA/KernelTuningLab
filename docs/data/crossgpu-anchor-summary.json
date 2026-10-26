@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "cohort_id": "0bf1376584fecd9c4ea19b0ba5027209c7a905ec875790f6b4f4e9dc380a1f16",
+  "status": "blocked_no_paired_gpu",
+  "devices": [
+    {
+      "label": "5060ti",
+      "status": "passed",
+      "hardware": {
+        "name": "NVIDIA GeForce RTX 5060 Ti",
+        "architecture": "sm_120",
+        "sm_count": 36,
+        "memory_bytes": 17074421760,
+        "l2_bytes": 33554432,
+        "smem_per_block": 101376
+      },
+      "software": {
+        "python": "3.12.13",
+        "torch": "2.13.0+cu132",
+        "triton": "3.7.1",
+        "cuda_runtime": "13.2",
+        "nvidia_driver": "616.92",
+        "runtime_source_sha256": "da6f217fdca328c484c804814a085fadcbdf3d0f114025f88b7c67168a1c1a14"
+      },
+      "execution_controls": {
+        "cuda_autocast": {
+          "dtype": "torch.float16",
+          "enabled": false
+        },
+        "default_dtype": "torch.float32",
+        "deterministic_algorithms": false,
+        "global_fp32_precision": "none",
+        "matmul": {
+          "allow_bf16_reduced_precision_reduction": true,
+          "allow_fp16_accumulation": false,
+          "allow_fp16_reduced_precision_reduction": true,
+          "fp32_precision": "none",
+          "legacy_float32_mode": "highest"
+        },
+        "preferred_blas_library": "_BlasBackend.Cublas",
+        "sdpa": {
+          "cudnn_sdp_enabled": true,
+          "flash_sdp_enabled": true,
+          "math_sdp_enabled": true,
+          "mem_efficient_sdp_enabled": true
+        },
+        "source_sha256": "d4a73ffcf891b555ba8f7ccba514aad7b51dd297540ccb44ae83d854d24efdc5",
+        "compiler_override_names": [],
+        "compiler_overrides_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "experiment_commit": "6ecde2ed6c6778bec4c68be0c326a3320212f43c",
+      "records": 192,
+      "costs": {
+        "new_evaluations": 192,
+        "cache_hits": 0,
+        "acceptance_evaluations": 48,
+        "job_wall_s": 396.1223233100609,
+        "unique_source_measurement_wall_s": 320.49259806616465,
+        "compile_time_ms": 6735.228518082295,
+        "phase_wall_time_ms": {
+          "compile": 6735.228518082295,
+          "initial_correctness": 24436.63124536397,
+          "measurement": 264329.8944380367,
+          "post_correctness": 7948.0684492737055,
+          "preflight_and_cache": 1036.9053879985586,
+          "preparation": 15717.387093114667,
+          "warmup": 282.0817700121552
+        },
+        "compile_subphases_ms": {
+          "build_time_ms": 3846.562655933667,
+          "setup_time_ms": 0.9886136977002025,
+          "cuda_graph_setup_time_ms": 2879.7667649341747
+        },
+        "scope_notice": "Compile includes build/setup/Graph capture; subphases are nested, not additive. Existing compiler cache is uncontrolled; source costs do not estimate independent cold starts. Job wall additionally includes acceptance and orchestration."
+      },
+      "record_statuses": {
+        "success": 192
+      },
+      "missing_or_failed": 0,
+      "source_record_ids_sha256": "f3417be6a57d4a24ae8e468a0eb5b628d3c4a3008cb1878c0571f0c6e481cdea"
+    },
+    {
+      "label": "4090",
+      "status": "not_executed",
+      "job_statuses": {}
+    },
+    {
+      "label": "H800",
+      "status": "not_executed",
+      "job_statuses": {}
+    }
+  ],
+  "datasets": {
+    "5060ti": {
+      "dataset_id": "f3417be6a57d4a24ae8e468a0eb5b628d3c4a3008cb1878c0571f0c6e481cdea",
+      "records": 192,
+      "full_record_roundtrip": true,
+      "jsonl_sha256": "770817e415c1129ed372d39690363ed4c930742c9d547f0bb9a7e5c003dce066",
+      "directory_relative_to_analysis": "datasets/f3417be6a57d4a24ae8e468a0eb5b628d3c4a3008cb1878c0571f0c6e481cdea",
+      "finite_cohort": "Use the explicit frozen/common cohort in this analyzer; the broad SDK Cartesian domain is not the 16-point matrix."
+    }
+  },
+  "matrix_exports": {
+    "5060ti": {
+      "file": "5060ti-matrix-public.json",
+      "sha256": "1d1d94be18b97468206281993b88dcac5e80d33c01bdfdb987e986ad87674bf5"
+    }
+  },
+  "common_config_count": null,
+  "common_configs": [],
+  "measured_device_intersection_config_count": 16,
+  "requested_all_devices_measured": false,
+  "common_cohort_scope": "Only available, verified datasets; absent GPUs are never assumed to support these configs.",
+  "requested_config_count": 16,
+  "shapes": [
+    {
+      "name": "decode-small",
+      "dims": {
+        "M": 1,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Low M, 8 MiB B; tile utilization and CTA count"
+    },
+    {
+      "name": "decode-weight64m",
+      "dims": {
+        "M": 4,
+        "N": 8192,
+        "K": 4096
+      },
+      "hypothesis": "Low M, 64 MiB B exceeds measured 5060 Ti L2; compare with actual target cache sizes"
+    },
+    {
+      "name": "tile-edge33",
+      "dims": {
+        "M": 33,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Just above BM32, below BM64; additional M tile versus padding"
+    },
+    {
+      "name": "medium",
+      "dims": {
+        "M": 512,
+        "N": 1024,
+        "K": 1024
+      },
+      "hypothesis": "Medium compute and multi-CTA scheduling"
+    },
+    {
+      "name": "compute-large",
+      "dims": {
+        "M": 1024,
+        "N": 2048,
+        "K": 2048
+      },
+      "hypothesis": "Larger compute workload and pipeline/tile tradeoffs"
+    },
+    {
+      "name": "tail",
+      "dims": {
+        "M": 63,
+        "N": 1031,
+        "K": 1025
+      },
+      "hypothesis": "Irregular strides and tails on all axes, near M64"
+    }
+  ],
+  "pairs": [],
+  "not_applicable": [],
+  "replay_trials": 1440,
+  "replay_aggregates": [
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "random",
+      "budget": 1,
+      "budget_fraction": 0.0625,
+      "trials": 120,
+      "mean_regret": 0.4729771213014371,
+      "p90_regret": 0.8187190170627444,
+      "within_5pct": 0.4,
+      "within_10pct": 0.5,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 1.6888415760253943
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "heuristic",
+      "budget": 1,
+      "budget_fraction": 0.0625,
+      "trials": 120,
+      "mean_regret": 0.08105850119776188,
+      "p90_regret": 0.22291281755535985,
+      "within_5pct": 0.3333333333333333,
+      "within_10pct": 0.6666666666666666,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 1.4738088549056556
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "surrogate",
+      "budget": 1,
+      "budget_fraction": 0.0625,
+      "trials": 120,
+      "mean_regret": 0.4729771213014371,
+      "p90_regret": 0.8187190170627444,
+      "within_5pct": 0.4,
+      "within_10pct": 0.5,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 1.6888415760253943
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "random",
+      "budget": 2,
+      "budget_fraction": 0.125,
+      "trials": 120,
+      "mean_regret": 0.26478225602876954,
+      "p90_regret": 0.6092698104771974,
+      "within_5pct": 0.5666666666666667,
+      "within_10pct": 0.65,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 3.3433391701313666
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "heuristic",
+      "budget": 2,
+      "budget_fraction": 0.125,
+      "trials": 120,
+      "mean_regret": 0.08105048835429902,
+      "p90_regret": 0.22291281755535985,
+      "within_5pct": 0.3333333333333333,
+      "within_10pct": 0.6666666666666666,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 2.960690805091872
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "surrogate",
+      "budget": 2,
+      "budget_fraction": 0.125,
+      "trials": 120,
+      "mean_regret": 0.26478225602876954,
+      "p90_regret": 0.6092698104771974,
+      "within_5pct": 0.5666666666666667,
+      "within_10pct": 0.65,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 3.3433391701313666
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "random",
+      "budget": 4,
+      "budget_fraction": 0.25,
+      "trials": 120,
+      "mean_regret": 0.10351038800475341,
+      "p90_regret": 0.5407717767513979,
+      "within_5pct": 0.8,
+      "within_10pct": 0.8,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 6.71885154946746
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "heuristic",
+      "budget": 4,
+      "budget_fraction": 0.25,
+      "trials": 120,
+      "mean_regret": 0.022928746333576555,
+      "p90_regret": 0.11150601455045828,
+      "within_5pct": 0.8333333333333334,
+      "within_10pct": 0.8333333333333334,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 5.958210432019162
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "surrogate",
+      "budget": 4,
+      "budget_fraction": 0.25,
+      "trials": 120,
+      "mean_regret": 0.10351038800475341,
+      "p90_regret": 0.5407717767513979,
+      "within_5pct": 0.8,
+      "within_10pct": 0.8,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 6.71885154946746
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "random",
+      "budget": 8,
+      "budget_fraction": 0.5,
+      "trials": 120,
+      "mean_regret": 0.05592218861469604,
+      "p90_regret": 0.12396877411393122,
+      "within_5pct": 0.8333333333333334,
+      "within_10pct": 0.8333333333333334,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 13.491334030675352
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "heuristic",
+      "budget": 8,
+      "budget_fraction": 0.5,
+      "trials": 120,
+      "mean_regret": 0.0026559670453188224,
+      "p90_regret": 0.013889474664405821,
+      "within_5pct": 1,
+      "within_10pct": 1,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 11.943362237269563
+    },
+    {
+      "source": null,
+      "target": "5060ti",
+      "method": "surrogate",
+      "budget": 8,
+      "budget_fraction": 0.5,
+      "trials": 120,
+      "mean_regret": 0.014711349934844012,
+      "p90_regret": 0.01911518360963882,
+      "within_5pct": 0.9333333333333333,
+      "within_10pct": 0.9333333333333333,
+      "failed_or_missing": 0,
+      "mean_known_target_source_cost_s": 13.092011522040897
+    }
+  ],
+  "training_costs": [],
+  "notice": "Only verified physical records; Replay creates no GPU measurements. B8 of 16 is 50%, not a 1%-cost result. RNG repeats are not independent physical runs.",
+  "remote_resource_status": {
+    "4090": {
+      "ssh_readonly": "passed",
+      "gpu_execution": "blocked_authorization_unconfirmed",
+      "gpu_model": "RTX 4090",
+      "visible_gpu_count": 8,
+      "visible_memory_per_gpu_mib": 23028,
+      "driver": "550.54.15",
+      "system_python": "3.6.8",
+      "execution_environment": "not_selected",
+      "gpu_loads_executed": 0,
+      "allocation_and_scheduler": "not_confirmed",
+      "workspace_and_storage_quota": "not_confirmed"
+    },
+    "H800": {
+      "ssh_readonly": "passed",
+      "gpu_execution": "blocked_authorization_unconfirmed",
+      "gpu_model": "H800",
+      "visible_gpu_count": 8,
+      "visible_memory_per_gpu_mib": 81559,
+      "driver": "535.216.03",
+      "system_python": "3.9.9",
+      "execution_environment": "not_selected",
+      "gpu_loads_executed": 0,
+      "allocation_and_scheduler": "not_confirmed",
+      "workspace_and_storage_quota": "not_confirmed"
+    },
+    "backup": {
+      "status": "blocked_no_authorized_destination",
+      "shared_gpu_servers_used_as_backup": false
+    }
+  },
+  "prior_archive_checks": {
+    "baseline_commit": "35ac36ed66becf19271c9ed3e97950fb67a03d87",
+    "archives": [
+      {
+        "archive": "5060ti-evidence-20261025.tar.gz",
+        "bytes": 6399985,
+        "sha256": "2bd56c0c31d47790d73c737e2f6b8676c6d86f91f8cb2979e4713452a0683774",
+        "verified": true
+      },
+      {
+        "archive": "research-workflow-evidence-20261025.tar.gz",
+        "bytes": 3113563,
+        "sha256": "431538aaca28714710dfd8c2dd8d4f8629ffaf5a5c90803476f3a39074b56987",
+        "verified": true
+      },
+      {
+        "archive": "research-phase1-evidence-20261025.tar.gz",
+        "bytes": 30080535,
+        "sha256": "1fbc2625417723030545c1ff5855558376bda671a3a713a86a0bdbce2420b12f",
+        "verified": true
+      },
+      {
+        "archive": "research-phase2-evidence-20261026-v2.tar.gz",
+        "bytes": 59911403,
+        "sha256": "84c057ff1a592e06df4d9a65f8898893025e7ed343d90d27ec91b3ac6f4c4ed4",
+        "verified": true
+      }
+    ],
+    "phase2_selected": "research-phase2-evidence-20261026-v2.tar.gz",
+    "external_backup": "blocked_no_authorized_destination"
+  },
+  "prior_file_integrity": {
+    "status": "passed",
+    "archives": [
+      {
+        "archive": "5060ti-evidence-20261025.tar.gz",
+        "status": "passed",
+        "inventory_files_verified": 2439,
+        "bytes_verified": 101458501
+      },
+      {
+        "archive": "research-workflow-evidence-20261025.tar.gz",
+        "status": "passed",
+        "inventory_files_verified": 3444,
+        "bytes_verified": 29217269
+      },
+      {
+        "archive": "research-phase1-evidence-20261025.tar.gz",
+        "status": "passed",
+        "inventory_files_verified": 6618,
+        "bytes_verified": 249200061
+      },
+      {
+        "archive": "research-phase2-evidence-20261026-v2.tar.gz",
+        "status": "passed",
+        "inventory_files_verified": 8614,
+        "bytes_verified": 343786746
+      }
+    ],
+    "scope": "All files named by each sealed SHA inventory; read streamed archive bytes, not mutable working directories."
+  },
+  "local_pilot": {
+    "status": "passed",
+    "new_gpu_measurements": 24,
+    "validation_evaluations": 24,
+    "cache_hits": 0,
+    "job_wall_s": 131.9153474329505,
+    "run_median_cv_median": 0.00044066670229116867,
+    "run_median_cv_max": 0.006718520862533197,
+    "max_source_measurement_wall_s": 6.742305718013085,
+    "decision": "proceed with frozen local anchor only; remote permission remains pending",
+    "main_wall_cap_s": 1200,
+    "estimated_main_wall_s": [
+      480,
+      720
+    ]
+  },
+  "local_quality": {
+    "new_measurements": 192,
+    "all_correctness_verified": true,
+    "cells": 96,
+    "physical_runs": 2,
+    "median_cv": 0.0005619090321467634,
+    "p90_cv": 0.005527725537641017,
+    "max_cv": 0.01188727834213474,
+    "device_total_memory_peak_mib": 1499.0,
+    "temperature_min_max_c": [
+      35.0,
+      64.0
+    ],
+    "sm_clock_min_max_mhz": [
+      382.0,
+      2737.0
+    ],
+    "telemetry_scope": "whole device, includes desktop and idle/compiler periods; no per-kernel frequency attribution"
+  },
+  "frozen_source": {
+    "experiment_commit": "6ecde2ed6c6778bec4c68be0c326a3320212f43c",
+    "runtime_base": "35ac36ed66becf19271c9ed3e97950fb67a03d87",
+    "spec_sha256": {
+      "examples/crossgpu_anchor/anchor.json": "39713e46e9af6513e6ed34f5cf1ab6c4d11a798cfdb43a0a99a0493b33ad28b2",
+      "examples/crossgpu_anchor/pilot.json": "25f08f441d25e68f769ff4329892e0b4056296e365006c29c1105c268570c2cd",
+      "examples/crossgpu_anchor/frozen-design.json": "88134c8261875ed0062528e62de94e8c019ee1ef6abd8c22125c3ae557163ebc",
+      "examples/research_phase1/cohort.py": "2f9c596f2eb0b778855b8eef7a2aaf6aa905e4c0d22e8fb75b15e137b7062059"
+    }
+  },
+  "deployment_source": {
+    "source_commit": "6ecde2ed6c6778bec4c68be0c326a3320212f43c",
+    "bundle": "source-6ecde2e.bundle",
+    "bytes": 887517,
+    "sha256": "369febee3f97cc8152441e903eb7dc65585a196a22e59397683119544ea270a4",
+    "transferred_to_remote": false,
+    "notice": "Tracked public Git source only; no venv, raw measurements, compiler cache or SSH configuration."
+  },
+  "audit": {
+    "status": "passed",
+    "datasets": {
+      "5060ti": {
+        "records": 192,
+        "verified_cells": 192,
+        "dataset_id": "f3417be6a57d4a24ae8e468a0eb5b628d3c4a3008cb1878c0571f0c6e481cdea",
+        "sqlite_quick_check": "ok",
+        "compiler_cubin_sha256_checked": 95
+      }
+    },
+    "replay_trials_checked": 1440,
+    "replay_reveals_checked": 5400,
+    "new_gpu_measurements_in_audit": 0,
+    "paired_directions": 0,
+    "scope": "Original record IDs, observed-only best and costs, SQLite payloads, declared matrix and compiler SHA; no missing hardware inferred."
+  },
+  "compiler_archive": {
+    "5060ti": {
+      "status": "complete",
+      "wanted_cubin_artifacts": 95,
+      "copied_cubin_artifacts": 95,
+      "missing_cubin_sha256": [],
+      "total_cubin_container_bytes": 3158792,
+      "known_text_section_bytes": 565248,
+      "scope": "Exact SHA256-matching original compiler artifacts. ELF .text section bytes exclude metadata and constants; neither metric is driver-resident size or a solved deployment byte budget."
+    }
+  },
+  "analysis_source_sha256": {
+    "summarize_cross_gpu.py": "b2ccdb77f2066d456892db964849b5de4df9965170509ac438507b473f098276",
+    "analyze_cross_gpu.py": "f18ef63733d4e4845dd21da5c57a65ddf631c75b8cb3ae6a0b6ef0c420f83b8d",
+    "audit_cross_gpu.py": "22d5b208d21e2393554f438a8755ca78b3990ea72cefa98a3c5b034f9f304542"
+  },
+  "best_by_shape": [
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 1,
+        "N": 2048,
+        "K": 2048
+      },
+      "latency_us": 6.719968747347593,
+      "config": {
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    },
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 4,
+        "N": 8192,
+        "K": 4096
+      },
+      "latency_us": 160.6425642967224,
+      "config": {
+        "BLOCK_M": 16,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    },
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 33,
+        "N": 2048,
+        "K": 2048
+      },
+      "latency_us": 15.712344087660313,
+      "config": {
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    },
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 512,
+        "N": 1024,
+        "K": 1024
+      },
+      "latency_us": 27.305062860250473,
+      "config": {
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    },
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 1024,
+        "N": 2048,
+        "K": 2048
+      },
+      "latency_us": 191.52943789958954,
+      "config": {
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    },
+    {
+      "gpu_label": "5060ti",
+      "shape": {
+        "M": 63,
+        "N": 1031,
+        "K": 1025
+      },
+      "latency_us": 11.611562222242355,
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "scope": "best of the verified finite 16-config Anchor; two input runs"
+    }
+  ],
+  "scope_notice": "One current GPU is a new local source Anchor, not cross-hardware transfer evidence. Original sample/cost/protocol records are in the standard private journal."
+}

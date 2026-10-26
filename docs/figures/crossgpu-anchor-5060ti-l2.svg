@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Anchor finite-cohort Replay</title>
+<desc id="desc">Single-GPU cold Replay only; cross-hardware transfer has not executed</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Anchor finite-cohort Replay</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Single-GPU cold Replay only; cross-hardware transfer has not executed</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >10.2</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >20.4</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >30.6</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >40.9</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >51.1</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Target observations / 16</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Mean target finite-set regret (%)</text>
+<polyline points="100.00,385.25 201.43,385.26 404.29,424.51 810.00,438.21" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="385.25" r="3" fill="#2563eb"><title>cold/heuristic: 1, 8.106</title></circle>
+<circle cx="201.43" cy="385.26" r="3" fill="#2563eb"><title>cold/heuristic: 2, 8.105</title></circle>
+<circle cx="404.29" cy="424.51" r="3" fill="#2563eb"><title>cold/heuristic: 4, 2.293</title></circle>
+<circle cx="810.00" cy="438.21" r="3" fill="#2563eb"><title>cold/heuristic: 8, 0.2656</title></circle>
+<g><title>cold/heuristic</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >cold/heuristic</text>
+</g>
+<polyline points="100.00,120.56 201.43,261.17 404.29,370.09 810.00,402.23" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#d97706"><title>cold/random: 1, 47.3</title></circle>
+<circle cx="201.43" cy="261.17" r="3" fill="#d97706"><title>cold/random: 2, 26.48</title></circle>
+<circle cx="404.29" cy="370.09" r="3" fill="#d97706"><title>cold/random: 4, 10.35</title></circle>
+<circle cx="810.00" cy="402.23" r="3" fill="#d97706"><title>cold/random: 8, 5.592</title></circle>
+<g><title>cold/random</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >cold/random</text>
+</g>
+<polyline points="100.00,120.56 201.43,261.17 404.29,370.09 810.00,430.06" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#059669"><title>cold/surrogate: 1, 47.3</title></circle>
+<circle cx="201.43" cy="261.17" r="3" fill="#059669"><title>cold/surrogate: 2, 26.48</title></circle>
+<circle cx="404.29" cy="370.09" r="3" fill="#059669"><title>cold/surrogate: 4, 10.35</title></circle>
+<circle cx="810.00" cy="430.06" r="3" fill="#059669"><title>cold/surrogate: 8, 1.471</title></circle>
+<g><title>cold/surrogate</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >cold/surrogate</text>
+</g>
+</g></svg>
