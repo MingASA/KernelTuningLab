@@ -25,6 +25,7 @@ RUNTIME=core.read_json(core.ROOT/'examples/crossgpu_anchor/runtime-sources.json'
 SOURCE_HASHES={Path(name).name:value for name,value in RUNTIME['sha256'].items()}
 CONFIGS=tuple(core.KernelConfig(c) for c in DESIGN['configs'])
 SHAPES=tuple(core.ShapeSpec(s['dims']) for s in DESIGN['shapes'])
+LEGACY_GUARD_SHA256='87cdf18731d113d0ad3573d1a75df0bf99829f45ab16cb5fa6b56abd3f92e249'
 
 
 def resource_admission(path,rows,required=False):
@@ -46,17 +47,41 @@ def resource_admission(path,rows,required=False):
     expected=normalize(proof.get('gpu',{}).get('uuid'))
     if not expected or not rows or any(normalize(r.hardware.metadata.get('device_uuid'))!=expected for r in rows):
         raise ValueError('resource receipt and measured physical GPU identities differ')
-    command=proof.get('command',[])
-    if not isinstance(command,list) or '--output' not in command:
-        raise ValueError('resource receipt lacks measurement output identity')
-    output=command[command.index('--output')+1:command.index('--output')+2]
-    if not output or Path(output[0]).name!=path.name:
-        raise ValueError('resource receipt belongs to another measurement command')
+    command=proof.get('command',[]);binding='recorded_command'
+    if command:
+        if not isinstance(command,list) or '--output' not in command:
+            raise ValueError('resource receipt lacks measurement output identity')
+        output=command[command.index('--output')+1:command.index('--output')+2]
+        if not output or Path(output[0]).name!=path.name:
+            raise ValueError('resource receipt belongs to another measurement command')
+    else:
+        # The already-used cbccd9d wrapper predates command serialization.
+        # Do not alter old receipts or invent fields as if captured originally.
+        # Bind that exact legacy version through retained driver/console data.
+        control_path=path.with_name(path.name+'-resource-control.json')
+        if proof['guard_source_sha256']!=LEGACY_GUARD_SHA256 or not control_path.is_file():
+            raise ValueError('resource receipt lacks measurement output identity')
+        control=core.read_json(control_path);manifest=core.read_json(path/'research_manifest.json')
+        if not (control.get('derived_after_collection') is True and control.get('stage')==path.name
+                and control.get('manifest_run_id')==manifest['run_id']
+                and control.get('raw_guard_sha256')==hashlib.sha256(proof_path.read_bytes()).hexdigest()):
+            raise ValueError('legacy resource control binding differs from dataset')
+        for key in ('raw_guard','raw_console'):
+            filename=control.get(key+'_basename','')
+            if not filename or Path(filename).name!=filename:raise ValueError('invalid control evidence filename')
+            blob=(path.parent/'ops-logs'/filename).read_bytes()
+            if hashlib.sha256(blob).hexdigest()!=control.get(key+'_sha256'):
+                raise ValueError('legacy control evidence content differs')
+            if key=='raw_console':
+                summary=json.JSONDecoder().raw_decode(blob.decode())[0]
+                if summary.get('run_id')!=manifest['run_id'] or summary.get('status')!='passed':
+                    raise ValueError('legacy console belongs to another dataset run')
+        binding='legacy_driver_manifest_console_attestation'
     return {'status':'passed','guard_source_sha256':proof['guard_source_sha256'],
         'conflict_checks':proof['conflict_checks'],'external_processes_observed':0,
         'wall_cap_s':proof.get('wall_cap_s'),'wall_s':proof.get('wall_s'),
         'retired_owned_nvml_entries':proof.get('retired_owned_nvml_entries',0),
-        'physical_identity_matched':True}
+        'physical_identity_matched':True,'command_binding':binding}
 
 
 def finite_space(configs):

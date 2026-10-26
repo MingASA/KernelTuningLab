@@ -195,6 +195,7 @@ def run(args):
         else:
             command=args.command[1:] if args.command[:1]==['--'] else args.command
             if not command:raise ValueError('an explicit bounded command is required')
+            result.update(command=list(command),cwd=args.cwd)
             # Fresh observation immediately before Popen closes the preparation
             # interval; monitoring remains necessary on a shared server.
             if not idle(snapshot(uuid)[uuid]):raise ResourceUnavailable('GPU became busy before launch')

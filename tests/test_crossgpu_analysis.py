@@ -115,3 +115,21 @@ def test_resource_admission_requires_completed_conflict_free_command_and_physica
                    {'external_processes_observed':1},{'gpu':{'uuid':'GPU-another'}},
                    {'command':['python','--output','/private/another-study']}):
         with pytest.raises(ValueError):check({**receipt,**change})
+
+
+def test_legacy_receipt_binding_keeps_original_bytes_and_rejects_swapped_runs(tmp_path):
+    path=tmp_path/'anchor';path.mkdir();logs=tmp_path/'ops-logs';logs.mkdir()
+    manifest={'run_id':'original_dataset'};(path/'research_manifest.json').write_text(json.dumps(manifest))
+    proof={'status':'passed','eligible':True,'exit_code':0,'external_processes_observed':0,
+           'conflict_checks':3,'guard_source_sha256':analysis.LEGACY_GUARD_SHA256,'gpu':{'uuid':'GPU-PRIVATE'}}
+    blob=json.dumps(proof).encode();(tmp_path/'anchor-resource-guard.json').write_bytes(blob)
+    (logs/'original.guard.json').write_bytes(blob)
+    console=json.dumps({**manifest,'status':'passed'}).encode();(logs/'original.log').write_bytes(console)
+    control={'derived_after_collection':True,'stage':'anchor','manifest_run_id':manifest['run_id'],
+             'raw_guard_basename':'original.guard.json','raw_guard_sha256':hashlib.sha256(blob).hexdigest(),
+             'raw_console_basename':'original.log','raw_console_sha256':hashlib.sha256(console).hexdigest()}
+    control_path=tmp_path/'anchor-resource-control.json';control_path.write_text(json.dumps(control))
+    assert analysis.resource_admission(path,rows('source',[1]),True)['command_binding'].startswith('legacy_')
+    assert (tmp_path/'anchor-resource-guard.json').read_bytes()==blob
+    (path/'research_manifest.json').write_text(json.dumps({'run_id':'swapped'}))
+    with pytest.raises(ValueError,match='binding differs'):analysis.resource_admission(path,rows('source',[1]),True)

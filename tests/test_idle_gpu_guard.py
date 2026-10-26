@@ -104,6 +104,7 @@ def test_short_lived_owned_worker_retirement_does_not_look_like_foreign_gpu_job(
     import json
     result=json.loads(receipt.read_text())
     assert result['status']=='passed' and result['eligible']
+    assert result['command']==args.command and result['cwd']==args.cwd
     assert result['external_processes_observed']==0 and result['retired_owned_nvml_entries']>0
 
 
