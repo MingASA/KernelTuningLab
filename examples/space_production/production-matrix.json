@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "research",
-  "name": "production-marlin085-finite-rule-matrix-v1",
+  "name": "production-marlin085-smoke-v1",
   "plugins": [
     "kernel_tuning_lab.production.marlin"
   ],
@@ -38,7 +38,7 @@
   },
   "cases": [
     {
-      "name": "decode1",
+      "name": "decode",
       "operator": "w4a16_gemm@2.0.0",
       "split": "validation",
       "kernels": [
@@ -89,7 +89,7 @@
       ]
     },
     {
-      "name": "prefill64",
+      "name": "prefill",
       "operator": "w4a16_gemm@2.0.0",
       "split": "validation",
       "kernels": [

@@ -41,7 +41,7 @@ def prepare(smoke, spec, output):
     for job in manifest['jobs']:
         matching=[r for r in records if r.operator.implementation==job['kernel'] and r.seed==job['seed']
             and dict(r.shape.dims) in job['shapes'] and r.operator.dtype==job['dtype']
-            and r.split==job['experiment']['split']]
+            and r.split==job['experiment']['split'] and r.experiment_id==job['experiment']['name']]
         if not matching:continue
         # Identity/protocol/hardware are NOT rewritten. Runner revalidates every
         # cache key against the actual loaded source/profile/software context.
