@@ -132,10 +132,16 @@ def supplement(directory,output):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--controlled',type=Path);p.add_argument('--production',type=Path)
-    p.add_argument('--l3',type=Path);p.add_argument('--supplement',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+    p.add_argument('--l3',type=Path);p.add_argument('--supplement',type=Path,action='append');p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     if a.controlled:controlled(a.controlled,a.output)
     if a.production:native(a.production,a.output)
-    if a.supplement:supplement(a.supplement,a.output)
+    if a.supplement:
+        combined={}
+        for root in a.supplement:
+            piece=supplement(root,a.output)
+            if combined.keys() & piece.keys():raise ValueError('duplicate stage names across explicit supplement roots; select one current attempt')
+            combined.update(piece)
+        write(a.output/'supplement.json',combined)
     if a.l3:
         x=read_json(a.l3);public={k:x[k] for k in ('status','native_rules','selections','chosen_dispatch','unseen_input_policy','counts','reference_scope','independent_input_repetitions')}
         public.update({k:x[k] for k in ('cohort','precision_scope') if k in x})
