@@ -126,6 +126,12 @@ SpaceDefinition({
 
 条件参数在不激活时仍保留完整参数键，值必须为声明的 default。条件依赖向上继承，不会静默删参。约束签名是 `(config, hardware, operator, shape)`，返回 None 表示合法，返回字符串说明拒绝原因，也可返回 `ValidationResult`。
 
+显式结构关系可用 `rules=(Relation("x", "==", "y"), Forbidden({"mode":"a", "split":4}))`，从 SDK 导入这两个类型。它们支持部分赋值检查和依赖传播；任意 Python 回调不自动解析，未赋齐参数时保留 unknown。`space.normalize` 只统一可证明等价的不激活默认值。原生后端的有限候选用 `SpaceDefinition.candidates` 或 `ConfigSpace.from_configs` 声明，候选集合不等于参数域的笛卡尔积。
+
+算法可使用 `build_feasible(..., budget=SpaceBuildBudget(...))`、`complete(partial, ..., count=...)`、`sample_feasible`、`validate_partial` 和联合 `neighbors(min_changed=2,max_changed=2)`。只读视图也支持这些方法。完整构建结果为 complete/proven_empty；节点、时间或估算存储预算耗尽返回 budget_exhausted，排除已揭示点后的 exhausted 不证明原空间为空。条件/结构化空间的验收探测也使用有界依赖构造。完整集合抽样可均匀；构造采样是非均匀的，分布与拒绝原因写入 diagnostics。存储字节预算是估算值，不是 OS 级 RSS 硬限制，外层仍有进程期限。
+
+内置搜索默认在 50,000 点以下尝试有界完整静态构建；超过预算则明确使用算法自己的有界活动池，余量低于池大小的四分之一时补充。Surrogate 每轮最多评分 4,096 点的新子集；日志披露近似。外部插件直接向权威空间提出配置，不受该池过滤。静态合法不等于实际编译或数值通过。共享内存估算是带校准范围的 advisory，实际编译资源和精确 workspace 上限仍独立核验。审计、原生优化器和生产实例见 [SPACE_PRODUCTION.md](SPACE_PRODUCTION.md)。
+
 实验的 `space` 仅缩小 Kernel 域，不得加新参数或扩大值域。硬件和 Shape 约束惰性组合，配置最终执行前再次校验。空间的 `cardinality` 是约束前的笛卡尔积上界。平台只探测有界数量的点，稀疏大空间中找不到合法点会明确报告“预算内未发现”，不会冒充数学上的全空间为空。
 
 研究限制只用于用户请求的形状，记录为 `requested_space_scope="experiment_restrictions"`。自动生成的 `validation_only` 边界案例使用该 Kernel 的完整声明域，记录为 `extra_space_scope="kernel_defaults"`，并继续受自身形状、硬件、上下文 resolver 和合法性约束限制。例如，生产形状可限制只研究 TMA 或 Split-K，tiny 边界案例仍可选用普通路径；请求形状无效或边界案例找不到合法配置时，预检仍明确失败。lock 和 preflight 记录这些范围，每个 case manifest 的 `space.resolution.space_scope` 标明实际来源。
@@ -145,6 +151,8 @@ suggest(hardware, operator, shape, space, history, budget, batch_size=1)
 完整独立示例见 [search_algorithm.py](../examples/extensions/search_algorithm.py)。其每轮探测量有上限，极稀疏空间可能提前耗尽建议；日志会保留停止原因。
 
 工厂的 `options` 可定义自己的初始化参数。内置 transfer 可用 `{"asset":"transfer@1.0.0","options":{"training_database":"/absolute/path/source.sqlite"}}` 读取仅 train 且正确性已核对的历史记录；目标 case 仍受训练隔离检查。SDK 也导出 `SearchHistory`、`MeasurementRecord` 与 `ExperimentStore`，供需要历史数据的算法使用。
+
+有状态原生优化器可选实现 `bind_trial(output_dir=...,identity=...)`、`observe(record,cache_hit=...)`、`runtime_identity` 和 `diagnostics`。最后一条观测也会反馈；重复原生提议由适配器按已揭示记录内部处理，不能替换成无关配置。版本、模型/代码 SHA 与运行时身份参与 trial 身份；工厂、提议、反馈和外部推理成本计入真实 wall，并单列在报告。失败罚值只能留在优化器内部，不能写成测得 latency。可信 Python 插件和生成程序均不构成恶意代码沙箱。
 
 ## 7. 配置与预算
 

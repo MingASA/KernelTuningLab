@@ -96,3 +96,44 @@ def test_joint_only_neighbor_budget_is_not_consumed_by_one_parameter_moves():
     space=ConfigSpace({'x':tuple(range(1000)),'y':tuple(range(1000))},rules=(Relation('x','==','y'),))
     candidates=space.neighbors(KernelConfig({'x':0,'y':0}),min_changed=2,max_changed=2,max_neighbors=4)
     assert KernelConfig({'x':1,'y':1}) in candidates
+
+
+def test_preflight_reaches_constructible_sparse_space_without_a_cartesian_random_pool():
+    from kernel_tuning_lab.acceptance import probe_legal_configs
+    space=ConfigSpace({'anchor':(0,5000,9999),'x':tuple(range(10000)),'y':tuple(range(10000))},
+        rules=(Relation('anchor','==','x'),Relation('x','==','y')))
+    result=probe_legal_configs(space,HW,OP,SHAPE,seed=7,count=3,max_inspected=64)
+    assert result['selected']==3 and result['inspected']==3
+    assert {c.get('x') for c in result['configs']}=={0,5000,9999}
+    assert 'construction_status' in result
+
+
+def test_external_optimizer_can_measure_the_optimum_outside_legacy_random_pool(tmp_path):
+    from kernel_tuning_lab.acceptance import request_candidates
+    from kernel_tuning_lab.backends.mock import MockAdapter
+    from kernel_tuning_lab.models import SearchBudget
+    from kernel_tuning_lab.runner import BenchmarkRunner
+    from kernel_tuning_lab.search import SearchHistory
+    # This tests admission/feedback, not GPU performance. A separate physical
+    # full-space W4 experiment verifies execution of open-space proposals.
+    space=ConfigSpace({'x':tuple(range(10000))})
+    pool={c.id for c in space.sample_configs(random.Random(7),512)}
+    outside=next(c for c in space.iter_configs() if c.id not in pool)
+    class External:
+        def suggest(self,h,o,s,view,history,budget,batch_size=1):return [outside]
+    candidate=request_candidates(External(),HW,OP,SHAPE,space,SearchHistory(),SearchBudget(1))[0]
+    # Exercise the actual Runner and journal, with explicitly synthetic costs.
+    from kernel_tuning_lab.space import ValidationResult
+    from kernel_tuning_lab.storage import ExperimentStore
+    class Objective(MockAdapter):
+        def validate(self,*args):return ValidationResult(True)
+        def prepare(self,*args):return None
+        def compile(self,prepared,config):return config
+        def check_correctness(self,compiled):return True,{'synthetic':True,'verified_on_gpu':False}
+        def measure(self,compiled,repetitions):return (.01 if compiled.id==outside.id else 1.,)*repetitions
+    with ExperimentStore(tmp_path/'records.sqlite') as store:
+        runner=BenchmarkRunner(Objective(),store=store,warmup=0,repetitions=2)
+        best=runner.measure(HW,OP,SHAPE,candidate,space)
+        others=[runner.measure(HW,OP,SHAPE,c,space) for c in space.sample_configs(random.Random(7),8)]
+        assert store.get_record(best.id).successful and best.provenance=='mock'
+        assert min([best,*others],key=lambda r:r.median_ms).config.id==outside.id

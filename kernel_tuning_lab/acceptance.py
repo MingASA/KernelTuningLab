@@ -98,6 +98,21 @@ def probe_legal_configs(space: ConfigSpace, hardware: HardwareSpec, operator: Op
     """Bound sparse-space rejection; retain examples and counts of invalid points."""
     if count < 1 or max_inspected < 1:
         return {"configs": [], "inspected": 0, "rejected": 0, "rejection_examples": [], "exhaustive": False}
+    if space.cardinality > max_inspected and (space.rules or getattr(space, 'conditional', False)):
+        # Preflight must not reject a constructible sparse space merely because
+        # a Cartesian random pool missed it. Explicit relations/conditions can
+        # propagate; arbitrary callbacks still run only at complete leaves.
+        from .space_tools import SpaceBuildBudget
+        built = space.complete({}, hardware, operator, shape, count=count, rng=random.Random(seed),
+            budget=SpaceBuildBudget(max_nodes=min(50_000, max_inspected * (len(space.domains) + 1)),
+                                    max_configs=count, max_wall_time_s=2))
+        diagnostics = dict(built.diagnostics)
+        reasons = diagnostics.get('rejection_reasons', {})
+        return {"configs": list(built.configs), "inspected": diagnostics.get('final_checks', 0),
+            "rejected": sum(reasons.values()), "rejection_examples": [],
+            "exhaustive": built.complete, "legal_found": len(built.configs), "selected": len(built.configs),
+            "construction_status": built.status, "construction_diagnostics": diagnostics,
+            "notice": "Dependency-aware nonuniform construction; budget exhaustion does not prove an empty space."}
     limit = min(space.cardinality, max_inspected)
     if space.cardinality <= max_inspected:
         candidates = (space.config_at(index) for index in range(limit))
