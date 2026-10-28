@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "name": "external-policy-interfaces-v1",
+  "frozen_before_test_labels": true,
+  "operator": "w4a16_gemm@2.0.0",
+  "kernel": "controlled/w4a16_fused@1.0.0",
+  "dtype": "float16",
+  "measurement": {
+    "mode": "cuda_graph",
+    "batch": 128,
+    "warmup": 10,
+    "samples": 15
+  },
+  "train_shapes": [
+    {
+      "M": 4,
+      "N": 512,
+      "K": 1024
+    },
+    {
+      "M": 128,
+      "N": 512,
+      "K": 1024
+    }
+  ],
+  "validation_shapes": [
+    {
+      "M": 16,
+      "N": 512,
+      "K": 1024
+    }
+  ],
+  "test_shapes": [
+    {
+      "M": 32,
+      "N": 512,
+      "K": 1024
+    },
+    {
+      "M": 64,
+      "N": 512,
+      "K": 1024
+    }
+  ],
+  "input_seed": 19,
+  "budget": 8,
+  "policy_version_rule": "v1 -> contract -> train/validation feedback -> audited v2 -> both source snapshots frozen before any test label. Coding agent receives no test table/path in feedback.",
+  "evidence_rule": "Artifact is an untrained interface fixture; process/HTTP contract fixture is not a real LLM. Real LLM invocation only if an owned compatible model is available without new download or GPU sharing."
+}

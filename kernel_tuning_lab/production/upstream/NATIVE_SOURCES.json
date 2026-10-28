@@ -1,0 +1,52 @@
+{
+  "version": "0.8.5",
+  "source_archive_sha256": "c7e04d1046304397b4580334038b558fe491af155fdea508224f140172cf9a82",
+  "files": [
+    {
+      "file": "csrc/core/exception.hpp",
+      "bytes": 55,
+      "sha256": "68132d178b7ea2a95748bae79991d53af1e54267ab82d066d156cd4c9c0c4d8c"
+    },
+    {
+      "file": "csrc/core/math.hpp",
+      "bytes": 208,
+      "sha256": "e7f791cdfef5445600e5783a6690129dd1525efb38eae7a144abab48c4504e7b"
+    },
+    {
+      "file": "csrc/core/registration.h",
+      "bytes": 1106,
+      "sha256": "58b98cd4792f18baae3d316af7a91440ec991ee75d2641d2bc805bcc8cd1c02e"
+    },
+    {
+      "file": "csrc/core/scalar_type.hpp",
+      "bytes": 13551,
+      "sha256": "b58f89a43bc3e579726317803d4b9d976c15216144aa82ab32163b6e26c9d393"
+    },
+    {
+      "file": "csrc/quantization/gptq_marlin/awq_marlin_repack.cu",
+      "bytes": 9061,
+      "sha256": "23d45cbb3c771a95d4fb0ae2fd0f8577979e5656f618f511709aca144829dbbf"
+    },
+    {
+      "file": "csrc/quantization/gptq_marlin/gptq_marlin.cu",
+      "bytes": 96981,
+      "sha256": "ac292497f4353ff02ccb35ab29ca4b09d7b3e151915d7710c74abe909b571531"
+    },
+    {
+      "file": "csrc/quantization/gptq_marlin/gptq_marlin_repack.cu",
+      "bytes": 11409,
+      "sha256": "256a24f543c6c53a84a9da396715afb03a30a96abfc54f93355dac0bdbfbed35"
+    },
+    {
+      "file": "csrc/quantization/gptq_marlin/marlin.cuh",
+      "bytes": 2420,
+      "sha256": "02a71b863311e47461eb50d6d12036c8a7b0a44e2f2c48862f743ea63575531e"
+    },
+    {
+      "file": "csrc/quantization/gptq_marlin/marlin_dtypes.cuh",
+      "bytes": 2098,
+      "sha256": "bd0e545afa3ecc23fbf919f50826219832258ce81d31d118a30b350e5cb9699a"
+    }
+  ],
+  "license": "Apache-2.0"
+}

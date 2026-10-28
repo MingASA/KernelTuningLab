@@ -825,7 +825,8 @@ class AssetKernelAdapter:
                      "build_time_ms": compiled.build_time_ms, "workspace_bytes": ctx.workspace_bytes,
                      "cuda_graph_setup_time_ms": ctx.metadata.get("cuda_graph_setup_time_ms"),
                      "workspace_allocations": ctx.metadata.get("workspace_allocations", []),
-                     "compiled_resources": ctx.metadata.get("execution_resources", {})}
+                     "compiled_resources": ctx.metadata.get("execution_resources", {}),
+                     "annotations": deepcopy(ctx.metadata.get('experiment_annotations', {}))}
         origin = "platform_structure" if claim is not None else "platform_reference"
         input_ok, integrity = self._input_integrity(compiled)
         aliases = self._output_input_aliases(ctx)

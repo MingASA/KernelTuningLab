@@ -141,6 +141,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "algorithm_ref": algorithm_definition.ref, "algorithm_fingerprint": identity["algorithm_fingerprint"],
                   "algorithm_options": options, "options": options, "seed": seed,
                   "training_data": identity.get("training_data"),
+                  'algorithm_runtime': identity.get('algorithm_runtime'),
                   "shape": dict(case.shape.dims), "dtype": case.operator.dtype,
                   "record_ids": [record.id for record in records], "evaluations": evaluations,
                   "observations": len(records),
@@ -186,6 +187,14 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
         searcher = algorithm_call('factory_ms', create_searcher, algorithm_definition, options, seed)
         if callable(getattr(searcher, 'bind_trial', None)):
             algorithm_call('factory_ms', searcher.bind_trial, output_dir=str(output), identity=deepcopy(identity))
+        runtime = algorithm_call('factory_ms', lambda: deepcopy(getattr(searcher, 'runtime_identity', None)))
+        if runtime is not None:
+            canonical_json(runtime)
+            identity['algorithm_runtime'] = runtime
+            trial_id = stable_id(identity)
+            _save_json(output / 'trial.json', {**identity, 'trial_id': trial_id, 'status': 'running',
+                'kernel_ref': case.kernel.ref, 'operator_ref': case.operator_definition.ref,
+                'shape': dict(case.shape.dims), 'dtype': case.operator.dtype, 'trace_schema_version': 1})
         # Built-in Transfer and opt-in plugins expose their actual historical
         # records. Bind content after loading; a database path can change in
         # place while algorithm code/options remain identical.

@@ -1,0 +1,13 @@
+{
+  "kind": "interface_linear_policy",
+  "model_id": "untrained-interface-policy-v1",
+  "feature_version": "shape-space-v1",
+  "evidence_level": "interface_fixture_not_trained",
+  "parameter_weights": {
+    "BLOCK_M": {"bias": -2.0, "log_M": 0.35, "observations": 0.02},
+    "BLOCK_N": {"bias": -1.0, "log_N": 0.10}
+  },
+  "default_weights": {"bias": -0.3, "log_M": 0.03, "observations": 0.05},
+  "training_record_ids": [],
+  "training_case_ids": []
+}

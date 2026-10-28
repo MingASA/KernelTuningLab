@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-marlin085-smoke-v1",
+  "plugins": [
+    "kernel_tuning_lab.production.marlin"
+  ],
+  "algorithms": [
+    "grid@1.0.0"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 4,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 60,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "decode",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "validation",
+      "kernels": [
+        "production/marlin_default@1.0.0",
+        "production/marlin_atomic_opt_in@1.0.0",
+        "production/marlin_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 1,
+          "N": 512,
+          "K": 2048
+        }
+      ]
+    },
+    {
+      "name": "prefill",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "validation",
+      "kernels": [
+        "production/marlin_default@1.0.0",
+        "production/marlin_atomic_opt_in@1.0.0",
+        "production/marlin_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 2048,
+          "K": 1024
+        }
+      ]
+    }
+  ]
+}

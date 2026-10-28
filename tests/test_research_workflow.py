@@ -348,3 +348,25 @@ ASSETS=(SearchAlgorithmDefinition('unit/hook','1.0.0',Hook),)
     assert result['status']=='failed' and failed['stop_reason']=='algorithm_feedback_error'
     assert failed['observations']==1 and failed['failed_measurements']==0
     assert failed['recommendation_verified'] and failed['algorithm_contract_failures']==1
+
+
+def test_execution_annotations_survive_real_cpu_measurement_and_storage(tmp_path):
+    from kernel_tuning_lab.asset_runner import execute_asset_experiment
+    plugin=tmp_path/'annotations.py'
+    plugin.write_text('''from kernel_tuning_lab.sdk import KernelDefinition
+from kernel_tuning_lab.catalog import get_catalog
+BASE=get_catalog().resolve('kernel','python/gemm@1.0.0')
+def build(ctx,**parameters):
+ ctx.metadata['experiment_annotations']={'unit_evidence':{'scope':'real CPU execution, not GPU','layout_sha256':'fixed-fixture'}}
+ return BASE.build(ctx,**parameters)
+ASSETS=(KernelDefinition('unit/annotations','1.0.0',BASE.operator,build,BASE.space,runtime='python',dtypes=BASE.dtypes),)
+''')
+    spec=write(tmp_path/'spec.json',{'schema_version':2,'name':'annotations','operator':'gemm@1.0.0',
+        'plugins':[str(plugin)],'kernels':['unit/annotations@1.0.0'],'algorithms':['grid@1.0.0'],'dtype':'float32',
+        'shapes':[{'M':2,'N':3,'K':5}],'budget':{'max_evaluations':1,'max_wall_time_s':10},'warmup':0,'repetitions':3,
+        'validation':{'max_configs':1,'max_cases':0,'max_wall_time_s':10,'trust_claims':False}})
+    output=tmp_path/'out';result=execute_asset_experiment(spec,output);assert result['status']=='passed'
+    from kernel_tuning_lab.storage import ExperimentStore
+    with ExperimentStore(output/'measurements.sqlite',read_only=True) as store:
+        rows=store.records()
+    assert all(r.metadata['correctness']['execution']['annotations']['unit_evidence']['layout_sha256']=='fixed-fixture' for r in rows)

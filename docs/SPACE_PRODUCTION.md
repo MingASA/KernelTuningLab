@@ -32,3 +32,13 @@
 - KT 1.5.0原生QMC未传seed，且全量LHS分支有np.shuffle缺陷。适配层仅注入QMC RNG及等量permutation，保留原始DE/CostFunc/repair；同步优化器以已揭示反馈计算重放，所有重放/反馈成本计wall。16观测CPU例实际完成一代，并flush最后反馈。
 - 本地5060 Ti准入发现显示占用/低持续负载，未启动GPU负载。先推进合法空闲H800，之后重新检查本地，不暂停/加入任何既有任务。
 - H800官方0.8.5 wheel全SHA通过；标准库下载先有CA路径错误，使用现有系统CA后验证通过但传输慢。curl IPv4保留9MiB前缀续传成功，未关闭TLS。实际_C SHA与固定wheel一致，CPU-only加载成功，CUDA尚待下一步验收。
+
+## 第一批真实GPU与生产恢复证据
+
+4090在源码6722390上执行了12个代表资源候选：10个不同候选编译/数值通过（10次独立验收+10次研究观测），2个fused候选真实OutOfResources，要求共享内存184,320/311,296 bytes，编译器报告本卡限制101,376。保留失败；此定向资源样本不能推断全空间83.3%成功率。
+
+H800官方0.8.5算子已CPU加载，但GPU全忙；4090包源不可达且大二进制传输不稳定，因此保留官方profile，新增**原生源码构建profile**：使用同0.8.5官方sdist（SHA c7e04d1046304397b4580334038b558fe491af155fdea508224f140172cf9a82）原封数值CUDA/内部模板选择器，仅注册两个算子，不裁剪该实现模板、不改计算主体。既有CUDA12.4/GCC11、MAX_JOBS1实际CPU编译669.54秒并load成功，未初始化CUDA。目标sm89，10,069,160-byte库SHA099d5481a21aa35750b18deb9324e944fd6828d90dfff0338b49263d98502c67。它不是官方wheel相同二进制，也不代表代码体积预算优化；新profile身份/架构/实际binarySHA均独立绑定缓存。下一步真实CUDA验收尚未执行。
+
+原生源码恢复入口为`python scripts/build_marlin_native.py --source-sdist <fixed.tar.gz> --output <private> --cuda-home <existing-toolkit> --cxx <existing-g++> --arch sm_89`；CPU-only，无sudo/系统改动，不能用它的load成功冒充GPU通过。准备官方wheel则用`prepare_marlin_components.py`，两种profile不可混称。
+
+新增外部AI模块为可选SDK插件`kernel_tuning_lab.external_search`：实际加载有SHA的未训练接口policy产物，或用有界本地JSON进程/HTTP端点提出完整/部分/region候选，经权威空间校验。无巨大候选Prompt、无oracle/测试表路径，区域撤销及原提议→实际执行分别落日志；所有请求/推理/重试在trial计成本。`ai-cpu.json`已用一条research命令执行artifact与process两条路径。HTTP与process fixture只是协议检查，不是LLM；目前真实LLM和这三条路线的GPU反馈尚未运行。代码生成版本的train/validation→冻结test工作流仍待完成。

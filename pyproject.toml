@@ -23,13 +23,13 @@ optimizers = ["smac==2.4.1", "ConfigSpace==1.2.2", "kernel_tuner==1.5.0",
 ktlab = "kernel_tuning_lab.cli:main"
 
 [tool.setuptools]
-license-files = ["third_party/triton-tutorial-LICENSE"]
+license-files = ["third_party/triton-tutorial-LICENSE", "kernel_tuning_lab/production/upstream/LICENSE"]
 
 [tool.setuptools.packages.find]
 include = ["kernel_tuning_lab*"]
 
 [tool.setuptools.package-data]
-kernel_tuning_lab = ["adapters/data/*.json", "adapters/data/*.txt"]
+kernel_tuning_lab = ["adapters/data/*.json", "adapters/data/*.txt", "production/upstream/*.json", "production/upstream/LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -53,6 +53,13 @@ class _Audit:
             'feedback_semantics':'verified latency or native failure encoding; never fabricated MeasurementRecords'}
         self.last_proposal_status = None
 
+    @property
+    def runtime_identity(self):
+        names=('numpy','scipy','scikit-learn','ConfigSpace','smac') if self.name=='smac_rf' else ('numpy','scipy','kernel_tuner')
+        versions={name:importlib.metadata.version(name) for name in names}
+        return {'optimizer':self.name,'versions':versions,'python_hash_seed':os.environ.get('PYTHONHASHSEED'),
+                'adapter_source_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+
     def bind_trial(self, *, output_dir, identity):
         self.output = Path(output_dir); self.output.mkdir(parents=True, exist_ok=True)
         self._event('start', identity=identity, recovery='reconstruct from fixed seed and revealed compatible cache; do not load native state twice')

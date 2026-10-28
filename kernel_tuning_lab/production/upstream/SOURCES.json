@@ -1,0 +1,14 @@
+{
+  "project": "vllm-project/vllm",
+  "version": "0.8.5",
+  "license": "Apache-2.0",
+  "usage": "Selected upstream functions compiled from unchanged source AST; full modules retained for provenance; no serving framework imported.",
+  "files": {
+    "marlin_utils.py": "23db33d9a8cc27b74086cc9034f50fc4de59b0fb48ae6ca9f3332d110e66fd10",
+    "custom_ops.py": "9d27e25ef6dcf891c98a18505b83a42c9ab7532ef861a20bccfd9e07746144b2",
+    "marlin_utils_test.py": "1e45cc5d7c293f899fc69588f29e81463a2ada2a551a958b7b57966126318be7",
+    "quant_utils.py": "5ceae79e9e5125dc9f820513accb234783813da3617d3779e47be8670e6996dd",
+    "scalar_type.py": "5a431f96a99a634d9299902780fa0fd7ec7c726cdf063feb729976761a61fabf",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "external-ai-cpu-interfaces-v1",
+  "plugins": [
+    "kernel_tuning_lab.external_search"
+  ],
+  "algorithms": [
+    {
+      "asset": "external/model_or_process@1.0.0",
+      "options": {
+        "model_artifact": "examples/space_production/models/interface_policy.json",
+        "model_sha256": "d15d5d02d7760b98233177a9d4a8425cf038206ff7cfb2094de22ba93e7f8d58"
+      }
+    },
+    {
+      "asset": "external/model_or_process@1.0.0",
+      "options": {
+        "command": [
+          "python",
+          "examples/space_production/decision_fixture.py",
+          "--once"
+        ],
+        "model_id": "protocol-fixture-not-LLM",
+        "provider_kind": "contract_fixture"
+      }
+    }
+  ],
+  "dtypes": [
+    "float32"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 30
+    }
+  ],
+  "defaults": {
+    "warmup": 0,
+    "repetitions": 3,
+    "validation": {
+      "max_configs": 2,
+      "max_cases": 0,
+      "max_wall_time_s": 20,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "cpu-gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        "python/gemm@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 2,
+          "N": 3,
+          "K": 5
+        }
+      ]
+    }
+  ]
+}
