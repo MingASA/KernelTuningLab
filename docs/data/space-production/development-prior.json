@@ -1,0 +1,147 @@
+{
+  "feedback_sha256": "3b23865971225e86d3c63b64a972e79f549d64d3a8093a33f8b550f74bbd9824",
+  "record_ids_sha256": "d68bee121cfa191c546ed89a6ebb169771cbc459d696859ef43917a3f6ec5445",
+  "observations": 72,
+  "allowed_splits": [
+    "train",
+    "validation"
+  ],
+  "test_labels_read": false,
+  "effects": {
+    "BLOCK_M": [
+      {
+        "value": 32,
+        "median_relative_latency": 1.176011105924189,
+        "observations": 11
+      },
+      {
+        "value": 16,
+        "median_relative_latency": 1.5927100191267471,
+        "observations": 30
+      },
+      {
+        "value": 64,
+        "median_relative_latency": 1.643920567488567,
+        "observations": 16
+      },
+      {
+        "value": 128,
+        "median_relative_latency": 2.5198511588271084,
+        "observations": 15
+      }
+    ],
+    "BLOCK_N": [
+      {
+        "value": 32,
+        "median_relative_latency": 1.1952468735545532,
+        "observations": 6
+      },
+      {
+        "value": 64,
+        "median_relative_latency": 1.616625291805611,
+        "observations": 39
+      },
+      {
+        "value": 128,
+        "median_relative_latency": 1.6407563694437897,
+        "observations": 27
+      }
+    ],
+    "BLOCK_K": [
+      {
+        "value": 64,
+        "median_relative_latency": 1.383374708194389,
+        "observations": 18
+      },
+      {
+        "value": 32,
+        "median_relative_latency": 1.6585416014186558,
+        "observations": 54
+      }
+    ],
+    "num_warps": [
+      {
+        "value": 8,
+        "median_relative_latency": 1.3993411612960995,
+        "observations": 42
+      },
+      {
+        "value": 4,
+        "median_relative_latency": 1.940931214218268,
+        "observations": 30
+      }
+    ],
+    "num_stages": [
+      {
+        "value": 2,
+        "median_relative_latency": 1.2180448164097373,
+        "observations": 6
+      },
+      {
+        "value": 4,
+        "median_relative_latency": 1.594026944719056,
+        "observations": 24
+      },
+      {
+        "value": 3,
+        "median_relative_latency": 1.89950368221218,
+        "observations": 33
+      },
+      {
+        "value": 1,
+        "median_relative_latency": 1.9141981551927407,
+        "observations": 9
+      }
+    ],
+    "GROUP_M": [
+      {
+        "value": 2,
+        "median_relative_latency": 1.3904937471091061,
+        "observations": 21
+      },
+      {
+        "value": 8,
+        "median_relative_latency": 1.632270985322902,
+        "observations": 27
+      },
+      {
+        "value": 1,
+        "median_relative_latency": 1.6407563694437897,
+        "observations": 9
+      },
+      {
+        "value": 4,
+        "median_relative_latency": 2.9838707732194214,
+        "observations": 15
+      }
+    ],
+    "SPLIT_K": [
+      {
+        "value": 16,
+        "median_relative_latency": 1.2180448164097373,
+        "observations": 6
+      },
+      {
+        "value": 8,
+        "median_relative_latency": 1.2773109038176462,
+        "observations": 33
+      },
+      {
+        "value": 4,
+        "median_relative_latency": 1.7750397746335316,
+        "observations": 12
+      },
+      {
+        "value": 2,
+        "median_relative_latency": 3.0377495645889527,
+        "observations": 15
+      },
+      {
+        "value": 1,
+        "median_relative_latency": 4.099299857750221,
+        "observations": 6
+      }
+    ]
+  },
+  "notice": "Descriptive, unbalanced and confounded parameter associations, not causal effects or a trained performance model."
+}

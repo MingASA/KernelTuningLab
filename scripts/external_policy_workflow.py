@@ -90,7 +90,8 @@ def make_test_spec(protocol, template, manifests, destination):
         algorithms=assets,seeds=[protocol['input_seed']],
         budgets=[{'max_evaluations':protocol['budget'],'max_wall_time_s':180}],
         cases=[{'name':'frozen-test','operator':protocol['operator'],'kernels':[protocol['kernel']],
-                'shapes':protocol['test_shapes'],'split':'test'}])
+                'shapes':protocol['test_shapes'],'split':'test',
+                'validation':{'max_configs':len(protocol['test_shapes'])}}])
     Path(destination).write_text(json.dumps(value,indent=2)+'\n')
     return {'status':'test_spec_exported_not_executed','frozen_versions':len(sources),
             'test_labels_read':False,'spec_sha256':hashlib.sha256(canonical_json(value).encode()).hexdigest()}
