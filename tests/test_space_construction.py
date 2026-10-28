@@ -92,6 +92,17 @@ def test_excluded_candidates_are_exhausted_not_a_proof_of_an_empty_space():
     assert space.build_feasible(HW,OP,SHAPE).complete
 
 
+def test_unavailable_asset_runtime_is_unsupported_not_a_false_empty_space_proof():
+    kernel=KernelDefinition('fixture','1','fixture@1',lambda ctx,**kw:lambda:None,
+        SpaceDefinition({'x':ParameterSpec((1,2))}),supports=lambda h,o,s:'required runtime unavailable')
+    space=build_effective_space(kernel,HW,OP,SHAPE)
+    built=space.build_feasible(HW,OP,SHAPE)
+    assert built.status=='unsupported' and not built.complete and built.diagnostics['nodes']==0
+    assert space._feasible_cache=={}
+    # A zero construction budget still performs no support work/proof.
+    assert space.build_feasible(HW,OP,SHAPE,budget=SpaceBuildBudget(max_wall_time_s=0)).status=='budget_exhausted'
+
+
 def test_joint_only_neighbor_budget_is_not_consumed_by_one_parameter_moves():
     space=ConfigSpace({'x':tuple(range(1000)),'y':tuple(range(1000))},rules=(Relation('x','==','y'),))
     candidates=space.neighbors(KernelConfig({'x':0,'y':0}),min_changed=2,max_changed=2,max_neighbors=4)

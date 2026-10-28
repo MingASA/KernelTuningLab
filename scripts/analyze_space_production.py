@@ -3,6 +3,7 @@ import argparse
 from collections import Counter,defaultdict
 import json
 from pathlib import Path
+import random
 
 from analyze_phase1 import current_records
 from kernel_tuning_lab.analysis.report import _bar_chart,_line_chart
@@ -38,6 +39,11 @@ def native(directory,output):
 def controlled(directory,output):
     records={r.id:r for r in current_records(directory)};manifest=read_json(directory/'research_manifest.json')
     best_known={};trials=[]
+    from kernel_tuning_lab.catalog import get_catalog
+    from kernel_tuning_lab.plugins import load_plugin
+    from kernel_tuning_lab.asset_space import build_effective_space
+    catalog=get_catalog();load_plugin('kernel_tuning_lab.production.marlin',catalog)
+    random_samples={}
     for r in records.values():
         if r.correctness_verified:
             k=(r.operator.implementation,r.shape.id);best_known[k]=min(best_known.get(k,float('inf')),r.median_ms)
@@ -46,6 +52,14 @@ def controlled(directory,output):
         if snapshot is None or not (snapshot/'trials.json').is_file():continue
         for raw in read_json(snapshot/'trials.json'):
             rows=[records[i] for i in raw['record_ids']];key=(raw['kernel_ref'],rows[0].shape.id) if rows else None
+            outside=None
+            if rows and raw.get('space_cardinality',0)>4096:
+                if key not in random_samples:
+                    r=rows[0];space=build_effective_space(catalog.resolve('kernel',raw['kernel_ref']),r.hardware,r.operator,r.shape)
+                    random_samples[key]={c.id for c in space.sample_configs(random.Random(7),512)}
+                outside={'sample_seed':7,'sample_size':512,'scope':'Raw uniform sample from current domains, not a rerun of the old optimizer',
+                    'proposed_outside':sum(r.config.id not in random_samples[key] for r in rows),
+                    'GPU_verified_outside':sum(r.config.id not in random_samples[key] and r.correctness_verified and r.metadata.get('correctness',{}).get('verified_on_gpu') is True for r in rows)}
             running=None;curve=[]
             for i,r in enumerate(rows,1):
                 if r.correctness_verified:running=min(running or float('inf'),r.median_ms)
@@ -56,7 +70,8 @@ def controlled(directory,output):
                 'cache_hits':raw['cache_hits'],'statuses':dict(Counter(r.status.value for r in rows)),
                 'record_ids':raw['record_ids'],'space_cardinality':raw.get('space_cardinality'),
                 'wall_s':raw.get('wall_time_s'),'algorithm_costs_ms':raw.get('algorithm_costs_ms'),
-                'diagnostics':raw.get('algorithm_diagnostics'),'curve':curve})
+                'diagnostics':raw.get('algorithm_diagnostics'),'curve':curve,
+                'reachability_beyond_a_512_point_sample':outside})
     result={'compute_commit':manifest.get('git_commit'),'manifest_status':manifest['status'],'trials':trials,
         'unique_observed_records':len(records),'statuses':dict(Counter(r.status.value for r in records.values())),
         'reference':'best-known in the observed union for each implementation/Shape; not an exhaustive oracle',

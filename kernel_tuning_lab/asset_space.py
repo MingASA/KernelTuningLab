@@ -169,6 +169,9 @@ def build_effective_space(kernel: KernelDefinition, hardware: HardwareSpec, oper
     space = ConfigSpace(domains, constraints=tuple(constraints), name=kernel.space.name, identity=identity, allow_empty=True,
                         rules=kernel.space.rules, native_configs=candidates, advisories=kernel.space.advisories)
     space.parameter_specs = MappingProxyType(dict(kernel.space.parameters))
+    # This predicate depends only on input/hardware/runtime, never on knobs.
+    # Keep unsupported contexts distinct from a proven-empty config region.
+    space._construction_support = lambda h, o, s: capability_constraint(KernelConfig({}), h, o, s)
     space.conditional = any(specification.active_when for specification in kernel.space.parameters.values())
     # Capability checks do not turn an otherwise unconstrained Cartesian space
     # into an algorithmically constrained space.

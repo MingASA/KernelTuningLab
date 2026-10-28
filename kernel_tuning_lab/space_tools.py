@@ -199,6 +199,15 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
     nodes = checks = errors = used_bytes = 0; output = []; seen = set(exclude_ids); stop = None
     values = dict(normalize(space, partial or {}).params)
     specs = _specs(space); order = _order(space)
+    support = getattr(space, '_construction_support', None)
+    if support is not None and time.perf_counter()-started < budget.max_wall_time_s:
+        try:
+            reason = support(hardware, operator, shape)
+        except Exception as exc:
+            reason = 'support check error: ' + type(exc).__name__ + ': ' + str(exc)
+        if reason:
+            return SpaceBuildResult((), 'unsupported', {'reason': reason, 'nodes': 0,
+                'wall_s': time.perf_counter()-started, 'scope': 'Input/hardware/runtime context; not a proof that the declaration has no feasible configurations elsewhere'})
     partial_check = validate_partial(space, values, hardware, operator, shape)
     if partial_check.status == 'invalid':
         return SpaceBuildResult((), 'proven_empty', {'partial_reasons': list(partial_check.reasons), 'nodes': 0,
