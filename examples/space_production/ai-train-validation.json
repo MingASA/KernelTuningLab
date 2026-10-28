@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "external-policy-train-validation-v1",
+  "plugins": [
+    "kernel_tuning_lab.production.marlin",
+    "kernel_tuning_lab.external_search",
+    "generated_policy_v1.py"
+  ],
+  "algorithms": [
+    "generated/constructive_v1@1.0.0",
+    {
+      "asset": "external/model_or_process@1.0.0",
+      "options": {
+        "model_artifact": "examples/space_production/models/interface_policy.json",
+        "model_sha256": "d15d5d02d7760b98233177a9d4a8425cf038206ff7cfb2094de22ba93e7f8d58"
+      }
+    },
+    {
+      "asset": "external/model_or_process@1.0.0",
+      "options": {
+        "command": [
+          "python",
+          "examples/space_production/decision_fixture.py",
+          "--once"
+        ],
+        "model_id": "protocol-fixture-not-LLM",
+        "provider_kind": "contract_fixture"
+      }
+    }
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    19
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 8,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 60,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "train",
+      "operator": "w4a16_gemm@2.0.0",
+      "kernels": [
+        "controlled/w4a16_fused@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 512,
+          "K": 1024
+        },
+        {
+          "M": 128,
+          "N": 512,
+          "K": 1024
+        }
+      ],
+      "split": "train"
+    },
+    {
+      "name": "validation",
+      "operator": "w4a16_gemm@2.0.0",
+      "kernels": [
+        "controlled/w4a16_fused@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 16,
+          "N": 512,
+          "K": 1024
+        }
+      ],
+      "split": "validation"
+    }
+  ]
+}

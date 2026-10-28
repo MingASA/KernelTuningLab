@@ -73,6 +73,11 @@ def test_research_cli_executes_multiple_cases_and_resumes_without_extra_measurem
     assert not report["physical_gpu_validated"]
     assert {t["operator"] for t in report["trials"]} == {"gemm", "softmax"}
     assert report["comparison_groups"]
+    assert report["algorithm_cost_trace_complete"]
+    assert report["algorithm_costs_ms"]["proposal_ms"] > 0
+    for key, total in report["algorithm_costs_ms"].items():
+        assert total == pytest.approx(sum(t["algorithm_costs_ms"][key] for t in report["trials"]))
+    assert "algorithm_diagnostics" in (output / "trials.csv").read_text()
     assert list((output / "figures").glob("*.svg"))
     assert (output / "observations.csv").is_file() and (output / "failures.jsonl").is_file()
     rerun = run_cli("research", "--spec", spec, "--output", output)

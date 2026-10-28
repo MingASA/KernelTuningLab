@@ -89,6 +89,9 @@ def _trial(output, job, raw, store, directory):
         "physical_measurement_wall_time_s": sum(row["physical_measurement_wall_time_s"] for row in trace) if trace else None,
         "source_compile_time_ms": sum(r.compile_time_ms for r in records),
         "source_measurement_wall_time_s": sum(r.wall_time_s for r in records),
+        "algorithm_costs_ms": raw.get("algorithm_costs_ms"),
+        "algorithm_diagnostics": raw.get("algorithm_diagnostics", {}),
+        "algorithm_runtime": raw.get("algorithm_runtime"),
         "observations_trace": [], "errors": raw.get("failures", [])}
     if raw.get("status") == "running":
         info["status"] = "interrupted"
@@ -298,6 +301,9 @@ def generate_research_report(output_dir):
         "physical_compile_time_ms": None if incomplete or any(t["observations"] and not t.get("trace_available", False) for t in trials)
             else sum(t.get("physical_compile_time_ms") or 0 for t in trials),
         "physical_measurement_wall_time_s": sum(t.get("physical_measurement_wall_time_s") or 0 for t in trials) + sum(a["wall_time_s"] for a in incomplete if a["stage"] == "research"),
+        "algorithm_costs_ms": {key: sum((t.get("algorithm_costs_ms") or {}).get(key, 0) for t in trials)
+            for key in ("factory_ms", "proposal_ms", "feedback_ms")},
+        "algorithm_cost_trace_complete": all(t.get("algorithm_costs_ms") is not None for t in trials if "trial_id" in t),
         "incomplete_attempts": incomplete,
         "cost_trace_complete": not incomplete and not statuses["timeout"] and not statuses["interrupted"] and all(t.get("trace_available", t["observations"] == 0) for t in trials),
         "physical_gpu_validated": status == "passed" and bool(jobs) and
@@ -313,7 +319,8 @@ def generate_research_report(output_dir):
         "source_context_id": t.get("source_context_id"), **row} for t in trials for row in t["observations_trace"]]
     _csv(output / "trials.csv", trials, ["job_id", "trial_id", "case", "operator", "kernel", "algorithm", "dtype", "shape", "seed",
         "operator_parameters", "budget", "status", "stop_reason", "observations", "evaluations", "cache_hits", "best_verified_latency_ms",
-        "measurement_mode", "source_context_id", "wall_time_s", "physical_compile_time_ms", "physical_measurement_wall_time_s"])
+        "measurement_mode", "source_context_id", "wall_time_s", "physical_compile_time_ms", "physical_measurement_wall_time_s",
+        "algorithm_costs_ms", "algorithm_diagnostics", "algorithm_runtime"])
     _csv(output / "observations.csv", observations, ["job_id", "trial_id", "case", "algorithm", "kernel", "dtype", "shape", "seed",
         "source_context_id", "measurement_mode", "observation", "record_id", "config", "status", "cache_hit",
         "correctness_verified", "latency_ms", "p10_ms", "p90_ms", "best_verified_latency_ms", "elapsed_wall_time_s",
@@ -324,9 +331,11 @@ def generate_research_report(output_dir):
     _write(output / "summary.json", summary)
     _write(output / "run_summary.json", {key: val for key, val in summary.items() if key not in {"jobs", "trials", "comparison_groups"}})
     _bar_chart(figures / "cost.svg", "Current research attempt costs", "Actual observed costs; compilation is included in measurement wall time",
-        ["All v2 job wall time", "Validation wall time", "New research measurement wall time", "New research compile time (subset)"],
+        ["All v2 job wall time", "Validation wall time", "New research measurement wall time", "New research compile time (subset)",
+         "Algorithm factory", "Candidate generation", "Optimizer feedback"],
         [summary["job_wall_time_s"], summary["validation_wall_time_s"], summary["physical_measurement_wall_time_s"],
-         summary["known_physical_compile_time_ms"]/1000], xlabel="Known seconds (components overlap; incomplete costs flagged)", render_png=False)
+         summary["known_physical_compile_time_ms"]/1000, *[v/1000 for v in summary["algorithm_costs_ms"].values()]],
+        xlabel="Known seconds (components overlap; incomplete costs flagged)", render_png=False)
     counts = Counter(f.get("status", f["kind"]) for f in failures)
     _bar_chart(figures / "failures.svg", "Failure and applicability events", "Job/validation/measurement events are separate; cached observations may repeat failures",
         list(counts), list(counts.values()), xlabel="Event count", render_png=False)
@@ -343,6 +352,9 @@ def generate_research_report(output_dir):
         "Shared measurement/JIT caches make execution order affect physical tuning cost. Equal observation allowances do not imply equal cold-start cost. "
         "Failed attempts consume budgets; terminated attempts may have incomplete compile costs (see v2 interrupted evidence). "
         "Source measurement cost describes the original observation; cache hits add lookup/wall overhead, not another compilation.", ""]
+    lines += ["Algorithm factory / proposal / feedback costs (ms): `" + canonical_json(summary["algorithm_costs_ms"]) + "`. "
+              "External model/process calls and retries are included in proposal cost; they are not added twice. "
+              f"Algorithm cost trace complete: **{summary['algorithm_cost_trace_complete']}**. Older records lacking this trace remain unknown.", ""]
     rejected = [j for j in jobs if j["status"] not in {"passed", "not_run"}]
     if rejected:
         lines += [_table(("Case", "Algorithm", "Status", "Diagnostic"),

@@ -49,7 +49,7 @@ class SearchPolicy:
     version = "1"
 
     def __init__(self, space: ConfigSpace, algorithm: str = "surrogate", seed: int = 0, training_records=(),
-                 candidate_pool_size: int = 512, exhaustive_threshold: int = 4096):
+                 candidate_pool_size: int = 512, exhaustive_threshold: int = 50_000):
         self.space = space
         self.algorithm = algorithm
         self.seed = seed
@@ -81,14 +81,14 @@ class SearchPolicy:
 
 
 class HeuristicPolicy(SearchPolicy):
-    def __init__(self, space: ConfigSpace, seed: int = 0, candidate_pool_size: int = 512, exhaustive_threshold: int = 4096):
+    def __init__(self, space: ConfigSpace, seed: int = 0, candidate_pool_size: int = 512, exhaustive_threshold: int = 50_000):
         super().__init__(space, algorithm="heuristic", seed=seed,
                          candidate_pool_size=candidate_pool_size, exhaustive_threshold=exhaustive_threshold)
 
 
 class TransferPolicy(SearchPolicy):
     def __init__(self, space: ConfigSpace, training_records=(), seed: int = 0,
-                 candidate_pool_size: int = 512, exhaustive_threshold: int = 4096):
+                 candidate_pool_size: int = 512, exhaustive_threshold: int = 50_000):
         super().__init__(space, algorithm="transfer", seed=seed, training_records=training_records,
                          candidate_pool_size=candidate_pool_size, exhaustive_threshold=exhaustive_threshold)
 
@@ -198,7 +198,7 @@ class _PolicySearcher:
         self.select_only = bool(self.selected)
         self.name = f"policy:{policy.name}"
         self.candidate_pool_size = getattr(policy.policy, "candidate_pool_size", 512)
-        self.exhaustive_threshold = getattr(policy.policy, "exhaustive_threshold", 4096)
+        self.exhaustive_threshold = getattr(policy.policy, "exhaustive_threshold", 50_000)
 
     def suggest(self, hardware, operator, shape, space, history, budget, batch_size=1):
         if self.select_only:
