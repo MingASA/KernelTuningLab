@@ -123,13 +123,30 @@ def analyze(directory, output, *, fixed_fp32_reduce=False):
     write(output,result);return result
 
 
-def dispatch_spec(analysis, template, destination):
+def dispatch_spec(analysis, template, destination, *, runtime_table=False):
     data=read_json(analysis);base=read_json(template);table=data['chosen_dispatch']
     base.update(name='production-marlin085-verified-finite-dispatch-v1',seeds=[31],
         budgets=[{'max_evaluations':1,'max_wall_time_s':120}])
     base['cases']=[{'name':'dispatch-'+str(i),'operator':'w4a16_gemm@2.0.0','split':'validation',
         'shapes':[entry['shape']],'kernels':[{'asset':EXPLICIT,'space':{k:[v] for k,v in entry['config'].items()}}]}
         for i,entry in enumerate(table['assignments'])]
+    if runtime_table:
+        metadata=data['matrix']['metadata']
+        artifact={'hardware_id':metadata['hardware_id'],'operator_id':metadata['operator_id'],
+            'kernel_fingerprint':metadata['measurement_context']['protocol']['kernel_fingerprint'],
+            'config_budget':2,'dispatch':table,'source_analysis_sha256':hashlib.sha256(Path(analysis).read_bytes()).hexdigest(),
+            'numerical_scope':data.get('precision_scope','see source study')}
+        artifact_path=Path(str(destination)+'.table.json').resolve();write(artifact_path,artifact)
+        plugin=Path(__file__).resolve().parents[1]/'examples/space_production/native_dispatch.py'
+        base.update(name='native-real-table-dispatch-fixed-workload-v1',
+            plugins=['kernel_tuning_lab.production.marlin',str(plugin)],
+            algorithms=[{'asset':'production/finite_dispatch@1.0.0','options':{
+                'table_artifact':str(artifact_path),'table_sha256':hashlib.sha256(artifact_path.read_bytes()).hexdigest()}}])
+        restrictions={'USE_FP32_REDUCE':[True]} if data.get('cohort')=='fixed_native_FP32_reduce_request' else {}
+        base['cases']=[{'name':'finite-workload','operator':'w4a16_gemm@2.0.0','split':'validation',
+            'kernels':[{'asset':EXPLICIT,'space':restrictions}],
+            'shapes':[entry['shape'] for entry in table['assignments']],
+            'validation':{'max_configs':len(table['assignments'])}}]
     write(destination,base)
     write(str(destination)+'.selection.json',{'analysis_sha256':hashlib.sha256(Path(analysis).read_bytes()).hexdigest(),
         'table':table,'unseen_input_policy':'reject; no native fallback outside K budget',
@@ -141,9 +158,9 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     a=sub.add_parser('prepare');a.add_argument('--smoke',required=True);a.add_argument('--spec',required=True);a.add_argument('--output',required=True)
     a=sub.add_parser('analyze');a.add_argument('--study',required=True);a.add_argument('--output',required=True);a.add_argument('--fixed-fp32-reduce',action='store_true')
-    a=sub.add_parser('dispatch-spec');a.add_argument('--analysis',required=True);a.add_argument('--template',required=True);a.add_argument('--output',required=True)
+    a=sub.add_parser('dispatch-spec');a.add_argument('--analysis',required=True);a.add_argument('--template',required=True);a.add_argument('--output',required=True);a.add_argument('--runtime-table',action='store_true')
     args=p.parse_args()
     if args.command=='prepare':v=prepare(args.smoke,args.spec,args.output)
     elif args.command=='analyze':v=analyze(args.study,args.output,fixed_fp32_reduce=args.fixed_fp32_reduce);v={k:v[k] for k in ('status','counts','unseen_input_policy')}
-    else:v=dispatch_spec(args.analysis,args.template,args.output)
+    else:v=dispatch_spec(args.analysis,args.template,args.output,runtime_table=args.runtime_table)
     print(json.dumps(v,indent=2))

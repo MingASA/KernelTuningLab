@@ -88,11 +88,54 @@ def controlled(directory,output):
     return result
 
 
+def supplement(directory,output):
+    """Exact current/archived attempt costs, plus real selected execution traces."""
+    stages={}
+    names=('ai-train-validation','moe-pilot','production-dispatch','common-inputs','ai-test',
+           'controlled-confirmation','final-core-regression','production-table-dispatch')
+    for name in names:
+        root=directory/name
+        if not root.exists():continue
+        summary=read_json(root/'summary.json');manifest=read_json(root/'research_manifest.json');records=current_records(root)
+        attempts=[]
+        for path in [root/'summary.json',*(root/'attempts').glob('*/summary.json')]:
+            value=read_json(path)
+            attempts.append({k:value.get(k) for k in ('run_id','status','observations','research_evaluations',
+                'cache_hits','validation_evaluations','job_wall_time_s','validation_wall_time_s')})
+        trials=[]
+        for job in manifest['jobs']:
+            snapshot=snapshot_directory(root,job)
+            if snapshot is None or not (snapshot/'trials.json').exists():continue
+            for trial in read_json(snapshot/'trials.json'):
+                trials.append({k:trial.get(k) for k in ('kernel_ref','algorithm_ref','shape','status','stop_reason',
+                    'record_ids','evaluations','cache_hits','best_verified_latency_ms','best_verified_config',
+                    'algorithm_costs_ms','algorithm_runtime','algorithm_diagnostics')})
+        compact=[];identity_groups=defaultdict(set)
+        for r in records:
+            annotations=r.metadata.get('correctness',{}).get('execution',{}).get('annotations',{})
+            if 'logical_input_identity' in annotations:
+                identity_groups[r.shape.id,r.seed].add(json.dumps(annotations['logical_input_identity'],sort_keys=True))
+            compact.append({'id':r.id,'kernel':r.operator.implementation,'shape':dict(r.shape.dims),'config':dict(r.config.params),
+                'seed':r.seed,'status':r.status.value,'reference_verified':r.correctness_verified,
+                'verified_on_gpu':r.metadata.get('correctness',{}).get('verified_on_gpu'),
+                'latency_ms':r.median_ms if r.correctness_verified else None,'raw_samples_ms':list(r.runtime_samples_ms),
+                'logical_input_identity':annotations.get('logical_input_identity'),
+                'native_call_flags':annotations.get('production',{}).get('actual_native_call_flags')})
+        if any(len(v)!=1 for v in identity_groups.values()):raise ValueError('paired logical input identities disagree')
+        stages[name]={'status':summary['status'],'compute_commit':manifest.get('git_commit'),
+            'counts':{k:summary[k] for k in ('observations','research_evaluations','cache_hits','validation_evaluations')},
+            'attempts':attempts,'trials':trials,'records':compact,
+            'paired_logical_identity_groups':len(identity_groups),'all_logical_identities_match':True}
+    write(output/'supplement.json',stages)
+    return stages
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--controlled',type=Path);p.add_argument('--production',type=Path)
-    p.add_argument('--l3',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+    p.add_argument('--l3',type=Path);p.add_argument('--supplement',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     if a.controlled:controlled(a.controlled,a.output)
     if a.production:native(a.production,a.output)
+    if a.supplement:supplement(a.supplement,a.output)
     if a.l3:
         x=read_json(a.l3);public={k:x[k] for k in ('status','native_rules','selections','chosen_dispatch','unseen_input_policy','counts','reference_scope','independent_input_repetitions')}
         public.update({k:x[k] for k in ('cohort','precision_scope') if k in x})
