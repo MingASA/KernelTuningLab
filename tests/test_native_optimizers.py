@@ -90,6 +90,15 @@ def test_native_failure_encoding_never_changes_measured_latency_or_promotes_fail
     assert failed.runtime_samples_ms==() and failed.median_ms is None and engine.diagnostics['failed_feedback']==1
 
 
+def test_native_smac_exhaustion_after_all_finite_points_is_not_a_contract_failure():
+    space=ConfigSpace({'x':(0,1,2),'y':(6,)})
+    engine=SMACSearch(seed=7,initial_design_size=2)
+    rows,physical,_=drive(engine,8,space)
+    assert len(rows)==physical==3
+    assert engine.last_proposal_status=='native_space_exhausted'
+    assert engine.diagnostics['native_space_exhausted'] and engine.diagnostics['tells']>=3
+
+
 def test_smac_structured_equality_mapping_preserves_feasibility():
     space=ConfigSpace({'x':tuple(range(8)),'y':tuple(range(8))},rules=(Relation('x','==','y'),))
     engine=SMACSearch(seed=2);rows,_,_=drive(engine,4,space)

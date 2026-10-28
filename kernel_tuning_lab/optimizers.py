@@ -210,8 +210,13 @@ class SMACSearch(_Audit):
         by_config={r.config.id:r for r in history}
         if self.pending and self.pending[0].id in by_config:self.observe(by_config[self.pending[0].id],cache_hit=True)
         seen=set(history.attempted_config_ids)|set(by_config)
+        from smac.main.exceptions import ConfigurationSpaceExhaustedException
         for _ in range(self.max_proposals):
             try:info=self.engine.ask()
+            except ConfigurationSpaceExhaustedException:
+                self.last_proposal_status='native_space_exhausted'
+                self.diagnostics['native_space_exhausted']=True
+                return []
             except (StopIteration,RuntimeError) as exc:
                 self.last_proposal_status='native_optimizer_stopped';self.diagnostics['stop']=str(exc);return []
             self.diagnostics['asks']+=1
