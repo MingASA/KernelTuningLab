@@ -57,3 +57,16 @@ def test_invalid_output_and_timeout_are_bounded_not_fake_measurements():
     timeout=ExternalSearch(command=[sys.executable,'-c','import time; time.sleep(5)'],timeout_s=.05,max_retries=0)
     assert timeout.suggest(H,O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))==[]
     assert timeout.diagnostics['calls']==1
+
+
+def test_http_gpu_placement_and_response_limits_fail_before_measurements():
+    for invalid in (float('nan'),float('inf'),False):
+        with pytest.raises(ValueError,match='finite'):ExternalSearch(command=['python'],timeout_s=invalid)
+    with pytest.raises(ValueError,match='response limit'):ExternalSearch(command=['python'],max_response_bytes=-1)
+    endpoint=ExternalSearch(endpoint='http://127.0.0.1:1',model_id='not-contacted')
+    with pytest.raises(ValueError,match='verify placement externally'):
+        endpoint.suggest(HardwareSpec('fixture',architecture='sm_89'),O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
+    assert endpoint.diagnostics['calls']==0
+    verbose=ExternalSearch(command=[sys.executable,'-c','print("x"*10000)'],max_response_bytes=16,max_retries=0)
+    assert verbose.suggest(H,O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))==[]
+    assert verbose.diagnostics['calls']==1

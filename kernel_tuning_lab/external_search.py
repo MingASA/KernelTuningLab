@@ -14,6 +14,7 @@ from pathlib import Path
 import random
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 
@@ -49,16 +50,21 @@ def describe_task(hardware,operator,shape,space,history,budget):
 class ExternalSearch:
     name='external_proposal'
     def __init__(self,seed=0,*,model_artifact=None,model_sha256=None,command=None,endpoint=None,
-                 model_id=None,provider_kind='external_declared',timeout_s=10,max_retries=2,max_response_bytes=65536):
+                 model_id=None,provider_kind='external_declared',timeout_s=10,max_retries=2,max_response_bytes=65536,
+                 inference_resource=None):
         if sum(value is not None for value in (model_artifact,command,endpoint))!=1:
             raise ValueError('exactly one model artifact, process command, or endpoint is required')
-        if timeout_s<=0 or type(max_retries) is not int or not 0<=max_retries<=4:raise ValueError('finite bounded external calls required')
+        if type(timeout_s) not in (int,float) or not math.isfinite(timeout_s) or timeout_s<=0 or type(max_retries) is not int or not 0<=max_retries<=4:raise ValueError('finite bounded external calls required')
+        if type(max_response_bytes) is not int or not 1<=max_response_bytes<=16*1024**2:raise ValueError('response limit must be within1byte and16MiB')
+        if inference_resource not in (None,'cpu','separate_device'):raise ValueError('inference_resource is cpu or separate_device; HTTP placement remains externally verified')
         self.seed=seed;self.rng=random.Random(seed);self.command=command;self.endpoint=endpoint
+        self.inference_resource=inference_resource
         self.timeout_s=timeout_s;self.max_retries=max_retries;self.max_response_bytes=max_response_bytes
         self.output=None;self.card=None
         self.diagnostics={'model_id':model_id,'calls':0,'retries':0,'inference_wall_ms':0.0,
             'invalid_responses':0,'region_revocations':0,'feedback_records':0,
             'transport':'artifact' if model_artifact else 'process' if command else 'HTTP',
+            'inference_resource':inference_resource,
             'model_execution':'CPU reference policy' if model_artifact else 'process CUDA hidden; trusted code, not sandbox' if command else 'external device placement declared by caller, unverified',
             'evidence_level':'unverified_external_provider' if not model_artifact else 'interface_fixture_not_trained'}
         if provider_kind=='contract_fixture' and not model_artifact:self.diagnostics['evidence_level']='protocol_fixture_not_a_real_model'
@@ -83,7 +89,7 @@ class ExternalSearch:
     @property
     def runtime_identity(self):
         return {key:value for key,value in self.diagnostics.items() if key in
-            ('model_id','model_sha256','command_sha256','process_code_sha256','transport','evidence_level','training_record_ids')}
+            ('model_id','model_sha256','command_sha256','process_code_sha256','transport','evidence_level','training_record_ids','inference_resource')}
 
     def bind_trial(self,*,output_dir,identity):self.output=Path(output_dir)
 
@@ -109,10 +115,15 @@ class ExternalSearch:
         try:
             if self.card is not None:response=self._artifact_action(task,space)
             elif self.command:
-                result=subprocess.run(self.command,input=request,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-                    timeout=self.timeout_s,env={**os.environ,'CUDA_VISIBLE_DEVICES':''},check=True)
-                if len(result.stdout)>self.max_response_bytes:raise ValueError('external response too large')
-                response=json.loads(result.stdout)
+                # Verbose trusted providers must not accumulate unbounded RAM
+                # before response-size validation. Files are private temporary
+                # output, not a sandbox or a hard disk-write quota.
+                with tempfile.TemporaryFile() as stdout,tempfile.TemporaryFile() as stderr:
+                    subprocess.run(self.command,input=request,stdout=stdout,stderr=stderr,
+                        timeout=self.timeout_s,env={**os.environ,'CUDA_VISIBLE_DEVICES':''},check=True)
+                    stdout.seek(0);blob=stdout.read(self.max_response_bytes+1)
+                if len(blob)>self.max_response_bytes:raise ValueError('external response too large')
+                response=json.loads(blob)
             else:
                 req=urllib.request.Request(self.endpoint,data=request,headers={'Content-Type':'application/json'},method='POST')
                 with urllib.request.urlopen(req,timeout=self.timeout_s) as stream:blob=stream.read(self.max_response_bytes+1)
@@ -138,6 +149,8 @@ class ExternalSearch:
 
     def suggest(self,hardware,operator,shape,space,history,budget,batch_size=1):
         if budget.exhausted(0,0):return []
+        if self.endpoint and hardware.architecture.startswith('sm_') and self.inference_resource not in ('cpu','separate_device'):
+            raise ValueError('CUDA experiments require HTTP inference_resource=cpu or separate_device; verify placement externally before using the endpoint')
         if self.card and case_id(hardware,operator,shape) in self.card.get('training_case_ids',[]):
             raise ValueError('model training manifest overlaps the target evaluation case')
         task=describe_task(hardware,operator,shape,space,history,budget)
