@@ -75,7 +75,10 @@
           "K": 1024
         }
       ],
-      "split": "train"
+      "split": "train",
+      "validation": {
+        "max_configs": 2
+      }
     },
     {
       "name": "validation",

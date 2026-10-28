@@ -42,3 +42,13 @@ def test_feedback_rejects_test_roster_before_opening_any_journal(tmp_path,monkey
     with pytest.raises(ValueError,match='test journal was not opened'):
         workflow.export_feedback(study,protocol,tmp_path/'feedback.json')
     assert not (tmp_path/'feedback.json').exists()
+
+
+def test_frozen_ai_example_has_independent_acceptance_budget_for_each_requested_shape():
+    import json
+    from kernel_tuning_lab.research import expand_research
+    path=PATH.with_name('ai-train-validation.json')
+    plan=expand_research(json.loads(path.read_text()),directory=path.parent)
+    assert plan['planned']['max_observations']==72
+    assert plan['planned']['max_validation_evaluations']==9
+    assert all(j['experiment']['validation']['max_configs']>=len(j['shapes']) for j in plan['jobs'])
