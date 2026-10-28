@@ -307,3 +307,44 @@ def test_orphan_worker_keeps_research_output_locked(tmp_path):
                 os.killpg(worker, signal.SIGKILL)
             except ProcessLookupError:
                 pass
+
+
+def test_optional_optimizer_feedback_flushes_final_observation_and_keeps_measurements_on_feedback_error(tmp_path):
+    from kernel_tuning_lab.asset_runner import execute_asset_experiment
+    plugin=tmp_path/'hook.py'
+    plugin.write_text('''from kernel_tuning_lab.sdk import SearchAlgorithmDefinition
+class Hook:
+ def __init__(self,seed=0,fail=False):self.count=0;self.bound=False;self.fail=fail
+ def bind_trial(self,output_dir,identity):self.bound=True
+ @property
+ def diagnostics(self):return {'feedback_count':self.count,'bound':self.bound}
+ def suggest(self,hardware,operator,shape,space,history,budget,batch_size=1):
+  if budget.exhausted(0,0):return []
+  seen={r.config.id for r in history}|set(history.attempted_config_ids)
+  return [c for c in space.iter_configs() if c.id not in seen and space.validate(c,hardware,operator,shape).valid][:min(batch_size,budget.max_evaluations)]
+ def observe(self,record,cache_hit=False):
+  assert self.bound
+  self.count+=1
+  if self.fail:raise RuntimeError('unit feedback failure')
+ASSETS=(SearchAlgorithmDefinition('unit/hook','1.0.0',Hook),)
+''')
+    base={'schema_version':2,'name':'feedback-hook','operator':'gemm','kernels':['python/gemm'],
+        'plugins':[str(plugin)],'algorithms':[{'asset':'unit/hook@1.0.0'}],'dtype':'float32',
+        'shapes':[{'M':2,'N':3,'K':5}],'seed':7,'warmup':0,'repetitions':3,
+        'budget':{'max_evaluations':2,'max_wall_time_s':10},
+        'validation':{'max_configs':2,'max_cases':0,'max_wall_time_s':10,'trust_claims':False}}
+    spec=write(tmp_path/'spec.json',base);output=tmp_path/'run'
+    assert execute_asset_experiment(spec,output)['status']=='passed'
+    first=json.loads((output/'trials.json').read_text())[0]
+    assert first['algorithm_diagnostics']['optimizer']=={'feedback_count':2,'bound':True}
+    assert set(first['algorithm_costs_ms'])=={'factory_ms','proposal_ms','feedback_ms'}
+    assert execute_asset_experiment(spec,output)['status']=='passed'
+    resumed=json.loads((output/'trials.json').read_text())[0]
+    assert resumed['cache_hits']==2 and resumed['physical_evaluations']==0
+    assert resumed['algorithm_diagnostics']['optimizer']['feedback_count']==2
+    base['algorithms'][0]['options']={'fail':True};spec=write(tmp_path/'bad.json',base);bad=tmp_path/'failed'
+    result=execute_asset_experiment(spec,bad)
+    failed=json.loads((bad/'trials.json').read_text())[0]
+    assert result['status']=='failed' and failed['stop_reason']=='algorithm_feedback_error'
+    assert failed['observations']==1 and failed['failed_measurements']==0
+    assert failed['recommendation_verified'] and failed['algorithm_contract_failures']==1

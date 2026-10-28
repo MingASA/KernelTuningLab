@@ -93,9 +93,9 @@ def test_quantized_partial_m_group_is_legal(kernel_ref):
     (3, 64, 2, 32, 122880), (3, 64, 3, 32, 221184),
     (4, 16, 3, 32, 149504), (4, 16, 3, 64, 84992),
 ])
-def test_fused_quantized_staging_respects_actual_hardware_capacity(bits, bm, stages, group_size, expected):
+def test_fused_quantized_staging_is_scoped_advisory_not_a_cross_hardware_legality_oracle(bits, bm, stages, group_size, expected):
     from kernel_tuning_lab.assets import SpaceContext
-    from kernel_tuning_lab.builtin_assets.quantized import _gemm_constraint, _pipeline_constraint
+    from kernel_tuning_lab.builtin_assets.quantized import _gemm_constraint, _pipeline_constraint, _gemm_resource_advisory
     config = KernelConfig({"BLOCK_M": bm, "BLOCK_N": 128, "BLOCK_K": 64, "num_warps": 8,
                            "num_stages": stages, "GROUP_M": 1, "SPLIT_K": 1})
     operator = OperatorSpec(f"w{bits}a16_gemm", kind=f"w{bits}a16_gemm", dtype="bfloat16",
@@ -104,10 +104,11 @@ def test_fused_quantized_staging_respects_actual_hardware_capacity(bits, bm, sta
     small = HardwareSpec("5060ti", architecture="sm_120", smem_per_block=101376)
     hopper = HardwareSpec("H200", architecture="sm_90", smem_per_block=232448)
     reason = _gemm_constraint(config, SpaceContext(small, operator, shape))
-    if expected > small.smem_per_block:
-        assert reason and "staging" in reason
-    else:
-        assert reason is None
+    assert reason is None
+    estimate = _gemm_resource_advisory(config, small, operator, shape)
+    assert estimate['estimated_shared_memory_bytes'] == expected
+    assert estimate['exceeds_known_limit'] == (expected > small.smem_per_block)
+    assert estimate['excludes_candidate'] is False
     assert _gemm_constraint(config, SpaceContext(hopper, operator, shape)) is None
     # The materialized dense pipeline has no staged integer unpack buffers.
     pipeline = KernelConfig({**config.params, "DEQUANT_BLOCK_SIZE": 512})

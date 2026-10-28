@@ -18,7 +18,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
-from .models import HardwareSpec, OperatorSpec, ShapeSpec, canonical_json, stable_id
+from .models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec, canonical_json, stable_id
 
 
 _UNSET = object()
@@ -277,6 +277,9 @@ class SpaceDefinition:
     constraints: tuple[Callable, ...] = ()
     name: str = "custom"
     resolver: Callable | None = None
+    rules: tuple = ()
+    advisories: tuple[Callable, ...] = ()
+    candidates: tuple | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, str) or not self.name:
@@ -315,8 +318,21 @@ class SpaceDefinition:
             raise TypeError("space constraints must be callable")
         if self.resolver is not None and not callable(self.resolver):
             raise TypeError("space resolver must be callable")
+        if any(not callable(r) or not callable(getattr(r, 'check_partial', None)) or set(r.dependencies)-parameters.keys() for r in self.rules):
+            raise ValueError('structured rules require declared dependencies and explicit partial checks')
+        if any(not callable(callback) for callback in self.advisories):
+            raise TypeError('space advisories must be callable')
         object.__setattr__(self, "parameters", MappingProxyType(parameters))
         object.__setattr__(self, "constraints", tuple(self.constraints))
+        object.__setattr__(self, 'rules', tuple(self.rules))
+        object.__setattr__(self, 'advisories', tuple(self.advisories))
+        if self.candidates is not None:
+            candidates = tuple(deepcopy(c) if isinstance(c, KernelConfig) else KernelConfig(c) for c in self.candidates)
+            if len({c.id for c in candidates}) != len(candidates):
+                raise ValueError('native candidates must be distinct')
+            if any(set(c.params) != set(parameters) or any(canonical_json(c.get(k)) not in {canonical_json(v) for v in parameters[k].values} for k in parameters) for c in candidates):
+                raise ValueError('native candidates must lie in the declared parameter domains')
+            object.__setattr__(self, 'candidates', candidates)
 
     @property
     def domains(self) -> dict[str, tuple[Any, ...]]:
@@ -330,7 +346,10 @@ class SpaceDefinition:
         return {"name": self.name,
                 "parameters": {name: specification.to_dict() for name, specification in self.parameters.items()},
                 "constraints": [callable_identity(constraint) for constraint in self.constraints],
-                "resolver": callable_identity(self.resolver) if self.resolver else None}
+                "resolver": callable_identity(self.resolver) if self.resolver else None,
+                "rules": [r.to_dict() for r in self.rules],
+                "advisories": [callable_identity(c) for c in self.advisories],
+                "candidates": [dict(c.params) for c in self.candidates] if self.candidates is not None else None}
 
 
 @dataclass(frozen=True)

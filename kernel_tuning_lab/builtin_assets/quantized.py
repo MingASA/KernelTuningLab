@@ -192,21 +192,28 @@ def _gemm_constraint(config, context, *, fused=True):
             return f"Split-K FP32 partials exceed the {context.workspace_memory_limit_bytes}-byte execution workspace budget"
         if split * shape.get("M") * shape.get("N") > _MAX_INDEX:
             return "Split-K FP32 partials exceed signed 32-bit indexing"
+    return None
+
+
+def _gemm_resource_advisory(config, hardware, operator, shape, *, fused=True):
+    bm, bn, bk, stages, split = (config.get(k) for k in ('BLOCK_M','BLOCK_N','BLOCK_K','num_stages','SPLIT_K'))
     estimate = (bm * bk + bk * bn) * 2 * stages
     if fused:
-        # The fused loop pipelines integer packed-word and zero-point loads,
-        # not just the final A16 dot operands. W3 loads a second packed word.
-        # Physical sm120/Triton 3.7 resource probes agree with this layout;
-        # retain the compiler resource check for layout/version differences.
         operands = 2 * (bm * bk + bk * bn)
         group_size = _group_size(operator)
         zero_elements = bn if group_size >= bk and group_size % bk == 0 else bk * bn
         raw_loads = 4 * (bk * bn * (2 if _BITS[operator.kind] == 3 else 1) + zero_elements)
-        iterations = (shape.get("K") + bk * split - 1) // (bk * split)
+        iterations = (shape.get('K') + bk * split - 1) // (bk * split)
         estimate = operands + (stages - 1) * raw_loads if iterations > 1 else operands
-    if hardware.smem_per_block and estimate > hardware.smem_per_block:
-        return f"{'fused integer staging' if fused else 'staged A16 tile'} estimate {estimate} exceeds {hardware.smem_per_block} shared-memory bytes"
-    return None
+    return {'kind':'resource_estimate','model':'fused_integer_staging_v1' if fused else 'staged_A16_v1',
+            'estimated_shared_memory_bytes':estimate,'device_limit_bytes':hardware.smem_per_block or None,
+            'exceeds_known_limit':bool(hardware.smem_per_block and estimate > hardware.smem_per_block),
+            'calibration':'Sampled sm120 / Triton3.7; not a cross-version or cross-architecture theorem',
+            'excludes_candidate':False,'authoritative_check':'Actual compiler resources and runtime validation'}
+
+
+def _pipeline_resource_advisory(config, hardware, operator, shape):
+    return _gemm_resource_advisory(config, hardware, operator, shape, fused=False)
 
 
 def _pipeline_constraint(config, context):
@@ -247,12 +254,6 @@ def _gemm_space_domains(context, *, pipeline=False):
     result["SPLIT_K"] = tuple(s for s in result["SPLIT_K"] if s <= (k + 31) // 32
                               and weight_bytes + (s * m * n * 4 if s > 1 else 0) <= context.workspace_memory_limit_bytes
                               and (s == 1 or s * m * n <= _MAX_INDEX))
-    if hardware.smem_per_block:
-        limit = hardware.smem_per_block
-        result["BLOCK_M"] = tuple(bm for bm in result["BLOCK_M"] if (bm * 32 + 32 * 32) * 2 <= limit)
-        result["BLOCK_N"] = tuple(bn for bn in result["BLOCK_N"] if (16 * 32 + 32 * bn) * 2 <= limit)
-        result["BLOCK_K"] = tuple(bk for bk in result["BLOCK_K"] if (16 * bk + bk * 32) * 2 <= limit)
-        result["num_stages"] = tuple(s for s in result["num_stages"] if (16 * 32 + 32 * 32) * 2 * s <= limit)
     return {name: values if values else _GEMM_DOMAINS[name] for name, values in result.items()}
 
 
@@ -611,10 +612,10 @@ def register_assets(catalog):
     gemm_parameters = {name: ParameterSpec(values, description=_KNOB_DESCRIPTIONS[name])
                        for name, values in _GEMM_DOMAINS.items()}
     gemm_space = SpaceDefinition(gemm_parameters, constraints=(_gemm_constraint,),
-                                 name="triton_fused_quantized_gemm_v1", resolver=_gemm_resolver)
+                                 name="triton_fused_quantized_gemm_v1", resolver=_gemm_resolver, advisories=(_gemm_resource_advisory,))
     pipeline_space = SpaceDefinition({**gemm_parameters, "DEQUANT_BLOCK_SIZE": ParameterSpec(_DEQUANT_BLOCKS,
                                       description="Materialized dequantization tile independent of GEMM BLOCK_K", unit="elements")},
-                                     constraints=(_pipeline_constraint,), name="triton_dequantize_gemm_pipeline_v1", resolver=_pipeline_resolver)
+                                     constraints=(_pipeline_constraint,), name="triton_dequantize_gemm_pipeline_v1", resolver=_pipeline_resolver, advisories=(_pipeline_resource_advisory,))
     shared_sources = ("../quantization.py", "../torch_context.py")
     gpu_sources = (*shared_sources, "../backends/_triton_quantized.py")
     for name, bits in _BITS.items():
@@ -660,7 +661,7 @@ def register_assets(catalog):
                       "optimization_design": "N-contiguous packed loads; aligned group scale broadcast; grouped M program order; FP32 Split-K partials and timed reduction" if gemm else "N-contiguous flattened unpack tiles",
                       "split_k_initialization": "No initialization: all FP32 partials are overwritten in every invocation",
                       "default_workspace_memory_limit_bytes": _DEFAULT_WORKSPACE_BYTES,
-                      "resource_validation": "Conservative staged A16 tile estimate plus compiled shared-memory/register limits"}))
+                      "resource_validation": "Scoped staging estimate is advisory; actual compiled resources remain authoritative"}))
         if gemm:
             catalog.register(KernelDefinition(
                 id=f"triton_pipeline/{name}", version=_VERSION, operator=operator.ref, build=_build_triton_pipeline,

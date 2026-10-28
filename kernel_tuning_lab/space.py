@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import product
+from itertools import product, combinations
 from math import prod
 import random
+from copy import deepcopy
 from typing import Any, Callable, Iterator, Mapping
 
 from .models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec, canonical_json, stable_id
@@ -21,9 +22,16 @@ Constraint = Callable[[KernelConfig, HardwareSpec, OperatorSpec, ShapeSpec], str
 
 
 class ConfigSpace:
-    def __init__(self, domains: Mapping[str, tuple[Any, ...] | list[Any]], constraints: tuple[Constraint, ...] = (), name: str = "custom", identity: Any = None, *, allow_empty: bool = False):
+    def __init__(self, domains: Mapping[str, tuple[Any, ...] | list[Any]], constraints: tuple[Constraint, ...] = (), name: str = "custom", identity: Any = None, *, allow_empty: bool = False, rules=(), native_configs=None, advisories=()):
         self.domains = {k: tuple(v) for k, v in domains.items()}
-        self.constraints = tuple(constraints)
+        self.rules = tuple(rules)
+        self.constraints = tuple(constraints) + self.rules
+        self.advisory_callbacks = tuple(advisories)
+        self.native_configs = None if native_configs is None else tuple(deepcopy(c) if isinstance(c, KernelConfig) else KernelConfig(c) for c in native_configs)
+        if self.native_configs is not None and len({c.id for c in self.native_configs}) != len(self.native_configs):
+            raise ValueError('native candidate configurations must be distinct')
+        self._native_ids = None if self.native_configs is None else frozenset(c.id for c in self.native_configs)
+        self._feasible_cache = {}
         self.name = name
         canonical_json(identity)
         self.identity = identity
@@ -36,24 +44,30 @@ class ConfigSpace:
             if len(membership) != len(values):
                 raise ValueError("configuration domains must not contain duplicate values")
             self._domain_membership[key] = (values, membership)
+        if any(set(rule.dependencies) - self.domains.keys() for rule in self.rules):
+            raise ValueError('structured rule refers to undeclared parameters')
+        if self.native_configs is not None and any(set(c.params) != set(self.domains) or any(canonical_json(c.get(k)) not in self._domain_membership[k][1] for k in self.domains) for c in self.native_configs):
+            raise ValueError('native candidates must use declared parameter keys and values')
 
     def __len__(self) -> int:
         return self.cardinality
 
     @property
     def cardinality(self) -> int:
-        return prod(len(v) for v in self.domains.values())
+        return len(self.native_configs) if self.native_configs is not None else prod(len(v) for v in self.domains.values())
 
     @property
     def fingerprint(self) -> str:
         """Compact protocol identity; avoid copying huge domains into every record."""
         from .assets import callable_identity
         constraints = [callable_identity(constraint) for constraint in self.constraints]
+        extra = {'native_config_ids': sorted(self._native_ids) if self._native_ids is not None else None,
+                 'advisories': [callable_identity(c) for c in self.advisory_callbacks]}
         signature = (self.name, tuple((key, id(values)) for key, values in self.domains.items()),
-                     canonical_json(constraints), canonical_json(self.identity))
+                     canonical_json(constraints), canonical_json(self.identity), canonical_json(extra))
         if self._fingerprint_cache is None or self._fingerprint_cache[0] != signature:
             self._fingerprint_cache = (signature, stable_id({"name": self.name, "domains": self.domains,
-                                                          "constraints": constraints, "identity": self.identity}))
+                                                          "constraints": constraints, "identity": self.identity, "capabilities": extra}))
         return self._fingerprint_cache[1]
 
     def read_only(self):
@@ -65,6 +79,8 @@ class ConfigSpace:
         """Decode one Cartesian index in O(number of dimensions), without enumeration."""
         if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < self.cardinality:
             raise IndexError("configuration index outside the finite space")
+        if self.native_configs is not None:
+            return deepcopy(self.native_configs[index])
         values = {}
         for key, domain in reversed(tuple(self.domains.items())):
             index, digit = divmod(index, len(domain))
@@ -104,6 +120,13 @@ class ConfigSpace:
         return result
 
     def iter_configs(self) -> Iterator[KernelConfig]:
+        if self.native_configs is not None:
+            yield from (deepcopy(c) for c in self.native_configs)
+            return
+        if getattr(self, 'conditional', False):
+            from .space_tools import canonical_configs
+            yield from canonical_configs(self)
+            return
         keys = tuple(self.domains)
         for values in product(*(self.domains[k] for k in keys)):
             yield KernelConfig(dict(zip(keys, values)))
@@ -122,6 +145,11 @@ class ConfigSpace:
                     self._domain_membership[key] = cached
                 if canonical_json(config.params[key]) not in cached[1]:
                     reasons.append(f"{key}={config.params[key]!r} is outside its domain")
+        if not reasons and self._native_ids is not None and config.id not in self._native_ids:
+            reasons.append('configuration is not in the declared native candidate set')
+        if not reasons and getattr(self, 'conditional', False):
+            if self.normalize(config).id != config.id:
+                reasons.append('inactive parameters must retain their declared defaults')
         if not reasons:
             for constraint in self.constraints:
                 try:
@@ -132,15 +160,83 @@ class ConfigSpace:
                     reasons.append(reason)
         return ValidationResult(not reasons, tuple(reasons))
 
+    @classmethod
+    def from_configs(cls, configs, *, name='native finite candidates', identity=None):
+        configs = tuple(c if isinstance(c, KernelConfig) else KernelConfig(c) for c in configs)
+        if not configs or any(set(c.params) != set(configs[0].params) for c in configs):
+            raise ValueError('nonempty native candidates must have identical parameter keys')
+        domains = {key: list({canonical_json(c.get(key)): c.get(key) for c in configs}.values()) for key in configs[0].params}
+        return cls(domains, name=name, identity=identity, native_configs=configs, allow_empty=True)
+
+    def normalize(self, config):
+        from .space_tools import normalize
+        return normalize(self, config)
+
+    def validate_partial(self, values, hardware, operator, shape):
+        from .space_tools import validate_partial
+        return validate_partial(self, values, hardware, operator, shape)
+
+    def build_feasible(self, hardware, operator, shape, *, budget=None):
+        from .space_tools import construct
+        result = construct(self, hardware, operator, shape, budget=budget)
+        if result.complete:
+            self._feasible_cache[(hardware.id, operator.id, shape.id, self.fingerprint)] = result
+        return result
+
+    def complete(self, values, hardware, operator, shape, *, count=1, rng=None, budget=None, exclude_ids=()):
+        from .space_tools import construct
+        if type(count) is not int or count < 1:
+            raise ValueError('completion count must be positive')
+        return construct(self, hardware, operator, shape, partial=values, count=count, rng=rng,
+                         budget=budget, exclude_ids=exclude_ids)
+
+    def sample_feasible(self, rng, count, hardware, operator, shape, *, budget=None, exclude_ids=()):
+        from .space_tools import SpaceBuildResult
+        cached = self._feasible_cache.get((hardware.id, operator.id, shape.id, self.fingerprint))
+        if cached is not None:
+            excluded = set(exclude_ids)
+            candidates = [c for c in cached.configs if c.id not in excluded]
+            sample = tuple(rng.sample(candidates, min(count, len(candidates))))
+            return SpaceBuildResult(sample, 'sampled' if len(sample) == count else 'exhausted',
+                                    {'distribution': 'uniform without replacement over the complete static feasible set', 'complete_set_size': len(cached.configs)})
+        return self.complete({}, hardware, operator, shape, count=count, rng=rng, budget=budget, exclude_ids=exclude_ids)
+
+    def assess(self, config, hardware, operator, shape):
+        result = []
+        for callback in self.advisory_callbacks:
+            try:
+                value = callback(config, hardware, operator, shape)
+                if value is not None: result.append(value)
+            except Exception as exc:
+                result.append({'kind': 'advisory_error', 'message': type(exc).__name__ + ': ' + str(exc), 'excludes_candidate': False})
+        return result
+
+    @property
+    def capabilities(self):
+        return {'conditional': getattr(self, 'conditional', False), 'native_candidates': self.native_configs is not None,
+                'partial_rules': [r.to_dict() for r in self.rules], 'opaque_final_constraints': len(self.constraints)-len(self.rules),
+                'normalization': 'declared inactive defaults only', 'sampling': 'uniform over complete cached set; otherwise dependency-aware nonuniform construction'}
+
     def legal_configs(self, hardware: HardwareSpec, operator: OperatorSpec, shape: ShapeSpec) -> list[KernelConfig]:
         return [c for c in self.iter_configs() if self.validate(c, hardware, operator, shape).valid]
 
-    def neighbors(self, config: KernelConfig) -> list[KernelConfig]:
-        result = []
-        for key, values in self.domains.items():
-            for value in values:
-                if canonical_json(value) != canonical_json(config.get(key)):
-                    result.append(KernelConfig({**config.params, key: value}))
+    def neighbors(self, config: KernelConfig, *, max_changed=1, min_changed=1, max_neighbors=4096) -> list[KernelConfig]:
+        if type(max_changed) is not int or type(min_changed) is not int or not 1 <= min_changed <= max_changed or type(max_neighbors) is not int or max_neighbors < 1:
+            raise ValueError('positive neighbor limits required')
+        result = []; seen = {config.id}
+        if self.native_configs is not None:
+            return [deepcopy(c) for c in self.native_configs if c.id != config.id and
+                    min_changed <= sum(canonical_json(c.get(k)) != canonical_json(config.get(k)) for k in self.domains) <= max_changed][:max_neighbors]
+        for degree in range(min_changed, min(max_changed, len(self.domains)) + 1):
+            for keys in combinations(self.domains, degree):
+                changed_domains = [tuple(v for v in self.domains[k] if canonical_json(v) != canonical_json(config.get(k))) for k in keys]
+                for values in product(*changed_domains):
+                    candidate = self.normalize(KernelConfig({**config.params, **dict(zip(keys, values))}))
+                    changed = sum(canonical_json(candidate.get(k)) != canonical_json(config.get(k)) for k in self.domains)
+                    if candidate.id not in seen and min_changed <= changed <= max_changed:
+                        result.append(candidate); seen.add(candidate.id)
+                        if len(result) >= max_neighbors:
+                            return result
         return result
 
 

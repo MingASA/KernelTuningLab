@@ -69,6 +69,8 @@ class BenchmarkRunner:
         compile_ms = 0.0
         samples: tuple[float, ...] = ()
         metadata = {"protocol": protocol}
+        if getattr(space, 'advisory_callbacks', ()):
+            metadata['constraint_advisories'] = space.assess(config, hardware, operator, shape)
         phase_costs = {"preflight_and_cache": (time.perf_counter() - started) * 1000}
         metadata["phase_wall_time_ms"] = phase_costs
 

@@ -163,7 +163,11 @@ def build_effective_space(kernel: KernelDefinition, hardware: HardwareSpec, oper
                 "space_fingerprint": kernel.space.fingerprint,
                 "hardware_id": hardware.id, "operator_id": operator.id, "shape_id": shape.id,
                 "context_fingerprint": context.fingerprint}
-    space = ConfigSpace(domains, constraints=tuple(constraints), name=kernel.space.name, identity=identity, allow_empty=True)
+    candidates = kernel.space.candidates
+    if candidates is not None:
+        candidates = tuple(c for c in candidates if all(canonical_json(c.get(k)) in {canonical_json(v) for v in domain} for k, domain in domains.items()))
+    space = ConfigSpace(domains, constraints=tuple(constraints), name=kernel.space.name, identity=identity, allow_empty=True,
+                        rules=kernel.space.rules, native_configs=candidates, advisories=kernel.space.advisories)
     space.parameter_specs = MappingProxyType(dict(kernel.space.parameters))
     space.conditional = any(specification.active_when for specification in kernel.space.parameters.values())
     # Capability checks do not turn an otherwise unconstrained Cartesian space
@@ -309,11 +313,41 @@ class SpaceView:
         for config in self.__space.iter_configs():
             yield deepcopy(config)
 
-    def neighbors(self, config):
-        return deepcopy(self.__space.neighbors(deepcopy(config)))
+    def neighbors(self, config, **options):
+        return deepcopy(self.__space.neighbors(deepcopy(config), **options))
 
     def legal_configs(self, hardware, operator, shape):
         return [config for config in self.iter_configs() if self.validate(config, hardware, operator, shape).valid]
+
+    @property
+    def rules(self):
+        return deepcopy(self.__space.rules)
+
+    @property
+    def capabilities(self):
+        return deepcopy(self.__space.capabilities)
+
+    @property
+    def native_configs(self):
+        return deepcopy(self.__space.native_configs)
+
+    def normalize(self, config):
+        return deepcopy(self.__space.normalize(deepcopy(config)))
+
+    def validate_partial(self, values, hardware, operator, shape):
+        return self.__space.validate_partial(deepcopy(values), deepcopy(hardware), deepcopy(operator), deepcopy(shape))
+
+    def build_feasible(self, hardware, operator, shape, *, budget=None):
+        return deepcopy(self.__space.build_feasible(deepcopy(hardware), deepcopy(operator), deepcopy(shape), budget=budget))
+
+    def complete(self, values, hardware, operator, shape, **options):
+        return deepcopy(self.__space.complete(deepcopy(values), deepcopy(hardware), deepcopy(operator), deepcopy(shape), **options))
+
+    def sample_feasible(self, rng, count, hardware, operator, shape, **options):
+        return deepcopy(self.__space.sample_feasible(rng, count, deepcopy(hardware), deepcopy(operator), deepcopy(shape), **options))
+
+    def assess(self, config, hardware, operator, shape):
+        return deepcopy(self.__space.assess(deepcopy(config), deepcopy(hardware), deepcopy(operator), deepcopy(shape)))
 
 
 __all__ = ["build_effective_space", "check_algorithm_compatibility", "SpaceView"]

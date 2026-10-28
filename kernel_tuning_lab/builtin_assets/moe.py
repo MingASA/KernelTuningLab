@@ -225,8 +225,6 @@ def _constraint(config, context):
         return "schedule preprocessing warps exceed the physical thread limit"
     if type(config.get("USE_TMA")) is not bool:
         return "USE_TMA must be boolean"
-    if hardware.smem_per_block and 2 * (bm + bn) * bk * stages > hardware.smem_per_block:
-        return "conservative pipelined operand storage exceeds shared memory limit"
     if split > (shape.get("K") + bk - 1) // bk:
         return "Split-K exceeds the number of nonempty K tiles"
     if _workspace_bytes(shape, bm, split) > context.workspace_memory_limit_bytes:
@@ -238,12 +236,19 @@ def _constraint(config, context):
     return None
 
 
+def _resource_advisory(config, hardware, operator, shape):
+    estimate = 2 * (config.get('BLOCK_M') + config.get('BLOCK_N')) * config.get('BLOCK_K') * config.get('num_stages')
+    return {'kind':'resource_estimate','model':'moe_pipelined_operands_v1',
+            'estimated_shared_memory_bytes':estimate,'device_limit_bytes':hardware.smem_per_block or None,
+            'excludes_candidate':False,'calibration':'Conservative model, compiler-layout dependent',
+            'authoritative_check':'Actual compiler resources and execution'}
+
+
 def _resolve_space(context):
     hardware, operator, shape = context.hardware, context.operator, context.shape
     k_tiles = (shape.get("K") + 31) // 32
     splits = tuple(value for value in (1, 2, 4, 8) if value <= k_tiles and _workspace_bytes(shape, 128, value) <= context.workspace_memory_limit_bytes)
-    stages = tuple(value for value in (1, 2, 3, 4, 5)
-                   if not hardware.smem_per_block or 2 * (16 + 32) * 32 * value <= hardware.smem_per_block)
+    stages = (1, 2, 3, 4, 5)
     return {"USE_TMA": (False, True) if _tma_allowed(hardware, shape) else (False,),
             "SPLIT_K": splits or (1,), "num_stages": stages or (1,)}
 
@@ -370,7 +375,7 @@ def register_assets(catalog):
     }
     catalog.register(KernelDefinition(
         "triton/moe_grouped_gemm", _VERSION, operator.ref, _build_triton,
-        SpaceDefinition(parameters, constraints=(_constraint,), name="ragged_expert_production_space", resolver=_resolve_space),
+        SpaceDefinition(parameters, constraints=(_constraint,), name="ragged_expert_production_space", resolver=_resolve_space, advisories=(_resource_advisory,)),
         runtime="cuda", dtypes=("float16", "bfloat16"), architectures=("sm_*",),
         source_files=("../backends/_triton_moe.py",),
         metadata={"requires_triton": True, "primary_sources": list(_SOURCES),

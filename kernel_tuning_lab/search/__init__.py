@@ -13,6 +13,7 @@ from ..datasets import case_id, require_training_records
 from ..measurement_context import source_context_id
 from ..models import HardwareSpec, KernelConfig, MeasurementRecord, OperatorSpec, SearchBudget, ShapeSpec, canonical_json
 from ..space import ConfigSpace
+from ..space_tools import SpaceBuildBudget
 
 
 @dataclass(frozen=True)
@@ -95,8 +96,19 @@ def _candidates(searcher, hardware, operator, shape, space, history, budget, bat
     count = min(batch_size, budget.max_evaluations)
     if _cardinality(space) <= searcher.exhaustive_threshold:
         if key not in searcher._candidate_cache:
-            searcher._candidate_cache[key] = tuple((c.id, c) for c in space.legal_configs(hardware, operator, shape))
-        return [c for identity, c in searcher._candidate_cache[key] if identity not in seen], count
+            if hasattr(space, 'build_feasible'):
+                built = space.build_feasible(hardware, operator, shape,
+                    budget=SpaceBuildBudget(max_nodes=500_000, max_wall_time_s=10, max_configs=50_000))
+                searcher.space_diagnostics = {'strategy': 'complete_static_build' if built.complete else 'bounded_static_build',
+                    **built.diagnostics, 'status': built.status}
+                if built.complete:
+                    searcher._complete_keys.add(key)
+                searcher._candidate_cache[key] = tuple((c.id, c) for c in built.configs)
+            else:
+                searcher._candidate_cache[key] = tuple((c.id, c) for c in space.legal_configs(hardware, operator, shape))
+                searcher._complete_keys.add(key)
+        if key in searcher._complete_keys:
+            return [c for identity, c in searcher._candidate_cache[key] if identity not in seen], count
     # Retain a bounded active pool. Refill after consumption, not by materializing C.
     active = {identity: c for identity, c in searcher._candidate_cache.get(key, ()) if identity not in seen}
     target = max(searcher.candidate_pool_size, count)
@@ -106,7 +118,15 @@ def _candidates(searcher, hardware, operator, shape, space, history, budget, bat
             requested = target - len(active)
             if requested <= 0:
                 break
-            sampled = _sample_configs(space, searcher.rng, requested, excluded)
+            if hasattr(space, 'sample_feasible'):
+                generated = space.sample_feasible(searcher.rng, requested, hardware, operator, shape,
+                    exclude_ids=excluded, budget=SpaceBuildBudget(max_nodes=max(1024, requested*32), max_wall_time_s=1))
+                sampled = generated.configs
+                searcher.space_diagnostics = {'strategy': 'bounded_active_pool', 'pool_target': target,
+                    'refill_trigger': 'remaining < max(batch, pool_target/4)', 'approximate': True,
+                    'status': generated.status, **generated.diagnostics}
+            else:
+                sampled = _sample_configs(space, searcher.rng, requested, excluded)
             if not sampled:
                 break
             for config in sampled:
@@ -145,7 +165,7 @@ def heuristic_score(config: KernelConfig, hardware: HardwareSpec, shape: ShapeSp
 class RandomSearch:
     name = "random"
 
-    def __init__(self, seed: int = 0, candidate_pool_size: int = 512, exhaustive_threshold: int = 4096):
+    def __init__(self, seed: int = 0, candidate_pool_size: int = 512, exhaustive_threshold: int = 50_000):
         if not isinstance(candidate_pool_size, int) or isinstance(candidate_pool_size, bool) or candidate_pool_size < 1:
             raise ValueError("candidate_pool_size must be a positive integer")
         if not isinstance(exhaustive_threshold, int) or isinstance(exhaustive_threshold, bool) or exhaustive_threshold < 0:
@@ -156,6 +176,8 @@ class RandomSearch:
         self.exhaustive_threshold = exhaustive_threshold
         self._candidate_cache = {}
         self._grid_cursors = {}
+        self._complete_keys = set()
+        self.space_diagnostics = {}
 
     def suggest(self, hardware, operator, shape, space, history, budget, batch_size=1):
         candidates, count = _candidates(self, hardware, operator, shape, space, history, budget, batch_size)
@@ -266,8 +288,11 @@ class SurrogateSearch(RandomSearch):
     name = "surrogate"
 
     def __init__(self, seed: int = 0, warmup: int = 4, exploration: float = 0.35,
-                 candidate_pool_size: int = 512, exhaustive_threshold: int = 4096):
+                 candidate_pool_size: int = 512, exhaustive_threshold: int = 50_000, model_score_limit: int = 4096):
         super().__init__(seed, candidate_pool_size=candidate_pool_size, exhaustive_threshold=exhaustive_threshold)
+        if type(model_score_limit) is not int or model_score_limit < 1:
+            raise ValueError('model_score_limit must be positive')
+        self.model_score_limit = model_score_limit
         if warmup < 1 or exploration < 0:
             raise ValueError("warmup must be positive and exploration nonnegative")
         self.warmup = warmup
@@ -305,6 +330,10 @@ class SurrogateSearch(RandomSearch):
         if len(known) < self.warmup:
             self.rng.shuffle(candidates)
             return candidates[:count]
+        if len(candidates) > self.model_score_limit:
+            candidates = self.rng.sample(candidates, self.model_score_limit)
+            self.space_diagnostics = {**self.space_diagnostics, 'model_score_limit': self.model_score_limit,
+                'model_scoring': 'fresh uniform subset of accessible feasible configurations each suggestion; approximate'}
         observations = [(self._encode(r.config, space), math.log(r.median_ms)) for r in known]
         def acquisition(config):
             point = self._encode(config, space)
@@ -335,7 +364,7 @@ class TransferSearch(RandomSearch):
     name = "transfer"
 
     def __init__(self, seed: int = 0, training_records=(), candidate_pool_size: int = 512,
-                 exhaustive_threshold: int = 4096):
+                 exhaustive_threshold: int = 50_000):
         super().__init__(seed, candidate_pool_size=candidate_pool_size, exhaustive_threshold=exhaustive_threshold)
         self.training_records = deepcopy(require_training_records(training_records))
         self._training_case_ids = {r.case_id for r in self.training_records}
@@ -396,7 +425,7 @@ SEARCHER_NAMES = ("random", "grid", "heuristic", "local", "surrogate", "transfer
 
 
 def make_searcher(name: str, seed: int = 0, training_records=(), candidate_pool_size: int = 512,
-                  exhaustive_threshold: int = 4096) -> Searcher:
+                  exhaustive_threshold: int = 50_000) -> Searcher:
     factories = {"random": RandomSearch, "grid": GridSearch, "heuristic": HeuristicSearch,
                  "local": LocalSearch, "surrogate": SurrogateSearch}
     if name == "transfer":

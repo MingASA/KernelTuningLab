@@ -70,6 +70,26 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
     attempts = evaluations = cache_hits = contract_failures = unrecorded_failures = 0
     status = "passed"
     stop_reason = "evaluation_budget"
+    searcher = None
+    algorithm_costs = {'factory_ms': 0.0, 'proposal_ms': 0.0, 'feedback_ms': 0.0}
+    def algorithm_call(label, callback, *args, **kwargs):
+        before = time.perf_counter()
+        try:
+            return callback(*args, **kwargs)
+        finally:
+            algorithm_costs[label] += (time.perf_counter() - before) * 1000
+
+    def algorithm_diagnostics():
+        if searcher is None:
+            return {}
+        try:
+            details = getattr(searcher, 'diagnostics', {})
+            details = details() if callable(details) else details
+            value = {'optimizer': deepcopy(details), 'space': deepcopy(getattr(searcher, 'space_diagnostics', {}))}
+            canonical_json(value)
+            return value
+        except Exception as exc:
+            return {'diagnostics_error': type(exc).__name__ + ': ' + str(exc)}
     trace_path = output / "observations.jsonl"
     trace_path.write_text("", encoding="utf-8")
     _save_json(output / "trial.json", {**identity, "trial_id": trial_id, "status": "running",
@@ -88,7 +108,8 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                "lookup_and_measurement_wall_time_s": time.perf_counter() - admitted_at,
                "source_compile_time_ms": record.compile_time_ms, "source_measurement_wall_time_s": record.wall_time_s,
                "physical_compile_time_ms": 0.0 if cached else record.compile_time_ms,
-               "physical_measurement_wall_time_s": 0.0 if cached else record.wall_time_s}
+               "physical_measurement_wall_time_s": 0.0 if cached else record.wall_time_s,
+               "algorithm_costs_ms": dict(algorithm_costs), 'algorithm_diagnostics': algorithm_diagnostics()}
         trace.append(row)
         # Linear append-only checkpoint; final trial.json remains the manifest.
         with trace_path.open("a", encoding="utf-8") as stream:
@@ -143,6 +164,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "physical_measurement_wall_time_s": sum(row["physical_measurement_wall_time_s"] for row in trace),
                   "source_compile_time_ms": sum(row["source_compile_time_ms"] for row in trace),
                   "source_measurement_wall_time_s": sum(row["source_measurement_wall_time_s"] for row in trace),
+                  'algorithm_costs_ms': dict(algorithm_costs), 'algorithm_diagnostics': algorithm_diagnostics(),
                   "budget_semantics": "max_evaluations bounds revealed candidates, including failures and cache hits; physical evaluations are reported separately; parent enforces hard wall deadline"}
         _save_json(output / "trial.json", result)
         return result
@@ -161,7 +183,9 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
 
     try:
         notify({"event": "algorithm_factory"})
-        searcher = create_searcher(algorithm_definition, options, seed)
+        searcher = algorithm_call('factory_ms', create_searcher, algorithm_definition, options, seed)
+        if callable(getattr(searcher, 'bind_trial', None)):
+            algorithm_call('factory_ms', searcher.bind_trial, output_dir=str(output), identity=deepcopy(identity))
         # Built-in Transfer and opt-in plugins expose their actual historical
         # records. Bind content after loading; a database path can change in
         # place while algorithm code/options remain identical.
@@ -189,7 +213,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
         try:
             notify({"event": "algorithm_suggest", "attempts": attempts,
                     "evaluations": evaluations, "cache_hits": cache_hits})
-            proposals = request_candidates(
+            proposals = algorithm_call('proposal_ms', request_candidates,
                 searcher, case.hardware, case.operator, case.shape, case.space,
                 SearchHistory(tuple(deepcopy(records)), frozenset(attempted)),
                 budget.remaining(len(records), time.perf_counter() - started), batch_size=1)
@@ -199,7 +223,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             note_failure("algorithm_suggest", exc)
             break
         if not proposals:
-            stop_reason = "searcher_exhausted"
+            stop_reason = getattr(searcher, 'last_proposal_status', None) or "searcher_exhausted"
             break
         config = proposals[0]
         # Suggestion time is charged before admitting compilation or execution.
@@ -237,11 +261,22 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             if record.case_id != initial.case_id or record.config.id != config.id or record.split != split:
                 raise ValueError("runner returned a record for a different case/configuration/split")
             records.append(deepcopy(record))
+            feedback_failed = False
+            if callable(getattr(searcher, 'observe', None)):
+                try:
+                    algorithm_call('feedback_ms', searcher.observe, deepcopy(record), cache_hit=runner.last_cache_hit)
+                except Exception as exc:
+                    status, stop_reason = 'failed', 'algorithm_feedback_error'
+                    contract_failures += 1
+                    note_failure('algorithm_feedback', exc)
+                    feedback_failed = True
             observed(record, runner.last_cache_hit, attempt_started)
             notify({"event": "measurement_completed", "config": dict(config.params),
                     "record_id": record.id, "record_status": record.status.value,
                     "cache_hit": runner.last_cache_hit, "attempts": attempts,
                     "evaluations": evaluations, "cache_hits": cache_hits})
+            if feedback_failed:
+                break
         except Exception as exc:
             status, stop_reason = "failed", "runner_error"
             note_failure("measurement", exc)
