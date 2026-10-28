@@ -59,14 +59,16 @@ def flags(record):
     return KernelConfig({'USE_ATOMIC_ADD':trace['use_atomic_add'],'USE_FP32_REDUCE':trace['use_fp32_reduce']})
 
 
-def analyze(directory, output):
+def analyze(directory, output, *, fixed_fp32_reduce=False):
     directory=Path(directory);spec=read_json(directory/'source_experiment.json')
     shapes=tuple(ShapeSpec(shape) for case in spec['cases'] for shape in case['shapes'])
     if len({s.id for s in shapes})!=len(shapes):raise ValueError('workload shapes must be distinct')
     records=current_records(directory);explicit=[r for r in records if r.operator.implementation==EXPLICIT]
     if not records or any(not r.correctness_verified or not r.metadata['correctness'].get('verified_on_gpu') for r in records):
         raise ValueError('all study records must be reference-verified on actual GPU')
-    configs=tuple(KernelConfig({'USE_ATOMIC_ADD':a,'USE_FP32_REDUCE':f}) for a in (False,True) for f in (True,False))
+    reduction_values=(True,) if fixed_fp32_reduce else (True,False)
+    configs=tuple(KernelConfig({'USE_ATOMIC_ADD':a,'USE_FP32_REDUCE':f}) for a in (False,True) for f in reduction_values)
+    explicit=[r for r in explicit if r.config.get('USE_FP32_REDUCE') in reduction_values]
     identities=defaultdict(set)
     for r in records:
         a=r.metadata['correctness']['execution']['annotations']
@@ -108,13 +110,15 @@ def analyze(directory, output):
     result={'status':'analyzed_not_GPU_dispatch_proof','source_record_ids':[r.id for r in records],
         'matrix':main_matrix.to_dict(),'native_rules':policies,'selections':selections,'chosen_dispatch':dispatch.to_dict(),
         'unseen_input_policy':unseen,'logical_packing_identity_groups_verified':len(identities),
-        'counts':{'candidate_config_count':4,'observed_marlin_symbols':len(symbols),
+        'cohort':'fixed_native_FP32_reduce_request' if fixed_fp32_reduce else 'extended_native_reduction_options',
+        'counts':{'candidate_config_count':len(configs),'observed_marlin_symbols':len(symbols),
             'symbol_names':symbols,'per_kernel_compiled_identities':None,'per_kernel_code_bytes':None,
             'loaded_library_files':len({p['host_library_sha256'] for p in prod}),
             'whole_library_container_bytes':sorted({p['host_library_container_bytes'] for p in prod}),
             'deployed_graph_count':None,
             'notice':'Runtime reduction options and symbols are not CUBIN counts. Whole library bytes are not per-config code size; this study does not deploy a Graph cache.'},
-        'synthetic_workload':True,'reference_scope':'only four actually executable native option combinations; not global optimum',
+        'synthetic_workload':True,'reference_scope':f'only {len(configs)} actually executable native option combinations; not global optimum',
+        'precision_scope':'USE_FP32_REDUCE=True is fixed in the primary cohort; atomics retain native arithmetic under the same FP16/reference tolerance contract' if fixed_fp32_reduce else 'Explicit extension permits native USE_FP32_REDUCE=False; do not present it as fixed-accumulation expert comparison',
         'independent_input_repetitions':sorted({r.seed for r in explicit})}
     write(output,result);return result
 
@@ -136,10 +140,10 @@ def dispatch_spec(analysis, template, destination):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     a=sub.add_parser('prepare');a.add_argument('--smoke',required=True);a.add_argument('--spec',required=True);a.add_argument('--output',required=True)
-    a=sub.add_parser('analyze');a.add_argument('--study',required=True);a.add_argument('--output',required=True)
+    a=sub.add_parser('analyze');a.add_argument('--study',required=True);a.add_argument('--output',required=True);a.add_argument('--fixed-fp32-reduce',action='store_true')
     a=sub.add_parser('dispatch-spec');a.add_argument('--analysis',required=True);a.add_argument('--template',required=True);a.add_argument('--output',required=True)
     args=p.parse_args()
     if args.command=='prepare':v=prepare(args.smoke,args.spec,args.output)
-    elif args.command=='analyze':v=analyze(args.study,args.output);v={k:v[k] for k in ('status','counts','unseen_input_policy')}
+    elif args.command=='analyze':v=analyze(args.study,args.output,fixed_fp32_reduce=args.fixed_fp32_reduce);v={k:v[k] for k in ('status','counts','unseen_input_policy')}
     else:v=dispatch_spec(args.analysis,args.template,args.output)
     print(json.dumps(v,indent=2))

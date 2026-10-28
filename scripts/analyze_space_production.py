@@ -95,13 +95,14 @@ def main():
     if a.production:native(a.production,a.output)
     if a.l3:
         x=read_json(a.l3);public={k:x[k] for k in ('status','native_rules','selections','chosen_dispatch','unseen_input_policy','counts','reference_scope','independent_input_repetitions')}
+        public.update({k:x[k] for k in ('cohort','precision_scope') if k in x})
         public['matrix']={k:x['matrix'][k] for k in ('workload','configs','latencies_ms','provenance')}
         write(a.output/'l3.json',public)
         series={}
         for row in x['selections']:
             key=row['workload']+'/'+row['method'];series.setdefault(key,[]).append((row['k'],row['relative_loss']*100))
         _line_chart(a.output/'l3-loss.svg','Native Marlin finite Config Budget',
-            'Synthetic frequencies; four runtime option combinations, not four binaries',series,
+            f"Synthetic frequencies; {x['counts']['candidate_config_count']} runtime option combinations, not CUBIN counts",series,
             'Config budget K','Loss to finite explicit-native reference (%)',render_png=False)
 
 

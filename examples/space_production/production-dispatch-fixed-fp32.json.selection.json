@@ -1,0 +1,93 @@
+{
+  "analysis_sha256": "6902a7f30d3c75ac14a1f72e920f409228265ce50a2a149fcc4b48307946b203",
+  "table": {
+    "kind": "exact_shape_table",
+    "provenance": "measured",
+    "selected_configs": [
+      {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": true
+      },
+      {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": true
+      }
+    ],
+    "assignments": [
+      {
+        "shape": {
+          "K": 1024,
+          "M": 64,
+          "N": 2048
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 1024,
+          "M": 257,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 1,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 16,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 32,
+          "N": 1024
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 128,
+          "N": 2048
+        },
+        "config_id": "f77af554d0df29cbf2216079",
+        "config": {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": true
+        }
+      }
+    ]
+  },
+  "unseen_input_policy": "reject; no native fallback outside K budget",
+  "evidence": "spec exported; actual verified execution requires the ordinary research command"
+}
