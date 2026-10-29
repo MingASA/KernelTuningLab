@@ -70,3 +70,16 @@ def test_optional_e8m0_registration_keeps_a16_maps_without_fabricating_a_dtype()
     assert not hasattr(torch,'float8_e8m0fnu') and 19 not in result['DTYPE_TO_TORCH']
     assert result['DTYPE_TO_TORCH'][1] is torch.float16 and result['DTYPE_TO_TORCH'][2] is torch.bfloat16
     assert result['TORCH_TO_DTYPE'][torch.float16]==result['DType'].FP16
+
+
+def test_raw_a16_profile_changes_only_optional_interop_decorators_not_function_bodies():
+    import ast
+    from kernel_tuning_lab.production import native_sources,gemlite_compat
+    for relative in gemlite_compat.RAW_FILES:
+        before=ast.parse(native_sources.source('gemlite',relative).read_text())
+        after=ast.parse(gemlite_compat.raw_a16_source(relative).decode())
+        functions=lambda tree:[(n.name,ast.dump(n.args),ast.dump(ast.Module(body=n.body,type_ignores=[]),include_attributes=False))
+            for n in ast.walk(tree) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))]
+        assert functions(before)==functions(after)
+        assert not any(ast.unparse(d.func if isinstance(d,ast.Call) else d) in ('torch.compile','torch.library.custom_op','torch.library.register_fake')
+            for n in ast.walk(after) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef)) for d in n.decorator_list)

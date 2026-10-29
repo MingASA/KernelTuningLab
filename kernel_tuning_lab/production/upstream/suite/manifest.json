@@ -62,6 +62,11 @@
         "git_blob_sha": "2ad22290ddd0585a6e7ea2bfd546a21b25b57ee4",
         "sha256": "e4b767dc6923a8f23af0f01568d52e64d2f0e6bfc78dbe4b40046020f1ce965d",
         "vendored": "gemlite/utils.py"
+      },
+      "gemlite/quant_utils.py": {
+        "vendored": "gemlite/quant_utils.py",
+        "sha256": "1ccf7f57dfeb86e411eb2ace753f2c94791611dbf5dcbc7ae63710d432c964c5",
+        "git_blob_sha": "794f324a6e5d67c2e842652f2b3f59566af779eb"
       }
     }
   },

@@ -82,9 +82,10 @@ def native_api():
     spec=importlib.util.find_spec('gemlite')
     if spec is None:raise RuntimeError('optional GemLite package is not installed')
     root=Path(spec.origin).parent.parent
-    files=[name for name in sources.manifest()['gemlite']['files'] if name.startswith('gemlite/') and name.endswith('.py') and name!='gemlite/dtypes.py']
+    files=[name for name in sources.manifest()['gemlite']['files'] if name.startswith('gemlite/') and name.endswith('.py') and name!='gemlite/dtypes.py' and name not in gemlite_compat.RAW_FILES]
     identity=sources.native_component(root,'gemlite',files)
     identity['optional_dtype_registration']=gemlite_compat.verify_dtype_source(root)
+    identity['native_A16_host_interop']={name:gemlite_compat.verify_runtime_source(root,name) for name in gemlite_compat.RAW_FILES}
     module=importlib.import_module('gemlite.core')
     return module,identity
 

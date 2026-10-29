@@ -60,7 +60,7 @@ class ProviderSearch:
         if hasattr(self,'client'):
             return self.client.invoke(task,route=self.route,schema=self.provider.get('output_schema'),
                 max_output_tokens=self.provider.get('max_output_tokens',1024),
-                system='Return one JSON action: config, partial, advisory region, or query (values/validate_partial/complete). Use only supplied revealed feedback. Never return unobserved performance as a measurement.')['text']
+                system='Return exactly ONE JSON OBJECT. Its sole action key must be config, partial, region, or query, and its value must be an OBJECT, not an action name. For example {"partial":{"PARAMETER_NAME":SCALAR_VALUE_FROM_TASK}} proposes parameter values; {"action":"config"} is INVALID. Replace the placeholders with actual task parameter names and legal scalar values. Use only declared choices and revealed feedback. Never invent measured performance.')['text']
         with tempfile.TemporaryFile() as stdout,tempfile.TemporaryFile() as stderr:
             subprocess.run(self.command,input=canonical_json(task).encode(),stdout=stdout,stderr=stderr,
                 timeout=self.timeout,check=True,env=cpu_provider_environment())
@@ -76,6 +76,7 @@ class ProviderSearch:
                 exclude_ids=seen,rng=self.rng).configs)
         task=describe_task(hardware,operator,shape,space,history,budget)
         task['response_contract']={'actions':['config','partial','region','query'],
+            'envelope':'{"config":{parameter:scalar,...}} or {"partial":{parameter:scalar,...}}; never {"action":"config"}',
             'queries':{'values':'parameter/offset/limit<=32','validate_partial':'partial','complete':'partial/count<=32'},
             'notice':'partial/region completions are platform-selected and separately logged, not entirely model decisions'}
         for index in range(self.limit):
