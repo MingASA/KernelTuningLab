@@ -131,10 +131,13 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
 
     def finish():
         successes = [record for record in records if record.successful]
-        best = min(successes, key=lambda record: (record.median_ms, record.config.id), default=None)
+        fastest_observed = min(successes, key=lambda record: (record.median_ms, record.config.id), default=None)
         verified_rows = [record for record in successes if _correctness(record)[0]]
         best_verified = min(verified_rows, key=lambda record: (record.median_ms, record.config.id), default=None)
-        verified, origin = _correctness(best)
+        # Accepted submitter claims remain recorded, but a generic best_config
+        # consumer must never mistake an unverified latency for a recommendation.
+        best = best_verified
+        verified, origin = _correctness(best if best is not None else fastest_observed)
         result = {"trial_id": trial_id, "case_id": case.id, "status": status, "stop_reason": stop_reason,
                   "kernel_ref": case.kernel.ref, "kernel_fingerprint": identity["kernel_fingerprint"],
                   "operator_ref": case.operator_definition.ref,
@@ -153,6 +156,12 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "best_config": dict(best.config.params) if best is not None else None,
                   "best_latency_ms": best.median_ms if best is not None else None,
                   "best_record_id": best.id if best is not None else None,
+                  "unverified_successes": len(successes)-len(verified_rows),
+                  "fastest_observed_success": ({"config":dict(fastest_observed.config.params),
+                      "record_id":fastest_observed.id,"latency_ms":fastest_observed.median_ms,
+                      "correctness_verified":_correctness(fastest_observed)[0],
+                      "notice":"Observation diagnostic only; recommendations require reference verification"}
+                      if fastest_observed is not None else None),
                   "recommendation_verified": verified, "correctness_origin": origin,
                   "best_verified_config": dict(best_verified.config.params) if best_verified is not None else None,
                   "best_verified_latency_ms": best_verified.median_ms if best_verified is not None else None,

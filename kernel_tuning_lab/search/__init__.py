@@ -46,7 +46,7 @@ def _seen(history: Sequence[MeasurementRecord]) -> set[str]:
 
 
 def _best(history: Sequence[MeasurementRecord]) -> MeasurementRecord | None:
-    successes = [r for r in history if r.successful]
+    successes = [r for r in history if r.correctness_verified]
     return min(successes, key=lambda r: (r.median_ms, r.config.id), default=None)
 
 
@@ -326,7 +326,7 @@ class SurrogateSearch(RandomSearch):
 
     def suggest(self, hardware, operator, shape, space, history, budget, batch_size=1):
         candidates, count = _candidates(self, hardware, operator, shape, space, history, budget, batch_size)
-        known = [r for r in history if r.successful]
+        known = [r for r in history if r.correctness_verified]
         if len(known) < self.warmup:
             self.rng.shuffle(candidates)
             return candidates[:count]

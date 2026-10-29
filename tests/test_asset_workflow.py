@@ -246,6 +246,8 @@ def test_declared_correctness_is_archived_as_claim_not_verified_oracle(tmp_path)
     assert trial["correctness_origin"] == "submitter_claim"
     assert trial["recommendation_verified"] is False
     assert trial["best_verified_record_id"] is None
+    assert trial["best_config"] is None and trial["best_latency_ms"] is None
+    assert trial["fastest_observed_success"]["correctness_verified"] is False
     for record in records:
         correctness = record["metadata"]["correctness"]
         assert correctness["correctness_origin"] == "submitter_claim"
