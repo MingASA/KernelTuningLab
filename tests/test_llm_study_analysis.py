@@ -48,3 +48,21 @@ def test_rule_mentions_shape_without_necessarily_changing_config_rank():
     assert audit_rule('where(M<32,1,0)+BLOCK_M')['proven_context_invariant_ranking_for_fixed_feasible_set']
     assert not audit_rule('M*BLOCK_M')['proven_context_invariant_ranking_for_fixed_feasible_set']
     assert not audit_rule('UNCERTAINTY')['proven_context_invariant_ranking_for_fixed_feasible_set']
+
+
+def test_method_comparison_rejects_different_devices_even_with_hardware_bound_space_context(monkeypatch):
+    from examples.h800_llm_study import analyze
+    from kernel_tuning_lab.models import HardwareSpec,OperatorSpec,ShapeSpec,KernelConfig,MeasurementRecord,RecordStatus
+    # Explicit CPU fixtures bypass only bundle I/O, never claimed GPU proof.
+    bundles=[]
+    for index in (1,2):
+        record=MeasurementRecord(HardwareSpec('fixture-unit'+str(index)),
+            OperatorSpec('fixture',implementation='fixture/kernel'),ShapeSpec({'M':1}),KernelConfig({'x':1}),
+            RecordStatus.SUCCESS,runtime_samples_ms=(1.,),seed=7,split='test',provenance='mock',
+            metadata={'correctness_verified':True,'fixture_not_actual_gpu':True,'protocol':{'hardware_bound_space':index},
+                'correctness':{'input_integrity':{'status':'passed','expected':{'x':'fixture'}}}})
+        trial={'job_id':str(index),'record_ids':[record.id],'algorithm_options':{},
+            'observations_trace':[{'record_id':record.id,'correctness_verified':True}]}
+        bundles.append(({'summary':{'trials':[trial]},'manifest':{'jobs':[]},'calls':{},'trial_files':{}},{record.id:record}))
+    monkeypatch.setattr(analyze,'load_bundle',lambda _:bundles.pop(0))
+    with pytest.raises(ValueError,match='different physical GPUs'):analyze.evaluate(['fixture1','fixture2'])

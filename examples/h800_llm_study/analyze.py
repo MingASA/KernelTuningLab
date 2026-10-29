@@ -205,12 +205,19 @@ def evaluate(paths):
         group=[r for r in rows if (r['method'],r['budget'])==key];ok=[r for r in group if r['reached_budget'] and r['regret'] is not None]
         matched=[r for r in ok if r['seed'] in (7,19)]
         seed7=[r for r in ok if r['seed']==7]
-        aggregate.append({'method':key[0],'budget':key[1],'tasks':len(group),'complete_tasks':len(ok),
+        expected=len(group)
+        n_tasks=len(protocol()['test_shapes'])*len(protocol()['kernels'])
+        if key[0].startswith('B/'):
+            expected=n_tasks*(1 if key[0].split('/')[-1] in ('Qwen3.5-0.8B','Qwen3.8-27B') else 2)
+        elif key[0]!='SMAC/preflight-rejected-original':expected=n_tasks*3
+        denominator=max(len(group),expected)
+        aggregate.append({'method':key[0],'budget':key[1],'tasks':len(group),'expected_tasks':expected,'complete_tasks':len(ok),
+            'not_executed_tasks':max(0,expected-len(group)),
             'early_or_no_result':len(group)-len(ok),'mean_regret_complete':statistics.mean(r['regret'] for r in ok) if ok else None,
             'matched_7_19_mean_regret_complete':statistics.mean(r['regret'] for r in matched) if matched else None,
             'matched_7_mean_regret_complete':statistics.mean(r['regret'] for r in seed7) if seed7 else None,
-            'within5pct_all_tasks':sum(r['regret']<=.05 for r in ok)/len(group),
-            'within10pct_all_tasks':sum(r['regret']<=.10 for r in ok)/len(group),
+            'within5pct_all_tasks':sum(r['regret']<=.05 for r in ok)/denominator,
+            'within10pct_all_tasks':sum(r['regret']<=.10 for r in ok)/denominator,
             'median_prefix_wall_s_complete':statistics.median(r['prefix_wall_s'] for r in ok) if ok else None})
     return {'schema_version':1,'reference':'finite verified target union per exact kernel/GPU/shape/input-seed/protocol, not global optimum',
         'aggregation':'equal task weight; primary mean conditional on reaching B, coverage/failure denominator includes all planned trials; no unseen latency imputation',
