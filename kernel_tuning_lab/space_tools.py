@@ -215,10 +215,20 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
             'wall_s': time.perf_counter()-started})
     class Stop(Exception):
         pass
+    class DrawComplete(Exception):
+        pass
+    class DrawLimit(Exception):
+        pass
+    restart_sampling=rng is not None and count is not None and space.native_configs is None
+    draw_start=0;restarts=0;draw_cutoffs=0
+    draw_allowance=max(64,min(4096,budget.max_nodes//max(1,count or 1)))
+    base_values=dict(values)
     def tick():
         nonlocal nodes, stop
         if nodes >= budget.max_nodes or time.perf_counter()-started >= budget.max_wall_time_s:
             stop = 'budget_exhausted'; raise Stop()
+        if restart_sampling and nodes-draw_start>=draw_allowance:
+            raise DrawLimit()
         nodes += 1
     def accept(config):
         nonlocal checks, used_bytes, errors, stop
@@ -234,6 +244,7 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
         seen.add(config.id); output.append(config); used_bytes += estimate
         if count is not None and len(output) >= count:
             stop = 'sampled'; raise Stop()
+        if restart_sampling:raise DrawComplete()
     def candidates(name):
         if _active(name, values, specs) is False:
             return (specs[name].default,)
@@ -278,13 +289,30 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
                 if all(canonical_json(config.get(k)) == canonical_json(v) for k, v in values.items()):
                     accept(config)
         else:
-            tick(); walk(0)
+            if restart_sampling:
+                # A short request must not consume its entire budget in one
+                # high-level DFS branch. Restart after each feasible leaf (or
+                # bounded unproductive traversal), propagating the same hard
+                # rules. This is explicitly nonuniform constructive sampling.
+                while True:
+                    values.clear();values.update(base_values);draw_start=nodes;restarts+=1
+                    try:
+                        tick();walk(0)
+                    except DrawComplete:continue
+                    except DrawLimit:
+                        draw_cutoffs+=1;continue
+                    # A naturally completed traversal proves no unseen leaf
+                    # remains in this partial region; a cutoff never does.
+                    break
+            else:
+                tick(); walk(0)
     except Stop:
         pass
     status = stop or ('unsupported' if errors else 'complete' if output else 'exhausted' if exclude_ids else 'proven_empty')
     return SpaceBuildResult(tuple(output), status, {'nodes': nodes, 'final_checks': checks,
         'wall_s': time.perf_counter()-started, 'estimated_result_bytes': used_bytes,
         'constraint_errors': errors, 'rejection_reasons': dict(reasons),
-        'distribution': 'uniform shuffled native list' if space.native_configs is not None and rng else 'dependency-aware randomized cyclic DFS; not uniform over feasible leaves' if rng else 'dependency-aware deterministic DFS',
+        'distribution': 'uniform shuffled native list' if space.native_configs is not None and rng else 'bounded randomized DFS restarts after each leaf; nonuniform over feasible leaves' if restart_sampling else 'dependency-aware deterministic DFS',
+        'constructive_restarts':restarts,'unproductive_draw_cutoffs':draw_cutoffs,
         'declared_cardinality': space.cardinality,
         'notice': 'Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments.'})

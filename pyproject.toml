@@ -29,7 +29,7 @@ license-files = ["third_party/triton-tutorial-LICENSE", "kernel_tuning_lab/produ
 include = ["kernel_tuning_lab*"]
 
 [tool.setuptools.package-data]
-kernel_tuning_lab = ["adapters/data/*.json", "adapters/data/*.txt", "production/upstream/*.json", "production/upstream/LICENSE"]
+kernel_tuning_lab = ["adapters/data/*.json", "adapters/data/*.txt", "production/upstream/*.json", "production/upstream/LICENSE", "production/upstream/suite/*.json", "production/upstream/suite/*/*.py", "production/upstream/suite/*/*.hpp", "production/upstream/suite/*/*.cpp", "production/upstream/suite/*/*.cu", "production/upstream/suite/*/LICENSE", "production/upstream/suite/*/*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

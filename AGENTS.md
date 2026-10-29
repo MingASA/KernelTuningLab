@@ -1,5 +1,7 @@
 # 实验接续要求
 
+当前平台任务优先读取`artifacts/PRODUCTION_SUITE_CURRENT.json`及其root的state/private SESSION_NOTES，开发分支`platform/production-suite-readiness`。旧H800研究保持挂起，不自动恢复多seed模型/优化器大矩阵；旧PAUSE_REQUESTED不得由新平台任务删除。当前先做CPU、构建和定向工程验收，不无限轮询占用卡，不使用任何key发真实API。最新用户撤销了逐候选强制完整模型卸载的全局要求：常驻串行必须有可验证的合作门禁，并把资源上下文绑定记录，不能用一次利用率/empty_cache当作静默证明。
+
 2026-10-29真实LLM审查任务接续还要先读`artifacts/H800_LLM_CURRENT.json`，再读其root的`state.json`、`H800-state.json`及`private/SESSION_NOTES.md`。新任务分支`research/h800-local-llm-review`；A专门训练模型延期，B为真实小模型逐步决策，C为Qwen3.8-27B生成/迭代规则。旧接口fixture不算真实模型证据。留出测试策略已冻结，不能据目标性能修改提示/规则；已经有效的GPU阶段只读恢复，不重测。
 
 开始或压缩上下文后恢复实验时，先读：

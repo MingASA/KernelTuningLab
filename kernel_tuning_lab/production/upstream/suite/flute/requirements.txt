@@ -1,0 +1,9 @@
+ninja
+wheel
+jaxtyping
+matplotlib
+transformers
+datasets
+accelerate
+vllm == 0.7.2
+bitsandbytes

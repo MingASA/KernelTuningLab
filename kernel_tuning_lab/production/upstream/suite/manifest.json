@@ -1,0 +1,212 @@
+{
+  "gemlite": {
+    "repository": "dropbox/gemlite",
+    "revision": "f649e80e3014bc7ca8195573683c2c440f3bd94e",
+    "files": {
+      "LICENSE": {
+        "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "vendored": "gemlite/LICENSE"
+      },
+      "setup.py": {
+        "git_blob_sha": "4af7390e3764be7f5563d11e4d6361e771fae2e4",
+        "sha256": "d6c2d79fe0656940b1b98fb3356ce54fb746b4895ddd46f78af11d3c5b94ac51",
+        "vendored": "gemlite/setup.py"
+      },
+      "gemlite/core.py": {
+        "git_blob_sha": "decede089888ca8451d429112d94e19eb5db9ff2",
+        "sha256": "b36b78be00724ce19b8c0f06fdbfa7e391b22c5408cab24239647fb1f10ce544",
+        "vendored": "gemlite/core.py"
+      },
+      "gemlite/helper.py": {
+        "git_blob_sha": "d8b5539582ad6367431b2402b3ea5fae6ec9e7b3",
+        "sha256": "48cba3b6c866a46c4d20800234bc63d89e897294eadafbed7e67e6ebea6f56cd",
+        "vendored": "gemlite/helper.py"
+      },
+      "gemlite/bitpack.py": {
+        "git_blob_sha": "e84be63d02003939337a2dcf5c9a562f03f0b58d",
+        "sha256": "2042461b3c93f81f3b51d365f05c1a73e1ddc4f50e082cb834f384cbee8a303a",
+        "vendored": "gemlite/bitpack.py"
+      },
+      "gemlite/dtypes.py": {
+        "git_blob_sha": "4e26b95da66470bd4f9f9219303e06204e28bb22",
+        "sha256": "b3587a1b22691f9f16b88a84377f531f757d00dd67e6ff6b93dbed1349efd167",
+        "vendored": "gemlite/dtypes.py"
+      },
+      "gemlite/triton_kernels/config.py": {
+        "git_blob_sha": "7d540eed78f28fd1024ece9e9ee606c3ed9119cc",
+        "sha256": "acee1dfe34b82a400215365338030e905fca27971c7a137137992869d18bf2bc",
+        "vendored": "gemlite/config.py"
+      },
+      "gemlite/triton_kernels/gemm_kernels.py": {
+        "git_blob_sha": "3db72734afa9bff3d8843b77c346e331fb31b466",
+        "sha256": "363b39af888bf499fa0494414030881fa0b9e64de7ddded6a1d70b5476da4fc7",
+        "vendored": "gemlite/gemm_kernels.py"
+      },
+      "gemlite/triton_kernels/gemm_splitK_kernels.py": {
+        "git_blob_sha": "9f21d5683ca966580b3803ee6ad07ab6905e906c",
+        "sha256": "c4abe5849bab8922e9c403de424075592012e1ee2d954f4f8863459f02b7a038",
+        "vendored": "gemlite/gemm_splitK_kernels.py"
+      },
+      "gemlite/triton_kernels/gemv_kernels.py": {
+        "git_blob_sha": "626b647ae700d23f265d3c4fab6f90bc98e9e85e",
+        "sha256": "32d9802d93990aabdad9a9589f7c35f0b68ee29603f553081cc3e6137a3511d3",
+        "vendored": "gemlite/gemv_kernels.py"
+      },
+      "gemlite/triton_kernels/gemv_revsplitK_kernels.py": {
+        "git_blob_sha": "12c6815027d9bc34427b6d2e045776f8a4b5dddd",
+        "sha256": "ae1379bdc387a713ee44b5a5bc30b8be345db1c57aa2fc92e9d6ac64a8980055",
+        "vendored": "gemlite/gemv_revsplitK_kernels.py"
+      },
+      "gemlite/triton_kernels/utils.py": {
+        "git_blob_sha": "2ad22290ddd0585a6e7ea2bfd546a21b25b57ee4",
+        "sha256": "e4b767dc6923a8f23af0f01568d52e64d2f0e6bfc78dbe4b40046020f1ce965d",
+        "vendored": "gemlite/utils.py"
+      }
+    }
+  },
+  "flute": {
+    "repository": "HanGuo97/flute",
+    "revision": "9eb83a12d56949bbe7fe9c836ba97a67bd1e3761",
+    "files": {
+      "LICENSE": {
+        "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "vendored": "flute/LICENSE"
+      },
+      "setup.py": {
+        "git_blob_sha": "cc46f6937a9aa15f10aa8a0d6e60e85d877f886d",
+        "sha256": "051258b51425934b6d1c906e1bb2f91ee4aeccc194d37ae3a213d53ae93f7e92",
+        "vendored": "flute/setup.py"
+      },
+      "requirements.txt": {
+        "git_blob_sha": "8c37842cc3b1c8dbec9faa110126963ddcbffe1a",
+        "sha256": "4a5e00a387337fc3e9db16c2c1c7fe3c73c6b15d84dff8c325a3e0b5fed7fc3a",
+        "vendored": "flute/requirements.txt"
+      },
+      "flute/codegen_utils.py": {
+        "git_blob_sha": "d90e37dc30ce64cc175605aabff91a028190599c",
+        "sha256": "94b1f95fe5060a672ffac69fa526d5a7cf1cb0c3364ce3728ba115d3cb3c5ad4",
+        "vendored": "flute/codegen_utils.py"
+      },
+      "flute/ops.py": {
+        "git_blob_sha": "6dd5c5117748ba9f064845bd247abcb765b606b3",
+        "sha256": "4cecb64eb058ead65d63458770e49d8fc1a70a3dc0eacbe1ce4b7b322c1ddd44",
+        "vendored": "flute/ops.py"
+      },
+      "flute/tune.py": {
+        "git_blob_sha": "0d9ddb01f316e90104e0581f25f4b868b9279271",
+        "sha256": "6952db778a534f78db92ceb7d2f81754e24ca509ea0f23fe03caa9b8ae42551e",
+        "vendored": "flute/tune.py"
+      },
+      "flute/utils.py": {
+        "git_blob_sha": "967cac656d2ba7c37bde07192552f8b1f8a1c41e",
+        "sha256": "33474cf409dc88b60cc19264fd025baa38eb5baf5c1cfc557f97602cf964c461",
+        "vendored": "flute/utils.py"
+      },
+      "flute/packbits_utils.py": {
+        "git_blob_sha": "890926ced988df755ef4d15bca916f385de0a435",
+        "sha256": "4c7a166de6e1eec73ffa240c985b81ff0c0e27daf1f6b8fa4a874225e24cac6d",
+        "vendored": "flute/packbits_utils.py"
+      },
+      "flute/csrc/config.hpp": {
+        "git_blob_sha": "880ecfa3a3dd5ece766e8cafbe0389a3d77c2265",
+        "sha256": "d3c5f5827dcd2dd0c26cdd50677716f991287bbf8a5cc61f66b0eff0e0dcd4f5",
+        "vendored": "flute/config.hpp"
+      },
+      "flute/csrc/qgemm.cpp": {
+        "git_blob_sha": "184f39496ca849e7996c979c23bc4184b8a73d74",
+        "sha256": "123a492a7b998214dae5d9c14d7d058170d261780ed329d6fa2015d990e821ec",
+        "vendored": "flute/qgemm.cpp"
+      },
+      "flute/csrc/qgemm_kernel_raw_generated.cu": {
+        "git_blob_sha": "81f322bc7acf2acb6595121cd06d058d1a9fa6f8",
+        "sha256": "384833611cb9a7b4ea7ebf63b98ff5a5ef3a45b76acfaa5974d48677042665f3",
+        "vendored": "flute/qgemm_kernel_raw_generated.cu"
+      },
+      "flute/__init__.py": {
+        "git_blob_sha": "0a210b6efd01441ca9da7b52b7274d21b70df382",
+        "sha256": "a18f92214852d284569398496b5be4766847aba2efe213e6f700a67a54fd232a",
+        "vendored": "flute/flute_init.py"
+      }
+    }
+  },
+  "sglang": {
+    "repository": "sgl-project/sglang",
+    "revision": "1ab008f5b090e6595479ba57934e9211ab083565",
+    "files": {
+      "LICENSE": {
+        "git_blob_sha": "9c422689c8f5c317c7c65153b1209349ec57007e",
+        "sha256": "1495e1e757ef4d0925a2350563cf5754bb23c51701a8ec4fb3c5cdcbedae6747",
+        "vendored": "sglang/LICENSE"
+      },
+      "python/sglang/kernels/ops/attention/decode_attention.py": {
+        "git_blob_sha": "4c14429f2e71888e2b61f273f60f7385d31168be",
+        "sha256": "7a3b66ce3daabbb027efd860411cd9abe4b399b1f2cfc3ed5c6c01731eb9fa0a",
+        "vendored": "sglang/decode_attention.py"
+      },
+      "python/sglang/kernels/ops/attention/score_mod.py": {
+        "git_blob_sha": "98540169dcd86b9de793b30dcc67f5667ec42f45",
+        "sha256": "127e2e6466bbfac3c2189cc4f2a9d7751fd819b30d25de65378d66ae63bbafa6",
+        "vendored": "sglang/score_mod.py"
+      }
+    }
+  },
+  "pytorch": {
+    "repository": "pytorch/pytorch",
+    "revision": "v2.14.0",
+    "files": {
+      "torch/nn/attention/flex_attention.py": {
+        "git_blob_sha": "15ce0c1303469bfeb1fdd66a754c294d8c087034",
+        "sha256": "213ccc122b0961ae354dcbe4befe92f94e55d45fa06b1df8757c327d2afaa155",
+        "vendored": "pytorch/flex_attention.py"
+      },
+      "LICENSE": {
+        "git_blob_sha": "c23172f7aff0254e4f0f163fb2e6e355cbaec5f4",
+        "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43",
+        "vendored": "pytorch/LICENSE"
+      }
+    }
+  },
+  "vllm": {
+    "repository": "vllm-project/vllm",
+    "revision": "ced6857afa0ea7b2e3f0846a62e1394e90f15607",
+    "files": {
+      "LICENSE": {
+        "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "vendored": "vllm/LICENSE"
+      },
+      "benchmarks/kernels/benchmark_moe.py": {
+        "git_blob_sha": "1fcc7ddde7f81e638200f210ba0960e4bb9b93fc",
+        "sha256": "cc78ddf704150b8585d6ffb8fba8fd2d0518629b0c3e6c511a3f39d217b640dd",
+        "vendored": "vllm/benchmark_moe.py"
+      },
+      "vllm/model_executor/layers/fused_moe/fused_moe.py": {
+        "git_blob_sha": "dc619b2b12d27d2955f38a656e7c524fd6042887",
+        "sha256": "7072eb06237be9d33dcb0ef7101410f886a6363c98cbee70a014c68b70f639cb",
+        "vendored": "vllm/fused_moe.py"
+      },
+      "vllm/model_executor/layers/fused_moe/config.py": {
+        "git_blob_sha": "4c7760d007926dd5ebe7faae3c1892bef65e6284",
+        "sha256": "a3a87cebcc7ac85d73f471dcfafc2d899c6fc08f264777b74a0e919adac9e03f",
+        "vendored": "vllm/config.py"
+      },
+      "vllm/model_executor/layers/fused_moe/moe_align_block_size.py": {
+        "git_blob_sha": "7fc8bfcf824d92ce3b73f2f1de0b6af900c207ee",
+        "sha256": "c3f7fc2087836f0160a32ab99ceb1d8f6e87c793679da34dd672e225cb7fa31b",
+        "vendored": "vllm/moe_align_block_size.py"
+      },
+      "vllm/model_executor/layers/fused_moe/__init__.py": {
+        "git_blob_sha": "120fbd15266838d5e283b5ac5c598fc0f7337261",
+        "sha256": "64a32665be6d5afcfbaf7a0915717267278b66b880b908b0263ea58f08e51b5e",
+        "vendored": "vllm/vllm_init.py"
+      },
+      "vllm/model_executor/layers/fused_moe/activation.py": {
+        "git_blob_sha": "d83301bed19fa1a125877e4b67d280b04001cc41",
+        "sha256": "78dec0e85e0c040304515f64ccf8f2c6a7a2e5b9f1124a2138a97d9a02585541",
+        "vendored": "vllm/activation.py"
+      }
+    }
+  }
+}

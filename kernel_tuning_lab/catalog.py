@@ -99,7 +99,7 @@ def register_builtin_search_algorithms(catalog: AssetCatalog) -> None:
     for name in SEARCHER_NAMES:
         catalog.register(SearchAlgorithmDefinition(
             name, "1.0.0", functools.partial(_builtin_search_factory, name), SearchCapabilities(),
-            source_files=(source_file,), metadata={"builtin": True, "legacy_name": name}))
+            source_files=(source_file,str(Path(__file__).with_name('space_tools.py'))), metadata={"builtin": True, "legacy_name": name}))
 
 
 _DEFAULT_CATALOG: AssetCatalog | None = None

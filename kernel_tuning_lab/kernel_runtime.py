@@ -54,6 +54,7 @@ class ExecutionContext:
     workspace_memory_limit_bytes: int = 256 * 1024**2
     workspace_bytes: int = 0
     metadata: dict[str, Any] = field(default_factory=dict)
+    prepared_inputs: dict[str, Any] = field(default_factory=dict)
     _workspace_allocation_open: bool = field(default=True, repr=False)
 
     def _allocate(self, shape, dtype, fill):
@@ -103,6 +104,19 @@ class ExecutionContext:
             raise ValueError("output names must be nonempty and allocated exactly once")
         value = self._allocate(shape, dtype, fill)
         self.outputs[name] = value
+        return value
+
+    def register_prepared_input(self,name,value):
+        """Declare config-dependent packed/read-only buffers before capture.
+
+        Mutable reset/reduction workspaces must not be registered here. These
+        values receive the same full integrity and alias checks as task inputs.
+        """
+        if not self._workspace_allocation_open:
+            raise ValueError('prepared inputs must be registered during build/setup')
+        if not isinstance(name,str) or not name or name in self.prepared_inputs:
+            raise ValueError('prepared input names must be nonempty and unique')
+        self.prepared_inputs[name]=value
         return value
 
     def record_compiled_kernel(self, name: str, compiled) -> None:
@@ -314,7 +328,12 @@ def _input_fingerprints(ctx: ExecutionContext) -> dict[str, str]:
 
     if any(not isinstance(name, str) or not name for name in ctx.inputs):
         raise ValueError("input names must be nonempty strings")
-    return {name: fingerprint(value) for name, value in ctx.inputs.items()}
+    result={name: fingerprint(value) for name, value in ctx.inputs.items()}
+    for name,value in ctx.prepared_inputs.items():
+        key='prepared::'+name
+        if key in result:raise ValueError('task/prepared input name collision')
+        result[key]=fingerprint(value)
+    return result
 
 
 class AssetKernelAdapter:
@@ -553,6 +572,12 @@ class AssetKernelAdapter:
             plan.setup()
         self._synchronize()
         setup_ms = (time.perf_counter() - setup_started) * 1000
+        # Bind only newly declared prepared buffers. Never overwrite the
+        # original input hashes or hide a mutation during native packing.
+        fingerprints=_input_fingerprints(prepared.context)
+        for name in prepared.context.prepared_inputs:
+            key='prepared::'+name
+            prepared.input_fingerprints[key]=fingerprints[key]
         prepared.context._workspace_allocation_open = False
         compiled = CompiledAsset(prepared, plan, build_ms, setup_ms)
         if self.timing_mode == "cuda_graph":
@@ -663,7 +688,7 @@ class AssetKernelAdapter:
             elif isinstance(value, (bytearray, memoryview)):
                 yield ("python", id(value))
 
-        inputs = {identity for value in ctx.inputs.values() for identity in identities(value)}
+        inputs = {identity for value in (*ctx.inputs.values(),*ctx.prepared_inputs.values()) for identity in identities(value)}
         return [name for name, value in ctx.outputs.items() if any(identity in inputs for identity in identities(value))]
 
     def _input_integrity(self, compiled: CompiledAsset):

@@ -84,6 +84,18 @@ def test_output_aliasing_input_is_rejected(tmp_path):
     assert record.metadata["correctness"]["outputs"]["__inputs__"]["aliased_outputs"]
 
 
+def test_config_dependent_packed_input_mutation_is_checked_without_hiding_task_input_changes(tmp_path):
+    def build(ctx,tile=1):
+        packed=ctx.register_prepared_input('backend_packed',[1.0])
+        def launch():
+            packed[0]=2.0
+            ctx.outputs['out'][0][0]=1.0
+        return launch
+    record,*_=_evaluate(build,tmp_path)
+    assert record.status==RecordStatus.CORRECTNESS_ERROR
+    assert 'prepared::backend_packed' in record.metadata['correctness']['input_integrity']['changed_inputs']
+
+
 @pytest.mark.parametrize("value", [True, "not numeric"])
 def test_malformed_python_outputs_are_persisted_as_correctness_failures(tmp_path, value):
     def build(ctx, tile=1):
