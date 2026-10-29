@@ -1,0 +1,198 @@
+{
+  "CPU_only": true,
+  "auditor_sha256": "48bf96a83f972447552e8e2467d58e0d5eb5ddae8f366d9dcebc5792e3124f66",
+  "baseline_commit": "d7eaca5b69995f3c10f45473d012574f83ed6d71",
+  "space_implementation_commit": "8171d3ae7e339cf8f9819bceb3ead9b2d73af363",
+  "cases": [
+    {
+      "case": "fused",
+      "declared_cartesian_count": 3840,
+      "resolved_context_cartesian_count": 3840,
+      "normalized": {
+        "status": "exact",
+        "count": 3840,
+        "parent_states": 1,
+        "notice": "Conditional normalization only; static/GPU constraints not included."
+      },
+      "static_build": {
+        "status": "complete",
+        "complete": true,
+        "count": 3840,
+        "diagnostics": {
+          "nodes": 4889,
+          "final_checks": 3840,
+          "wall_s": 0.993749461020343,
+          "estimated_result_bytes": 1343168,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "declared_cardinality": 3840,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      "peak_process_RSS_bytes": 25284608,
+      "sample": {
+        "requested": 32,
+        "returned": 32,
+        "status": "sampled",
+        "wall_s": 0.01830766291823238,
+        "diagnostics": {
+          "distribution": "uniform without replacement over the complete static feasible set",
+          "complete_set_size": 3840
+        }
+      },
+      "baseline_static_build": {
+        "status": "complete",
+        "complete": true,
+        "count": 3456,
+        "checked": 3840,
+        "rejections": {
+          "fused integer staging estimate 108544 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 149504 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 215040 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 110592 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 151552 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 217088 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 114688 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 155648 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 221184 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 122880 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 163840 exceeds 101376 shared-memory bytes": 32,
+          "fused integer staging estimate 229376 exceeds 101376 shared-memory bytes": 32
+        }
+      },
+      "baseline_peak_process_RSS_bytes": 26267648,
+      "baseline_random_pool": {
+        "method": "legacy initial random pool",
+        "requested": 512,
+        "returned": 459,
+        "proposed": 512,
+        "wall_s": 0.12375861709006131,
+        "declared_fraction": 0.13333333333333333
+      }
+    },
+    {
+      "case": "pipeline",
+      "declared_cartesian_count": 15360,
+      "resolved_context_cartesian_count": 15360,
+      "normalized": {
+        "status": "exact",
+        "count": 15360,
+        "parent_states": 1,
+        "notice": "Conditional normalization only; static/GPU constraints not included."
+      },
+      "static_build": {
+        "status": "complete",
+        "complete": true,
+        "count": 15360,
+        "diagnostics": {
+          "nodes": 20249,
+          "final_checks": 15360,
+          "wall_s": 4.067454147036187,
+          "estimated_result_bytes": 5760512,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "declared_cardinality": 15360,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      "peak_process_RSS_bytes": 31711232,
+      "sample": {
+        "requested": 32,
+        "returned": 32,
+        "status": "sampled",
+        "wall_s": 0.06632439093664289,
+        "diagnostics": {
+          "distribution": "uniform without replacement over the complete static feasible set",
+          "complete_set_size": 15360
+        }
+      },
+      "baseline_static_build": {
+        "status": "complete",
+        "complete": true,
+        "count": 15200,
+        "checked": 15360,
+        "rejections": {
+          "staged A16 tile estimate 131072 exceeds 101376 shared-memory bytes": 160
+        }
+      },
+      "baseline_peak_process_RSS_bytes": 23908352,
+      "baseline_random_pool": {
+        "method": "legacy initial random pool",
+        "requested": 512,
+        "returned": 507,
+        "proposed": 512,
+        "wall_s": 0.12574603303801268,
+        "declared_fraction": 0.03333333333333333
+      }
+    },
+    {
+      "case": "moe",
+      "declared_cartesian_count": 2488320,
+      "resolved_context_cartesian_count": 1244160,
+      "normalized": {
+        "status": "exact",
+        "count": 691200,
+        "parent_states": 8,
+        "notice": "Conditional normalization only; static/GPU constraints not included."
+      },
+      "static_build": {
+        "status": "budget_exhausted",
+        "complete": false,
+        "count": 31975,
+        "diagnostics": {
+          "nodes": 70169,
+          "final_checks": 44935,
+          "wall_s": 15.00066683604382,
+          "estimated_result_bytes": 15195009,
+          "constraint_errors": 0,
+          "rejection_reasons": {
+            "Split-K exceeds the number of nonempty K tiles": 12960
+          },
+          "distribution": "dependency-aware deterministic DFS",
+          "declared_cardinality": 1244160,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      "peak_process_RSS_bytes": 48394240,
+      "sample": {
+        "requested": 32,
+        "returned": 32,
+        "status": "sampled",
+        "wall_s": 0.014660330023616552,
+        "diagnostics": {
+          "nodes": 61,
+          "final_checks": 32,
+          "wall_s": 0.011448600911535323,
+          "estimated_result_bytes": 15249,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware randomized cyclic DFS; not uniform over feasible leaves",
+          "declared_cardinality": 1244160,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      "baseline_static_build": {
+        "status": "budget_exhausted",
+        "complete": false,
+        "count": 25904,
+        "checked": 58136,
+        "rejections": {
+          "inactive parameter 'REDUCE_BLOCK_SIZE' must retain its declared default 256": 6528,
+          "inactive parameter 'PERSISTENT_CTA_MULT' must retain its declared default 1": 19368,
+          "Split-K exceeds the number of nonempty K tiles": 9504
+        }
+      },
+      "baseline_peak_process_RSS_bytes": 23781376,
+      "baseline_random_pool": {
+        "method": "legacy initial random pool",
+        "requested": 512,
+        "returned": 149,
+        "proposed": 512,
+        "wall_s": 0.13442653499078006,
+        "declared_fraction": 0.00041152263374485596
+      }
+    }
+  ]
+}

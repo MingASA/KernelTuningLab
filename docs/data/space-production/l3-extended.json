@@ -1,0 +1,3351 @@
+{
+  "status": "analyzed_not_GPU_dispatch_proof",
+  "native_rules": [
+    {
+      "workload": "uniform_synthetic",
+      "policy": "production/marlin_default@1.0.0",
+      "actual_distinct_config_count": 1,
+      "same_explicit_candidate_weighted_ms": 0.02094891667366028,
+      "same_candidate_relative_loss": 0.6156106574479996,
+      "separate_native_call_weighted_ms": 0.020969854046901066,
+      "assignments": [
+        {
+          "shape": {
+            "M": 1,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 16,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 32,
+            "N": 1024,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 64,
+            "N": 2048,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 128,
+            "N": 2048,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 257,
+            "N": 512,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        }
+      ],
+      "notice": "Trace executes pinned original selector; native record timings are separate from explicit-matrix timings. Not forcibly equal K."
+    },
+    {
+      "workload": "uniform_synthetic",
+      "policy": "production/marlin_atomic_opt_in@1.0.0",
+      "actual_distinct_config_count": 2,
+      "same_explicit_candidate_weighted_ms": 0.01545149980423351,
+      "same_candidate_relative_loss": 0.19164194245246358,
+      "separate_native_call_weighted_ms": 0.0154917292141666,
+      "assignments": [
+        {
+          "shape": {
+            "M": 1,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 16,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 32,
+            "N": 1024,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 64,
+            "N": 2048,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 128,
+            "N": 2048,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 257,
+            "N": 512,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        }
+      ],
+      "notice": "Trace executes pinned original selector; native record timings are separate from explicit-matrix timings. Not forcibly equal K."
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "policy": "production/marlin_default@1.0.0",
+      "actual_distinct_config_count": 1,
+      "same_explicit_candidate_weighted_ms": 0.018324272378402597,
+      "same_candidate_relative_loss": 0.9812449598766135,
+      "separate_native_call_weighted_ms": 0.01833112494033926,
+      "assignments": [
+        {
+          "shape": {
+            "M": 1,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 16,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 32,
+            "N": 1024,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 64,
+            "N": 2048,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 128,
+            "N": 2048,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 257,
+            "N": 512,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        }
+      ],
+      "notice": "Trace executes pinned original selector; native record timings are separate from explicit-matrix timings. Not forcibly equal K."
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "policy": "production/marlin_atomic_opt_in@1.0.0",
+      "actual_distinct_config_count": 2,
+      "same_explicit_candidate_weighted_ms": 0.010127345538314651,
+      "same_candidate_relative_loss": 0.09498221213757896,
+      "separate_native_call_weighted_ms": 0.010162353022571872,
+      "assignments": [
+        {
+          "shape": {
+            "M": 1,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 16,
+            "N": 512,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 32,
+            "N": 1024,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 64,
+            "N": 2048,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 128,
+            "N": 2048,
+            "K": 2048
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        },
+        {
+          "shape": {
+            "M": 257,
+            "N": 512,
+            "K": 1024
+          },
+          "config": {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": true
+          }
+        }
+      ],
+      "notice": "Trace executes pinned original selector; native record timings are separate from explicit-matrix timings. Not forcibly equal K."
+    }
+  ],
+  "selections": [
+    {
+      "workload": "uniform_synthetic",
+      "method": "oracle",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.013245312186578909,
+      "conditional_latency_ms": 0.013245312186578909,
+      "coverage": 1.0,
+      "relative_loss": 0.021497572557950706,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.013245312186578909,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 4,
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.013245312186578909,
+      "conditional_latency_ms": 0.013245312186578909,
+      "coverage": 1.0,
+      "relative_loss": 0.021497572557950706,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.013245312186578909,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 4
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy_local_swap",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.013245312186578909,
+      "conditional_latency_ms": 0.013245312186578909,
+      "coverage": 1.0,
+      "relative_loss": 0.021497572557950706,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.013245312186578909,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 0,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 3,
+        "initial_expected_latency_ms": 0.013245312186578909
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "oracle",
+      "k": 2,
+      "selected_indices": [
+        1,
+        2
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      ],
+      "assignment_indices": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.012967145924145976,
+      "conditional_latency_ms": 0.012967145924145976,
+      "coverage": 1.0,
+      "relative_loss": 4.4989346610790903e-05,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012967145924145976,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 6,
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy",
+      "k": 2,
+      "selected_indices": [
+        1,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        1,
+        3
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.012971208120385805,
+      "conditional_latency_ms": 0.012971208120385805,
+      "coverage": 1.0,
+      "relative_loss": 0.0003582717773897848,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012971208120385805,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 7
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy_local_swap",
+      "k": 2,
+      "selected_indices": [
+        1,
+        2
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      ],
+      "assignment_indices": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.012967145924145976,
+      "conditional_latency_ms": 0.012967145924145976,
+      "coverage": 1.0,
+      "relative_loss": 4.4989346610790903e-05,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012967145924145976,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 1,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 8,
+        "initial_expected_latency_ms": 0.012971208120385805
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "oracle",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.012966562566968301,
+      "conditional_latency_ms": 0.012966562566968301,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012966562566968301,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 1,
+        "optimality_certificate": "unrestricted_observed_row_minima",
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.012966562566968301,
+      "conditional_latency_ms": 0.012966562566968301,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012966562566968301,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 10
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "uniform_synthetic",
+      "method": "greedy_local_swap",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.012966562566968301,
+      "conditional_latency_ms": 0.012966562566968301,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.012966562566968301,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.012966562566968301,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 0,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 3,
+        "initial_expected_latency_ms": 0.012966562566968301
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "oracle",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.009347360088106464,
+      "conditional_latency_ms": 0.009347360088106464,
+      "coverage": 1.0,
+      "relative_loss": 0.010649136854140373,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009347360088106464,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 4,
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.009347360088106464,
+      "conditional_latency_ms": 0.009347360088106464,
+      "coverage": 1.0,
+      "relative_loss": 0.010649136854140373,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009347360088106464,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 4
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy_local_swap",
+      "k": 1,
+      "selected_indices": [
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "config_count": 1,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 1,
+      "expected_latency_ms": 0.009347360088106464,
+      "conditional_latency_ms": 0.009347360088106464,
+      "coverage": 1.0,
+      "relative_loss": 0.010649136854140373,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009347360088106464,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 0,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 3,
+        "initial_expected_latency_ms": 0.009347360088106464
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "oracle",
+      "k": 2,
+      "selected_indices": [
+        1,
+        2
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      ],
+      "assignment_indices": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.009250514757107286,
+      "conditional_latency_ms": 0.009250514757107286,
+      "coverage": 1.0,
+      "relative_loss": 0.0001780894931628918,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009250514757107286,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 6,
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy",
+      "k": 2,
+      "selected_indices": [
+        1,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        3,
+        3,
+        3,
+        1,
+        3
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.009250617476508897,
+      "conditional_latency_ms": 0.009250617476508897,
+      "coverage": 1.0,
+      "relative_loss": 0.00018919565293407103,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009250617476508897,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 7
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy_local_swap",
+      "k": 2,
+      "selected_indices": [
+        1,
+        2
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      ],
+      "assignment_indices": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 2,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 2,
+      "expected_latency_ms": 0.009250514757107286,
+      "conditional_latency_ms": 0.009250514757107286,
+      "coverage": 1.0,
+      "relative_loss": 0.0001780894931628918,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009250514757107286,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 1,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 8,
+        "initial_expected_latency_ms": 0.009250617476508897
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "oracle",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.009248867630958557,
+      "conditional_latency_ms": 0.009248867630958557,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": true,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009248867630958557,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 1,
+        "optimality_certificate": "unrestricted_observed_row_minima",
+        "exact_scope": "complete_matrix"
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.009248867630958557,
+      "conditional_latency_ms": 0.009248867630958557,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009248867630958557,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "subsets_evaluated": 10
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "workload": "decode_skew_synthetic",
+      "method": "greedy_local_swap",
+      "k": 4,
+      "selected_indices": [
+        1,
+        2,
+        3
+      ],
+      "configs": [
+        {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        },
+        {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": false
+        }
+      ],
+      "assignment_indices": [
+        3,
+        2,
+        2,
+        2,
+        1,
+        2
+      ],
+      "config_count": 3,
+      "budget_kind": "config_count",
+      "compiled_variant_count": null,
+      "binary_size_bytes": null,
+      "variant_count": 3,
+      "expected_latency_ms": 0.009248867630958557,
+      "conditional_latency_ms": 0.009248867630958557,
+      "coverage": 1.0,
+      "relative_loss": 0.0,
+      "reference_latency_ms": 0.009248867630958557,
+      "provenance": "measured",
+      "exact": false,
+      "metadata": {
+        "matrix_complete": true,
+        "matrix_cell_coverage": 1.0,
+        "reference_scope": "all_candidates",
+        "objective": "minimum_uncovered_weight_then_observed_weighted_latency",
+        "uncovered_weight": 0.0,
+        "weighted_observed_latency_ms": 0.009248867630958557,
+        "hardware_id": "3ccc188a8b6085fcbed99b4f",
+        "operator_id": "9ad036216f6c9f864eef927a",
+        "shape_ids": [
+          "2f78170aebde92ef38ab9c9e",
+          "6c4863c9047cc50ab5cfc6d0",
+          "740849312c89a068449deaa5",
+          "128be78043dff17ade2954e3",
+          "53ab28e6e3996a9a08cae3be",
+          "f3b3a632489b630455a79ac3"
+        ],
+        "candidate_config_ids": [
+          "f77af554d0df29cbf2216079",
+          "95f64de36f38bdcb1aa91edb",
+          "4c796fbaace011c7c177459d",
+          "93147480d815d44e0fafdf9f"
+        ],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
+        "mock_data": false,
+        "swaps": 0,
+        "converged": true,
+        "max_passes": 100,
+        "swap_subsets_evaluated": 3,
+        "initial_expected_latency_ms": 0.009248867630958557
+      },
+      "dispatch": {
+        "kind": "exact_shape_table",
+        "provenance": "measured",
+        "selected_configs": [
+          {
+            "USE_ATOMIC_ADD": false,
+            "USE_FP32_REDUCE": false
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": true
+          },
+          {
+            "USE_ATOMIC_ADD": true,
+            "USE_FP32_REDUCE": false
+          }
+        ],
+        "assignments": [
+          {
+            "shape": {
+              "K": 1024,
+              "M": 64,
+              "N": 2048
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 1024,
+              "M": 257,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 1,
+              "N": 512
+            },
+            "config_id": "93147480d815d44e0fafdf9f",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": false
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 16,
+              "N": 512
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 32,
+              "N": 1024
+            },
+            "config_id": "4c796fbaace011c7c177459d",
+            "config": {
+              "USE_ATOMIC_ADD": true,
+              "USE_FP32_REDUCE": true
+            }
+          },
+          {
+            "shape": {
+              "K": 2048,
+              "M": 128,
+              "N": 2048
+            },
+            "config_id": "95f64de36f38bdcb1aa91edb",
+            "config": {
+              "USE_ATOMIC_ADD": false,
+              "USE_FP32_REDUCE": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "chosen_dispatch": {
+    "kind": "exact_shape_table",
+    "provenance": "measured",
+    "selected_configs": [
+      {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": false
+      },
+      {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": true
+      }
+    ],
+    "assignments": [
+      {
+        "shape": {
+          "K": 1024,
+          "M": 64,
+          "N": 2048
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 1024,
+          "M": 257,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 1,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 16,
+          "N": 512
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 32,
+          "N": 1024
+        },
+        "config_id": "4c796fbaace011c7c177459d",
+        "config": {
+          "USE_ATOMIC_ADD": true,
+          "USE_FP32_REDUCE": true
+        }
+      },
+      {
+        "shape": {
+          "K": 2048,
+          "M": 128,
+          "N": 2048
+        },
+        "config_id": "95f64de36f38bdcb1aa91edb",
+        "config": {
+          "USE_ATOMIC_ADD": false,
+          "USE_FP32_REDUCE": false
+        }
+      }
+    ]
+  },
+  "unseen_input_policy": "rejected_without_execution_or_budget_expansion",
+  "counts": {
+    "candidate_config_count": 4,
+    "observed_marlin_symbols": 4,
+    "symbol_names": [
+      "void marlin::Marlin<__half, 1125899907892224l, 128, 1, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)",
+      "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)",
+      "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)",
+      "void marlin::Marlin<__half, 1125899907892224l, 256, 2, 16, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+    ],
+    "per_kernel_compiled_identities": null,
+    "per_kernel_code_bytes": null,
+    "loaded_library_files": 1,
+    "whole_library_container_bytes": [
+      10069160
+    ],
+    "deployed_graph_count": null,
+    "notice": "Runtime reduction options and symbols are not CUBIN counts. Whole library bytes are not per-config code size; this study does not deploy a Graph cache."
+  },
+  "reference_scope": "only four actually executable native option combinations; not global optimum",
+  "independent_input_repetitions": [
+    7,
+    19
+  ],
+  "matrix": {
+    "workload": {
+      "name": "uniform_synthetic",
+      "shapes": [
+        {
+          "M": 1,
+          "N": 512,
+          "K": 2048
+        },
+        {
+          "M": 16,
+          "N": 512,
+          "K": 2048
+        },
+        {
+          "M": 32,
+          "N": 1024,
+          "K": 2048
+        },
+        {
+          "M": 64,
+          "N": 2048,
+          "K": 1024
+        },
+        {
+          "M": 128,
+          "N": 2048,
+          "K": 2048
+        },
+        {
+          "M": 257,
+          "N": 512,
+          "K": 1024
+        }
+      ],
+      "weights": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "configs": [
+      {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": true
+      },
+      {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": false
+      },
+      {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": true
+      },
+      {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": false
+      }
+    ],
+    "latencies_ms": [
+      [
+        0.015836000442504883,
+        0.015010249800980091,
+        0.006526625016704202,
+        0.006523124873638153
+      ],
+      [
+        0.01592312566936016,
+        0.0164558757096529,
+        0.007161875022575259,
+        0.0071621248498559
+      ],
+      [
+        0.02719775028526783,
+        0.022475624457001686,
+        0.01228387514129281,
+        0.012284999713301659
+      ],
+      [
+        0.02004099916666746,
+        0.016598250716924667,
+        0.015162874944508076,
+        0.015177874825894833
+      ],
+      [
+        0.018140374682843685,
+        0.017404000274837017,
+        0.019759499467909336,
+        0.01904862467199564
+      ],
+      [
+        0.02855524979531765,
+        0.02475025039166212,
+        0.019263625144958496,
+        0.019275124184787273
+      ]
+    ],
+    "provenance": "measured"
+  }
+}

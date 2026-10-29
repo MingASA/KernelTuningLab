@@ -57,3 +57,14 @@
 3. 网络传输查已验证bundle/部分包和SHA，包未完整不安装；安装只用指定私有venv。
 4. 每个GPU命令重新进行空卡准入；预选不等于预留。若别人开始使用，只停自己的进程并隔离受污染数据，不能从该次缓存继续当作干净测量。
 5. Pilot有效且资源允许时直接继续有界Anchor，再分析/Replay；不请求重复批准。全程保留独立验收、缓存、失败、实际GPU观测与离线Replay的不同计数。
+
+## 空间/生产接入轮的补充（2026-10-28）
+
+- 4090离线优化器wheelhouse跨Python下载漏掉`python<3.12`的importlib_metadata条件依赖；补齐固定importlib_metadata/zipp并全SHA核验后，安装到新私有环境。网络错误不等同于版本不存在，原GPU环境未改动。
+- 固定vLLM0.8.5官方wheel在H800仅CPU加载；其卡被占用未执行GPU。4090以既有CUDA12.4/GCC11、单编译worker构建原封数值源码及两个schema注册，真实Marlin已验证。源码build与官方wheel分别绑定binary SHA，不能混称同一产物。
+- 4090长SSH丢失后，原受控研究实际已完成800观测；只读恢复terminal guard和SQLite，未重测。私有poll模板另有缩进错误，最小CPU复现后修复并保存poll stderr；不能把这个错误归因CUDA或全部归因网络。
+- 大传输采用有界4/8/32KiB确认帧与prefix SHA续传，最后核完整SHA才解包。既有配置publickey认证、正常known-host验证均保留；没有改密钥/全局SSH/驱动。此措施改善本次恢复，不把网络具体根因写成已证明。
+- AI同一job有两个Shape却只给一个独立验收点，初次partial保留；只增加验收预算，已有72研究观测全部cache恢复。观测预算不等于验收预算。
+- Torch2.6实际probe的shared memory字段仍为0/unknown，编译器报告本卡101376。原记录不补造规格；校准于sm120/Triton3.7的估算改advisory，真实编译资源另验。规划profile与实际probe不能混用。
+
+本轮所有新GPU批次已结束。继续前仍先读本轮私有SESSION_NOTES、state和对应receipt；不要因为控制/下载失败而重测已有证据。原始大数据只回传开发机并私有封存，未经授权不作为共享服务器备份。
