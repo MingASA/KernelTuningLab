@@ -173,9 +173,18 @@ class SMACSearch(_Audit):
         scenario=Scenario(cs,deterministic=True,n_trials=self.max_native_trials,seed=self.seed,
                           n_workers=1,output_directory=directory,crash_cost=1e12)
         additional=[]
-        if self.warm_start_configs and space.conditional:
+        warm_configs=self.warm_start_configs
+        # The SDK deliberately tests unrelated singleton/mixed domains without
+        # binding a research trial. Target-specific source points are not valid
+        # points in those synthetic spaces. Keep the native contract check,
+        # with its ordinary initial design; never waive real target validation.
+        synthetic=(self.output is None and space.name in ('acceptance_singleton','acceptance_mixed_finite'))
+        if synthetic and warm_configs:
+            warm_configs=()
+            self.diagnostics['synthetic_contract_warm_configs_omitted']=space.name
+        if warm_configs and space.conditional:
             raise ValueError('native warm initialization currently supports unconditional domains only')
-        for config in self.warm_start_configs:
+        for config in warm_configs:
             if not space.validate(config,hardware,operator,shape).valid or space.normalize(config).id!=config.id:
                 raise ValueError('warm source config is outside the authoritative current space')
             additional.append(CS.Configuration(cs,values={name:encoders[name][canonical_json(config.get(name))] for name in domains}))

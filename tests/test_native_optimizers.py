@@ -109,6 +109,19 @@ def test_warm_smac_uses_native_additional_initial_design_then_native_model():
     assert engine.diagnostics['model_fitted'] and engine.diagnostics['proposals_with_fitted_model']>0
 
 
+def test_warm_smac_passes_real_sdk_singleton_and_mixed_contracts_without_dropping_target_checks(tmp_path):
+    from kernel_tuning_lab.acceptance import check_algorithm
+    from kernel_tuning_lab.assets import SearchAlgorithmDefinition
+    definition=SearchAlgorithmDefinition('unit/warm_smac','1',SMACSearch)
+    space=ConfigSpace({'x':tuple(range(8)),'y':tuple(range(8))},name='actual_warm_target')
+    result=check_algorithm(definition,{'warm_start_configs':[{'x':3,'y':6},{'x':4,'y':6}]},7,HW,OP,SHAPE,space)
+    assert result['status']=='passed'
+    bad=SMACSearch(seed=7,warm_start_configs=[{'x':99,'y':6}])
+    bad.bind_trial(output_dir=tmp_path,identity={})
+    with pytest.raises(ValueError,match='outside the authoritative'):
+        bad.suggest(HW,OP,SHAPE,space.read_only(),SearchHistory(),SearchBudget(4))
+
+
 def test_smac_structured_equality_mapping_preserves_feasibility():
     space=ConfigSpace({'x':tuple(range(8)),'y':tuple(range(8))},rules=(Relation('x','==','y'),))
     engine=SMACSearch(seed=2);rows,_,_=drive(engine,4,space)

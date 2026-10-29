@@ -1,5 +1,7 @@
 # 实验接续要求
 
+2026-10-29真实LLM审查任务接续还要先读`artifacts/H800_LLM_CURRENT.json`，再读其root的`state.json`、`H800-state.json`及`private/SESSION_NOTES.md`。新任务分支`research/h800-local-llm-review`；A专门训练模型延期，B为真实小模型逐步决策，C为Qwen3.8-27B生成/迭代规则。旧接口fixture不算真实模型证据。留出测试策略已冻结，不能据目标性能修改提示/规则；已经有效的GPU阶段只读恢复，不重测。
+
 开始或压缩上下文后恢复实验时，先读：
 
 1. `docs/REMOTE_GPU_TROUBLESHOOTING.md`。
