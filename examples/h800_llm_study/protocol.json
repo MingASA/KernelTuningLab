@@ -132,17 +132,25 @@
     "only_local_files": true,
     "single_GPU": true,
     "weights_exit_before_kernel_measurement": true,
-    "do_sample": false,
+    "do_sample": true,
     "template": {
       "enable_thinking": false,
       "preserve_thinking": false,
       "reasoning_effort": "low"
-    }
+    },
+    "sampling": {
+      "temperature": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "repetition_penalty": 1.0
+    },
+    "presence_penalty": "not supplied: this Transformers path does not assert API presence_penalty support",
+    "profile_scope": "B sampled, C greedy structured rule generation; initial greedy pilots separate"
   },
   "analysis": {
     "reference": "best-known union of actually verified observations in each exact kernel/hardware/shape/dtype/protocol; not a global oracle",
     "equal_budget_comparisons": "compare only shared prefix budgets; static portfolios exhausted early remain censored",
-    "statistics": "separate Shape, physical input repetitions, algorithm stochasticity and model decoding variability",
+    "statistics": "B real sampled calls acrossseed7/19 (coupled input/tuning seed); traditional/C across7/19/31. Use matched seeds for comparisons; no independent frozen-policy development replications. No model scaling law inference across different release families.",
     "counts": "new physical attempts,cache observations,static rejections,failed measurements,LLM tokens/load/generation cost separately",
     "warm_versus_cold": "warm feedback costs never hidden; zero-target prediction is not zero-physical-evaluation proof",
     "no_expected_algorithm_winner": true
@@ -157,14 +165,17 @@
   "user_route_A": "dedicated trained performance/decision model deferred to next round; native SMAC internal RF remains an optimizer baseline",
   "user_route_B": {
     "primary_models": [
-      "Qwen/Qwen3.5-0.8B",
+      "Qwen/Qwen3-1.7B",
       "Qwen/Qwen3.5-4B"
     ],
     "mode": "real next-action decisions with revealed target history",
-    "target_budget": 16,
-    "main_tuning_seeds": [7],
+    "target_budget": 8,
+    "main_tuning_seeds": [
+      7,
+      19
+    ],
     "large_model_paired_budget": 4,
-    "pilot_based_cost_scope": "Small-model B uses one input/tuning seed; traditional optimizers and frozen C rules use three. Compare effects at matched prefixes and shared seed7, and show traditional/C seed variability separately. Real H800 pilot cost was about6s/0.8B,10s/4B,50s/27B per action including full offload; do not multiply deterministic greedy actions by three and call them independent model replications.",
+    "pilot_based_cost_scope": "4B about10s and27B about50s/action including full offload; B8 over2seeds bounds online cost, matched-size B4 overseed7. 0.8B greedy pilot returned one legal config then repeated it despite explicit retry. Models not chosen by heldout latency. Greedy pilots retained; sampled main protocol chosen from official model cards and pre-test compatibility evidence.",
     "paired_large_model": "same H800/offload/backend for one seed/prefixB1/B4; generation vs transfer costs separate",
     "model_size_and_release_family_confounded": true,
     "isolation": "same admitted H800, full model CPU offload and CUDA allocated-byte barrier between each real inference and Kernel measurement",
@@ -176,13 +187,27 @@
       "model_retry",
       "Kernelcompile_validation_measurement"
     ],
-    "small_model_final_choice": "0.8B and4B, compare both; no trained performance model"
+    "small_model_final_choice": "0.8B and4B, compare both; no trained performance model",
+    "paired_ablation_models": [
+      "Qwen/Qwen3.5-0.8B",
+      "Qwen/Qwen3.8-27B"
+    ],
+    "paired_ablation_budget": 4,
+    "paired_ablation_seeds": [
+      7
+    ]
   },
   "user_route_C": {
     "model": "Qwen/Qwen3.8-27B",
     "mode": "real LLM generated/iterated expression/rule, frozen before target tests",
-    "thinking": true,
+    "thinking": false,
     "reasoning_effort": "medium",
-    "no_agent_policy_rewriting": true
-  }
+    "no_agent_policy_rewriting": true,
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 2048
+    },
+    "static_failure": "initial thinking greedy8192token attempt did not produce a final program; concise no-thinking rule0 accepted unchanged; rule1 uses the SAME final decoding to avoid confounding feedback with decoding"
+  },
+  "protocol_revision": "post-pilot, before target labels; scalar-choice-v3 plus fixed sampled decoding"
 }

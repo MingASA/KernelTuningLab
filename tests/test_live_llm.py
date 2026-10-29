@@ -14,8 +14,9 @@ from kernel_tuning_lab.space import ConfigSpace
 def setup(tmp_path,monkeypatch,texts):
     manifest={'model_id':'unit-not-real-model','full_weight_hashes':True};file=tmp_path/'manifest.json';file.write_text(json.dumps(manifest));sha=hashlib.sha256(file.read_bytes()).hexdigest()
     class Fixture:
-        def infer(self,messages,seed,max_tokens):
+        def infer(self,messages,seed,max_tokens,decoding='greedy'):
             return {'text':texts.pop(0),'messages':list(messages),'input_token_ids':[],'output_token_ids':[],
+                'decoding':decoding,
                 'output_tokens':2,'upload_wall_s':0.,'generation_wall_s':0.,
                 'offload_and_release_wall_s':0.,'all_parameters_on_CPU_before_Kernel':True,
                 'CUDA_allocated_before_bytes':0,'CUDA_allocated_after_bytes':0}
@@ -65,3 +66,10 @@ def test_bare_config_pilot_response_gets_only_a_lossless_envelope(tmp_path,monke
     assert row['text']=='{"x":2}' and row['response_form']=='bare_complete_config_lossless_envelope'
     for bad in ['{"x":[1,2]}','{"x":1,"latency_ms":0.1}','{"other":1}']:
         with pytest.raises(ValueError):live_llm.parse_decision(bad,{'x'})
+
+
+def test_sampled_profile_reaches_the_actual_model_call_without_hidden_fallback(tmp_path,monkeypatch):
+    policy=setup(tmp_path,monkeypatch,['{"config":{"x":2}}']);policy.decoding='sampled'
+    policy.suggest(HardwareSpec('unit'),OperatorSpec('fixture'),ShapeSpec({'M':1}),
+        ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
+    assert json.loads((tmp_path/'llm-live-calls.jsonl').read_text())['decoding']=='sampled'
