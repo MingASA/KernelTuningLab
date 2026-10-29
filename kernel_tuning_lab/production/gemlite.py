@@ -82,7 +82,7 @@ def native_api():
     spec=importlib.util.find_spec('gemlite')
     if spec is None:raise RuntimeError('optional GemLite package is not installed')
     root=Path(spec.origin).parent.parent
-    files=[name for name in sources.manifest()['gemlite']['files'] if name.endswith('.py')]
+    files=[name for name in sources.manifest()['gemlite']['files'] if name.startswith('gemlite/') and name.endswith('.py')]
     identity=sources.native_component(root,'gemlite',files)
     module=importlib.import_module('gemlite.core')
     return module,identity
