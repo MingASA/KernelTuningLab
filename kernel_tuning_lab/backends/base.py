@@ -4,12 +4,22 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from ..models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec
+from ..models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec,canonical_json
 from ..space import ValidationResult
 
 
 class BackendUnavailableError(RuntimeError):
     """A required runtime or physical device is absent."""
+
+
+class UnsupportedPreparationError(ValueError):
+    """A native selection lacks this input/packing preparation path.
+
+    This is not a compiler failure or a permanent hardware prohibition.
+    Details retain the original selection before any candidate is executed.
+    """
+    def __init__(self,message,*,details=None):
+        super().__init__(message);self.details=dict(details or {});canonical_json(self.details)
 
 
 class KernelAdapter(Protocol):

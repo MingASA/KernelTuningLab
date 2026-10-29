@@ -107,6 +107,16 @@ def test_native_artifact_identity_is_resolved_before_cache_lookup(tmp_path):
         assert first.environment['native_execution_identity']!=second.environment['native_execution_identity']
 
 
+def test_native_unsupported_packing_is_not_fabricated_as_compilation_or_latency(tmp_path):
+    from kernel_tuning_lab.sdk import UnsupportedPreparationError
+    def build(ctx,tile=1):
+        raise UnsupportedPreparationError('native selection has no logical packer',details={'native_template_id':0,'TileP':64})
+    record,*_=_evaluate(build,tmp_path)
+    assert record.status==RecordStatus.INVALID_CONFIG and not record.runtime_samples_ms
+    assert record.metadata['failure_class']=='unsupported_preparation'
+    assert record.metadata['native_preparation_details']['TileP']==64
+
+
 def test_config_dependent_packed_input_mutation_is_checked_without_hiding_task_input_changes(tmp_path):
     def build(ctx,tile=1):
         packed=ctx.register_prepared_input('backend_packed',[1.0])

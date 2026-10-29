@@ -10,6 +10,7 @@ from .search import SearchHistory
 from .storage import ExperimentStore
 from .space import ValidationResult
 from .space_tools import SpaceBuildBudget, SpaceBuildResult, PartialValidation, Relation, Forbidden
+from .backends.base import UnsupportedPreparationError
 
 
 def __getattr__(name):
@@ -28,4 +29,4 @@ __all__ = ["KernelDefinition", "OperatorDefinition", "ParameterSpec", "SearchAlg
            "MeasurementRecord", "RecordStatus", "SearchHistory", "WorkloadDistribution", "ExperimentStore",
            "ExecutionContext", "ExecutionPlan", "ExecutionStep", "AssetKernelAdapter",
            "SpaceBuildBudget", "SpaceBuildResult", "PartialValidation", "Relation", "Forbidden",
-           "CorrectnessClaim", "declare_correctness", "claim_matches"]
+           "CorrectnessClaim", "declare_correctness", "claim_matches", "UnsupportedPreparationError"]

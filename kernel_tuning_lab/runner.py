@@ -144,6 +144,12 @@ class BenchmarkRunner:
         except Exception as exc:
             status = (RecordStatus.COMPILE_ERROR if phase == "compile" else
                       RecordStatus.CORRECTNESS_ERROR if phase == "correctness" else RecordStatus.RUNTIME_ERROR)
+            from .backends.base import UnsupportedPreparationError
+            if isinstance(exc,UnsupportedPreparationError):
+                status=RecordStatus.INVALID_CONFIG
+                metadata.update(failure_class='unsupported_preparation',
+                    failure_scope='this implementation/input/software/packing path only; not architecture-wide',
+                    native_preparation_details=exc.details)
             reason = f"{phase}: {type(exc).__name__}: {exc}"
             metadata["traceback"] = traceback.format_exc(limit=8)
             from .inference_resources import COORDINATOR,ResourceContextLimit

@@ -92,6 +92,10 @@ class _Session:
     def close(self):
         with COORDINATOR.inference_window(self.lease_token):
             del self.model;gc.collect();self.torch.cuda.synchronize()
+            # Phase-end resource release, AFTER producer completion under the
+            # lease. This is not the quiescence proof and never runs between
+            # resident decisions. A child worker cannot reuse this allocator.
+            self.torch.cuda.empty_cache()
         COORDINATOR.unregister(self.lease_token)
     def infer(self,messages,seed,max_tokens,decoding='greedy',constraint=None):
         with COORDINATOR.inference_window(self.lease_token):

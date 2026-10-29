@@ -73,3 +73,16 @@ def test_sampled_profile_reaches_the_actual_model_call_without_hidden_fallback(t
     policy.suggest(HardwareSpec('unit'),OperatorSpec('fixture'),ShapeSpec({'M':1}),
         ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
     assert json.loads((tmp_path/'llm-live-calls.jsonl').read_text())['decoding']=='sampled'
+
+
+def test_phase_close_releases_allocator_after_completion_without_using_it_as_proof(monkeypatch):
+    from types import SimpleNamespace
+    from kernel_tuning_lab.inference_resources import ProcessCoordinator
+    gate=ProcessCoordinator();calls=[];monkeypatch.setattr(live_llm,'COORDINATOR',gate)
+    session=live_llm._Session.__new__(live_llm._Session);session.model=object()
+    session.torch=SimpleNamespace(cuda=SimpleNamespace(synchronize=lambda:calls.append('producer-sync'),empty_cache=lambda:calls.append('release-unused-allocator')))
+    session.lease_token=gate.register('CPU-fixture-not-model',mode='single_card_resident',device_uuid='fixture-device',identity={},
+        synchronize=lambda:calls.append('lease-completion-sync'))
+    session.close()
+    assert calls==['producer-sync','release-unused-allocator','lease-completion-sync']
+    assert not gate.participants and gate.phase=='idle'

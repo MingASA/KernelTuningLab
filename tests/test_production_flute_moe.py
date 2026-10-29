@@ -32,7 +32,22 @@ def test_int3_packing_constraints_are_not_just_template_ids():
     ctx=SpaceContext(h,o,ShapeSpec({'M':128,'N':512,'K':2048}))
     assert 'packing' in flute.hard_support(row.config,ctx)
     ctx=SpaceContext(h,o,ShapeSpec({'M':128,'N':2048,'K':2048}))
-    assert flute.hard_support(row.config,ctx) is None
+    assert 'TileP=32' in flute.hard_support(row.config,ctx)
+    packed=next(r for r in flute.candidates() if r.parameters['TileP']==32)
+    assert flute.hard_support(packed.config,ctx) is None
+
+
+def test_original_int3_packer_support_is_separate_from_source_and_compiled_templates():
+    from kernel_tuning_lab.production import native_sources
+    namespace={}
+    native_sources.host_functions('flute','flute/utils.py',{'_pack_3bit'},namespace)
+    with pytest.raises(NotImplementedError):namespace['_pack_3bit'](None,tile_P=64)
+    h=HardwareSpec('CPU planning',sm_count=132);op=OperatorSpec('fixture',parameters={'bits':3,'group_size':128})
+    ctx=SpaceContext(h,op,ShapeSpec({'M':128,'N':2048,'K':2048}))
+    assert len(flute.candidates())==36 and any(c.parameters['TileP']==64 for c in flute.candidates())
+    for row in flute.candidates():
+        reason=flute.hard_support(row.config,ctx)
+        if row.parameters['TileP']==64:assert reason and 'TileP=32' in reason
 
 
 def test_native_moe_rule_nearest_table_override_and_order_survive_export(tmp_path):

@@ -274,5 +274,67 @@
         "sha256": "8514dd1a18d314f593a055331def93cc4d8f742982d477c8d762cad3bb7996f8"
       }
     }
+  },
+  "pytorch26": {
+    "repository": "pytorch/pytorch",
+    "revision": "2236df1770800ffea5697b11b0bb0d910b2e59e1",
+    "files": {
+      "torch/nn/attention/flex_attention.py": {
+        "git_blob_sha": "40dd6c701ddd94e47151d88f6346f6252a2aac19",
+        "sha256": "11740f7ae998ab49b9e881291889b53572b822c064168a97cfcd0ae674fa23b6",
+        "vendored": "pytorch26/flex_attention_api.py"
+      },
+      "torch/_inductor/kernel/flex_attention.py": {
+        "git_blob_sha": "2318be5c423e5733d700fa7058ca8928c9f0d701",
+        "sha256": "3aed11592b2a0c9876341d6b5c34e2449d6729834e4e6f23f44a97e871d4286b",
+        "vendored": "pytorch26/flex_attention.py"
+      },
+      "torch/_inductor/kernel/flex_decoding.py": {
+        "git_blob_sha": "c1d99e259369996cb31b67708540aca64aab0c1f",
+        "sha256": "02ceba2724f6ace1195bdf010a934e65f20cfcd610fd19b01d8fd678081f0fc5",
+        "vendored": "pytorch26/flex_decoding.py"
+      },
+      "LICENSE": {
+        "git_blob_sha": "9315c4efb68a2a419904031f9657845f7f979baa",
+        "sha256": "47a26beb94e3f6b333a3677fc85d546f1fdfd2f0b3686c26d2fb5b10e0134165",
+        "vendored": "pytorch26/LICENSE"
+      }
+    }
+  },
+  "vllm085": {
+    "repository": "vllm-project/vllm",
+    "revision": "ba41cc90e8ef7f236347b2f1599eec2cbb9e1f0d",
+    "files": {
+      "vllm/model_executor/layers/fused_moe/fused_moe.py": {
+        "vendored": "vllm085/fused_moe.py",
+        "git_blob_sha": "a209715ede77cdab40732a90026a734f8acfda30",
+        "sha256": "045b22786b4fa02cf5527d589a3453f9209c3c8d4c99d78d9094dc1177dd2a12"
+      },
+      "vllm/model_executor/layers/fused_moe/moe_align_block_size.py": {
+        "vendored": "vllm085/moe_align_block_size.py",
+        "git_blob_sha": "07d51acf986749ad19568d0cfbdd5e5f63ad8d7f",
+        "sha256": "a26d5d6e769e7c72e7f12f63ef1f79fbce55bc2011dd6b71d6bbc4600b43bcc5"
+      },
+      "vllm/model_executor/layers/fused_moe/__init__.py": {
+        "vendored": "vllm085/fused_moe_init.py",
+        "git_blob_sha": "9829ccdb384fff7a1dfb48d6704327c4650379d5",
+        "sha256": "847de3d8ef58b53954dc6e289d6b97868df3c621986a2967ffdf6d8726b5bfa6"
+      },
+      "vllm/_custom_ops.py": {
+        "vendored": "vllm085/_custom_ops.py",
+        "git_blob_sha": "4c577c1c47e7af7e2cb62cb202c488dfe20c1208",
+        "sha256": "9d27e25ef6dcf891c98a18505b83a42c9ab7532ef861a20bccfd9e07746144b2"
+      },
+      "vllm/envs.py": {
+        "vendored": "vllm085/envs.py",
+        "git_blob_sha": "ea40bfff11b5b7a937474ed1fe46aa7fb0d01ed1",
+        "sha256": "5bd0b822bd6fbce1f7f5090dd0177eca0e1a7ed5af4b8135851042f04a82a05f"
+      },
+      "LICENSE": {
+        "vendored": "vllm085/LICENSE",
+        "git_blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    }
   }
 }

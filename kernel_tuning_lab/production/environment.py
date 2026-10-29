@@ -42,6 +42,7 @@ def installed_identity(backend,package,*,native_default=False):
     if spec is None or spec.origin is None:return {'backend':backend,'version':version,'availability':'no importable package root'}
     root=Path(spec.origin).parent.parent;profile=backend
     if backend=='pytorch' and version.split('+')[0]=='2.13.0':profile='pytorch213'
+    if backend=='pytorch' and version.split('+')[0]=='2.6.0':profile='pytorch26'
     pin=sources.manifest()[profile];files={}
     for relative in pin['files']:
         if relative.endswith(('.py','.pth','.json')):files[relative]=file_identity(root/relative)
@@ -54,6 +55,8 @@ def installed_identity(backend,package,*,native_default=False):
     for pattern in patterns:
         for path in sorted(directory.glob(pattern)):files[str(path.relative_to(root))]=file_identity(path)
     extras={}
+    if os.environ.get('KT_PRODUCTION_COMPONENT_MANIFEST'):
+        extras['validated_deployment_component_manifest_sha256']=file_identity(os.environ['KT_PRODUCTION_COMPONENT_MANIFEST'])
     if backend=='flute' and os.environ.get('KT_FLUTE_BUILD_MANIFEST'):
         extras['compiled_subset_manifest_sha256']=file_identity(os.environ['KT_FLUTE_BUILD_MANIFEST'])
     if native_default:

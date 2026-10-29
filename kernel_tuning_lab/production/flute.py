@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import time
 
-from ..sdk import KernelDefinition,ParameterSpec,SpaceDefinition,ExecutionPlan,ExecutionStep
+from ..sdk import KernelDefinition,ParameterSpec,SpaceDefinition,ExecutionPlan,ExecutionStep,UnsupportedPreparationError
 from . import native_sources as sources,suite_inputs,environment
 from .contracts import NativeCandidate,preparation_identity
 
@@ -59,6 +59,7 @@ def hard_support(config,ctx,*,fixed_parameters=None):
     parameters={**(fixed_parameters or {}),**dict(config.params)}
     tid=template_id(parameters,bits);tile_p=template_configs()[(bits,tid)]['TileP']
     if n%16 or (n//16)%tile_p:return 'original int3 packing requires N/16 divisible by template TileP'
+    if tile_p!=32:return 'FLUTE0.4.2 upstream _pack_3bit supports TileP=32 only for logical uint3 inputs; compiled/prepacked TileP64 is a separate preparation contract'
     if ctx.hardware.sm_count and not host_rules()['is_template_supported'](m,n,k,bits,tid,ctx.hardware.sm_count):
         return 'original FLUTE0.4.2 is_template_supported predicate rejects this input/template/SM count'
     return None
@@ -106,6 +107,14 @@ def build(ctx,*,mode,**parameters):
         selection={'native_template_cache_hit':len(tune._TEMPLATES)==before,'native_internal_tuning_wall_ms':(time.perf_counter()-start)*1000}
     else:tid=template_id(parameters,bits);selection={'native_internal_tuning_wall_ms':0.,'hidden_tuning_allowed':False}
     candidate=next(c for c in candidates(bits) if int(c.native_id)==tid)
+    preparation_trace={'backend':'FLUTE','version':VERSION,'native_template_id':tid,
+        'requested_configuration':dict(parameters) if mode=='explicit' else {'selection':'native'},
+        'effective_configuration':dict(candidate.parameters),'native_selection':selection,
+        'logical_input_layout':'N,K integer codes, upstream uint3 packer','packer_support':'TileP=32 only'}
+    ctx.metadata.setdefault('experiment_annotations',{}).update(preparation_trace)
+    if candidate.parameters['TileP']!=32:
+        raise UnsupportedPreparationError('native FLUTE selected TileP='+str(candidate.parameters['TileP'])+
+            ' but its unchanged0.4.2 logical int3 packer supports TileP=32 only; selector was not rewritten',details=preparation_trace)
     if identity.get('compiled_templates') is not None and tid not in identity['compiled_templates'].get(str(bits),[]):
         raise RuntimeError('template is source-expressible but not in this fixed compiled subset')
     if not utils.is_template_supported(m,n,k,bits,tid,sms):raise ValueError('actual upstream template support check failed')
@@ -146,6 +155,7 @@ def register_assets(catalog):
     space=SpaceDefinition({k:ParameterSpec(v,kind='categorical' if isinstance(v[0],str) else 'integer') for k,v in domains.items()},
         constraints=(partial(hard_support,fixed_parameters=fixed),),candidates=rows,name='FLUTE actual structured int3 template set')
     metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),
+        'logical_packing_support':{'bits':3,'TileP':[32],'source':'unchanged original _pack_3bit guard; does not remove raw/prepacked CUDA templates'},
         'compiled_profile':compiled_profile,'fixed_template_attributes':fixed,
         'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
         'packing_dependency':'TileP + bits + logical weights','ID_semantics':'native template_id resolved from structural parameters, never a continuous coordinate'}
