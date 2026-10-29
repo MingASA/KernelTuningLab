@@ -130,10 +130,18 @@ def build(ctx,*,mode,**parameters):
 def register_assets(catalog):
     op=suite_inputs.operator_definition();catalog.register(op)
     src=(__file__,suite_inputs.__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
-    rows=tuple(dict(c.parameters) for c in candidates(3));domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
+    compiled_profile=None
+    if os.environ.get('KT_FLUTE_BUILD_MANIFEST'):
+        compiled_profile=json.loads(Path(os.environ['KT_FLUTE_BUILD_MANIFEST']).read_text())
+        if compiled_profile.get('source_revision')!='9eb83a12d56949bbe7fe9c836ba97a67bd1e3761':raise ValueError('compiled FLUTE profile source mismatch')
+    available=candidates(3,None if compiled_profile is None else compiled_profile['compiled_templates'].get('3',[]))
+    rows=tuple(dict(c.parameters) for c in available if c.compiled is not False)
+    if not rows:raise ValueError('this compiled profile has no W3 templates; not a proof the upstream W3 space is empty')
+    domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
     space=SpaceDefinition({k:ParameterSpec(v,kind='categorical' if isinstance(v[0],str) else 'integer') for k,v in domains.items()},
         constraints=(hard_support,),candidates=rows,name='FLUTE actual structured int3 template set')
-    metadata={'pin':sources.pin('flute'),'source_template_count':len(rows),'compiled_template_set':'unknown until validated build manifest or actual execution',
+    metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),
+        'compiled_profile':compiled_profile,'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
         'packing_dependency':'TileP + bits + logical weights','ID_semantics':'native template_id resolved from structural parameters, never a continuous coordinate'}
     catalog.register(KernelDefinition('production/flute_w3_explicit','1.0.0',op.ref,partial(build,mode='explicit'),space,
         runtime='cuda',supports=_support,source_files=src,metadata=metadata))

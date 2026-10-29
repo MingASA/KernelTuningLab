@@ -149,12 +149,22 @@
         "git_blob_sha": "98540169dcd86b9de793b30dcc67f5667ec42f45",
         "sha256": "127e2e6466bbfac3c2189cc4f2a9d7751fd819b30d25de65378d66ae63bbafa6",
         "vendored": "sglang/score_mod.py"
+      },
+      "python/sglang/srt/layers/attention/triton_backend.py": {
+        "git_blob_sha": "d86ec9957baa6cabb43be5b976c12b6cc9296323",
+        "sha256": "8f1de9db0a82ffa7d254c4b1192372c7bfa849739ed8d92c3112736734107df4",
+        "vendored": "sglang/triton_backend.py"
+      },
+      "python/sglang/kernels/ops/attention/metadata.py": {
+        "git_blob_sha": "ba4866571ca1e05a71f59679dbb9cad0dba6e060",
+        "sha256": "8aa5db57763f5ecfb01a05beba74791d0bf3921952c789d8a8432abf25c231ca",
+        "vendored": "sglang/attention_metadata.py"
       }
     }
   },
   "pytorch": {
     "repository": "pytorch/pytorch",
-    "revision": "v2.14.0",
+    "revision": "2b3ec34829036a65cd9d1398ea72a0167dc37470",
     "files": {
       "torch/nn/attention/flex_attention.py": {
         "git_blob_sha": "15ce0c1303469bfeb1fdd66a754c294d8c087034",
@@ -165,6 +175,21 @@
         "git_blob_sha": "c23172f7aff0254e4f0f163fb2e6e355cbaec5f4",
         "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43",
         "vendored": "pytorch/LICENSE"
+      },
+      "torch/_inductor/kernel/flex/flex_attention.py": {
+        "git_blob_sha": "0a397c05f569df06059de1ac2f07c240121e204e",
+        "sha256": "58453a26355bdbad9532235e8455f9b6c22282803d628466ec06b6837d059fb9",
+        "vendored": "pytorch/inductor_flex_attention.py"
+      },
+      "torch/_inductor/kernel/flex/flex_decoding.py": {
+        "git_blob_sha": "c2a076ae0e988af953b6ae9a30651da2c4ab29c5",
+        "sha256": "b88b0b6e5db171af64887c7c8595802dc047f764a9b9f742b9119d818eab340f",
+        "vendored": "pytorch/inductor_flex_decoding.py"
+      },
+      "torch/_inductor/kernel/flex/common.py": {
+        "git_blob_sha": "82ef70b717adac3e9f7b85f1b8a67d7d9080e9c9",
+        "sha256": "d20df6180978954f79a576f20b32a021558318f0c53d2c7c3bb8164edfa1918d",
+        "vendored": "pytorch/inductor_flex_common.py"
       }
     }
   },

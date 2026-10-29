@@ -62,3 +62,17 @@ def pin(backend):
     data=manifest()[backend]
     return {'repository':data['repository'],'revision':data['revision'],
         'source_sha256':{k:v['sha256'] for k,v in data['files'].items()}}
+
+
+def jit_module(backend,relative,namespace,*,name):
+    """Original definitions/decorators with only dependency imports supplied.
+
+    Used by extracted native Triton implementations. This does not rewrite any
+    function body or launch a kernel; caller controls the admitted device.
+    """
+    import sys,types
+    path=source(backend,relative);tree=ast.parse(path.read_text())
+    nodes=[n for n in tree.body if not isinstance(n,(ast.Import,ast.ImportFrom))]
+    module=types.ModuleType(name);module.__file__=str(path);module.__dict__.update(namespace);sys.modules[name]=module
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),'exec'),module.__dict__)
+    return module
