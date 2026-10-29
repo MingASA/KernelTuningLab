@@ -48,9 +48,9 @@ def installed_identity(backend,package,*,native_default=False):
     directory=root/package
     # Only our selected backend's immediate binary artifacts, not unrelated
     # model weights or other users' files. Paths never enter public identities.
-    patterns={'flute':('_C*.so','data/*.pth'),
-        'vllm':('_C_stable_libtorch*.so','_moe_C_stable_libtorch*.so','model_executor/layers/fused_moe/configs/*.json'),
-        'gemlite':('*.json','triton_kernels/*.json')}.get(backend,())
+    patterns={'flute':('*.py','_C*.so','data/*.pth'),
+        'vllm':('_C_stable_libtorch*.so','_moe_C_stable_libtorch*.so','model_executor/layers/fused_moe/*.py','model_executor/layers/fused_moe/configs/*.json'),
+        'gemlite':('*.py','triton_kernels/*.py','*.json','triton_kernels/*.json')}.get(backend,())
     for pattern in patterns:
         for path in sorted(directory.glob(pattern)):files[str(path.relative_to(root))]=file_identity(path)
     extras={}

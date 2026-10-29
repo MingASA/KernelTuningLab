@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import time
 from .api_inference import outbound_task
 from .models import canonical_json
 
@@ -29,19 +30,25 @@ class LocalModelClient:
         if type(max_output_tokens) is not int or not 1<=max_output_tokens<=8192:raise ValueError('finite local output cap1..8192 required')
         if sampling:raise ValueError('this local provider declares greedy only; no provider capability guessing')
         task=outbound_task({**task,'route':route});outbound_task({'notice':system})
-        if self.session is None:
-            from .live_llm import _Session
-            self.session=_Session(self.manifest,self.mode,self.sha)
         messages=[{'role':'system','content':system},{'role':'user','content':canonical_json(task)}]
-        self.calls+=1
-        row=self.session.infer(messages,self.seed+self.calls-1,max_output_tokens)
-        row.update(route=route,model_identity=self.runtime_identity,evidence_level='real_local_model_inference',
-            schema_enforcement='JSON schema supplied as a contract only; final action/code checks remain mandatory',response_id=None,
-            estimated_usd=None,price_basis='local inference costs/time only; no cloud price fabricated')
-        if self.log_path:
-            self.log_path.parent.mkdir(parents=True,exist_ok=True)
-            with self.log_path.open('a') as stream:stream.write(canonical_json(row)+'\n')
-        return row
+        self.calls+=1;started=time.perf_counter();row={'messages':messages,'route':route,'model_identity':self.runtime_identity,
+            'evidence_level':'local_provider_attempt; model_execution_unconfirmed'}
+        try:
+            if self.session is None:
+                from .live_llm import _Session
+                self.session=_Session(self.manifest,self.mode,self.sha)
+            row.update(self.session.infer(messages,self.seed+self.calls-1,max_output_tokens))
+            row.update(evidence_level='real_local_model_inference',
+                schema_enforcement='JSON schema supplied as a contract only; final action/code checks remain mandatory',response_id=None,
+                estimated_usd=None,price_basis='local inference costs/time only; no cloud price fabricated')
+            return row
+        except Exception as exc:
+            row.update(error=type(exc).__name__+': '+str(exc),candidate_measurement_admitted=False);raise
+        finally:
+            row['client_total_wall_s']=time.perf_counter()-started
+            if self.log_path:
+                self.log_path.parent.mkdir(parents=True,exist_ok=True)
+                with self.log_path.open('a') as stream:stream.write(canonical_json(row)+'\n')
     def close(self):
         if self.session is not None:self.session.close();self.session=None
     def __enter__(self):return self

@@ -53,6 +53,8 @@ GemLite已从固定源码构建wheel。FLUTE在私有CUDA12.4/GCC11.2.1/Torch2.6
 
 vLLM0.30官方wheel在私有overlay安装，Torch2.13+cu132下两个stable-libtorch扩展CPU加载通过且CUDA未初始化。完整Python路径仍须完整可选依赖，导入失败逐次保留。安装、二进制加载、Python加载和GPU执行不能相互替代。
 
+首轮目标机验收：FLUTE补齐私有jaxtyping0.3.2/wadler-lindig0.1.7后完整Python路径CPU加载通过，原缺依赖失败保留。H800首次SGLang四次独立验收均在编译准备时失败：Triton3.2缺少GDC/PDL符号，未得到可排名延迟。不是H800数值错误或硬件被判不支持。兼容层仅给私有language投影添加“被调用即static_assert失败”的JIT符号，绕过constexpr关闭分支仍被依赖hasher提前解析的问题；原数值函数、全局Triton和USE_PDL=False契约不改。CPU缺符号/cache-key回归通过，修复后的GPU路径仍须独立验收，不能把旧失败改成成功。
+
 ## 身份、成本与优化器
 
 SDK新增可选无参`KernelDefinition.execution_identity`：在**缓存查询之前**绑定实际安装源码、选定扩展SHA、软件版本、配置表及相关运行选项。文件hash按size/mtime/ctime缓存，开销进入preflight/cache墙钟。新增回归验证“插件声明不变，原生文件变化→不命中旧测量”。不要在worker执行期间修改其依赖。
@@ -72,6 +74,8 @@ LocalModelClient只用完整指纹的已有checkpoint，B/C共用任务。默认
 资源上下文进入测量和失败缓存；常驻OOM仅属于该上下文，不永久禁用架构。合作门禁CPU线程测试已通过；“无模型/常驻静默/推理后warmup”的新GPU验收待空卡，旧LLM证据不能冒充新驻留协议已测。
 
 C完整程序入口：`ktlab ai-program submit/review/check/development/feedback/freeze/test/show`。原文、原程序、人工/静态编辑、源码SHA和父版本分别保存；必须明确可信审查后才执行。契约与开发评测用原v2 Runner/Store，冻结后不能继续同版本开发；读取test前持久化exposure。开发反馈不输出test路径/标签。受审进程不继承任意凭据环境，但不是恶意Python文件系统沙箱。CPU工作流fixture不算新LLM实测。
+
+迭代子版本继承父版本的测试曝光任务ID，预算/seed变化不能把已暴露Shape重新标为盲测；与检查/开发已见任务重叠的test明确标为retest。仍需外部划分/来源审计，不能防御故意隐瞒父版本的可信调用者。截断、refusal等失败响应也保留原文、request ID和可用usage；本地加载/生成失败有独立日志，不产生候选性能。
 
 ## 原生规则、配置表与验收入口
 

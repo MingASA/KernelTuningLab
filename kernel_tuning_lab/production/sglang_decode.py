@@ -9,7 +9,7 @@ from typing import NamedTuple,Optional,Tuple
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..torch_context import strict_fp32_reference
-from . import native_sources as sources,environment
+from . import native_sources as sources,environment,pdl_compat
 from .inputs import _counter,counter_scalar
 
 KNOBS={'BLOCK_N':(32,64,128),'num_warps':(2,4,8),'num_stages':(1,2,3),'MAX_KV_SPLITS':(1,2,4,8,16)}
@@ -79,6 +79,7 @@ def support(h,o,s):
 
 def native_api():
     import torch,triton,triton.language as tl
+    tl,missing_pdl=pdl_compat.language_with_optional_pdl(tl)
     ns={'torch':torch,'triton':triton,'tl':tl,'math':math,'logging':logging,
         'NamedTuple':NamedTuple,'Optional':Optional,'Tuple':Tuple,
         'is_hip':lambda:False,'is_gfx95_supported':lambda:False,'is_gfx1250_supported':lambda:False,
@@ -86,6 +87,7 @@ def native_api():
         'envs':SimpleNamespace()}
     sources.host_functions('sglang','python/sglang/kernels/ops/attention/score_mod.py',{'unpack_aux_tensors'},ns)
     decode=sources.jit_module('sglang','python/sglang/kernels/ops/attention/decode_attention.py',ns,name='_ktlab_sglang_native_decode')
+    decode.__ktlab_missing_pdl_intrinsics__=missing_pdl
     scheduler=sources.jit_module('sglang','python/sglang/kernels/ops/attention/metadata.py',
         {'torch':torch,'triton':triton,'tl':tl,'Optional':Optional},name='_ktlab_sglang_native_metadata')
     return decode,scheduler
@@ -127,6 +129,7 @@ def build(ctx,*,mode,BLOCK_N=None,num_warps=None,num_stages=None,MAX_KV_SPLITS=N
             {'BLOCK_N':BLOCK_N,'num_warps':num_warps,'num_stages':num_stages,'MAX_KV_SPLITS':MAX_KV_SPLITS},
         native_policy_scope='original GPU per-sequence split scheduler, standard non-MLA CUDA wrapper; profile cap explicit, not inferred from server defaults',
         workspace_policy={'partials':[b,hq,cap,d],'lse':[b,hq,cap],'merge_cap':cap,'min_block_KV':32},
+        PDL=False,missing_compiler_PDL_intrinsics=list(native.__ktlab_missing_pdl_intrinsics__),
         scope='native GPU split scheduling + stage1 paged/gqa partials + stage2 merge, no hidden continuous-KV substitute')
     initialize();torch.cuda.synchronize();annotations['actual_per_sequence_splits']=splits.cpu().tolist()
     def invoke():
@@ -136,7 +139,7 @@ def build(ctx,*,mode,BLOCK_N=None,num_warps=None,num_stages=None,MAX_KV_SPLITS=N
 
 
 def register_assets(catalog):
-    src=(__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
+    src=(__file__,sources.__file__,pdl_compat.__file__,str(sources.ROOT/'manifest.json'))
     op=OperatorDefinition('production/paged_decode','1.0.0',('B','H_Q','H_KV','D','MAX_SEQ','PAGE_SIZE'),('float16','bfloat16'),
         generate,reference,parameters={'length_pattern':'ragged'},validate=validate,
         tolerances={'float16':(.005,.005),'bfloat16':(.02,.02)},source_files=src,

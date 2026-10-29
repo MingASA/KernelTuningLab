@@ -34,7 +34,8 @@ def describe_task(hardware,operator,shape,space,history,budget):
         parameters[name]={'kind':spec.kind,'size':len(domain),'default':spec.default,
             'active_when':dict(spec.active_when),
             'values':list(domain) if len(domain)<=32 else None,
-            'numeric_bounds':[min(domain),max(domain)] if spec.kind in ('integer','real') else None}
+            'numeric_bounds':([min(domain[0],domain[-1]),max(domain[0],domain[-1])] if isinstance(domain,range) and domain else
+                [min(domain),max(domain)] if len(domain)<=4096 else None) if spec.kind in ('integer','real') else None}
     return {'schema_version':1,'feature_version':'shape-space-v1','operator':{'kind':operator.kind,
         'implementation':operator.implementation,'dtype':operator.dtype,'parameters':dict(operator.parameters)},
         'hardware':{'name':hardware.name,'architecture':hardware.architecture,'sm_count':hardware.sm_count,

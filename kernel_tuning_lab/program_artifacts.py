@@ -17,6 +17,13 @@ from .process_environment import reviewed_environment
 
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+def task_ids(spec):
+    # Conservative task exposure: budget/seed changes do not make a previously
+    # revealed Shape/implementation a fresh blind target. Unspecified hardware
+    # stays conservatively unspecified, never guessed from a host path.
+    return sorted({stable_id([spec.get('hardware'),spec['operator'],spec.get('dtype','float32'),
+        spec.get('parameters',{}),kernel if isinstance(kernel,str) else kernel['asset'],shape])
+        for kernel in spec['kernels'] for shape in spec['shapes']})
 def write(path,value):
     temporary=path.with_suffix('.tmp');temporary.write_text(canonical_json(value)+'\n');temporary.replace(path)
 
@@ -32,15 +39,19 @@ def submit(directory,*,response,program,algorithm_ref,provenance,edited_program=
         [('model-response.txt',response),('model-program.py',program),('program.py',edited_program or program)]}
     if any(len(b)>1024**2 for b in blobs.values()):raise ValueError('program artifacts limited to1MiB each')
     compile(blobs['program.py'],'reviewed-program.py','exec') # syntax only; never imports/executes generated code
+    inherited=[]
     if parent:
         previous=verify(parent)
         if previous.get('frozen') is None:raise ValueError('parent version must be frozen before iteration')
-        parent={'artifact_id':previous['artifact_id'],'source_sha256':previous['hashes']['program.py']}
+        inherited=sorted(set(previous.get('inherited_exposed_tasks',[]))|set(previous.get('exposed_tasks',[])))
+        parent={'artifact_id':previous['artifact_id'],'source_sha256':previous['hashes']['program.py'],
+            'test_exposed':previous['test_exposed']}
     directory.mkdir(parents=True,mode=0o700)
     for name,blob in blobs.items():(directory/name).write_bytes(blob)
     manifest={'schema_version':1,'algorithm_ref':algorithm_ref,'provenance':provenance,'parent':parent,
         'hashes':{name:sha(directory/name) for name in blobs},'created_unix_s':time.time(),
-        'review':None,'checks':[],'development':[],'frozen':None,'tests':[],'test_exposed':False}
+        'review':None,'checks':[],'development':[],'frozen':None,'tests':[],'test_exposed':False,
+        'inherited_exposed_tasks':inherited,'exposed_tasks':[]}
     manifest['artifact_id']=stable_id({k:manifest[k] for k in ('algorithm_ref','provenance','parent','hashes')})
     write(directory/'artifact.json',manifest);return manifest
 
@@ -76,6 +87,9 @@ def evaluate(directory,spec_path,*,stage):
         if spec.get('schema_version')!=2:raise ValueError('use the existing schema_version=2 experiment')
         if stage=='development' and spec.get('split','train') not in ('train','validation'):raise ValueError('development accepts split=train or validation only, never held-out test')
         if stage=='test' and spec.get('split')!='test':raise ValueError('test stage requires an explicitly labelled test spec')
+        tasks=task_ids(spec);inherited=set(value.get('inherited_exposed_tasks',[]))
+        if stage=='development' and inherited&set(tasks):
+            raise ValueError('parent exposed this target; do not turn its test labels into blind-workflow development feedback')
         if stage=='check' and spec.get('split','train')=='test':raise ValueError('do not inspect held-out task in development contract checks')
         if len(spec.get('algorithms',[]))!=1 or spec['algorithms'][0]['asset']!=value['algorithm_ref']:
             raise ValueError('experiment must select exactly the submitted algorithm ref')
@@ -84,8 +98,12 @@ def evaluate(directory,spec_path,*,stage):
         attempt=directory/'evaluations'/f'{stage}-{len(value[key]):03d}'
         attempt.mkdir(parents=True);write(attempt/'spec.json',spec)
         # Persist exposure BEFORE a worker can read a target, including failures.
-        if stage=='test':value['test_exposed']=True
-        entry={'spec_sha256':sha(attempt/'spec.json'),'stage':stage,'output':str(attempt/'run'),'status':'running'}
+        if stage=='test':
+            value['test_exposed']=True;value['exposed_tasks']=sorted(set(value.get('exposed_tasks',[]))|set(tasks))
+        developed={task for run in (*value['checks'],*value['development']) for task in run.get('task_ids',[])}
+        entry={'spec_sha256':sha(attempt/'spec.json'),'stage':stage,'output':str(attempt/'run'),'status':'running','task_ids':tasks,
+            'target_evidence_scope':'previously_exposed_or_developed_task_retest' if stage=='test' and (inherited|developed)&set(tasks)
+                else 'frozen_target_evaluation; external split/provenance audit still required' if stage=='test' else 'development_only'}
         value[key].append(entry);write(directory/'artifact.json',value)
         result=execute_asset_experiment(attempt/'spec.json',attempt/'run',check_only=stage=='check',worker_environment=reviewed_environment())
         entry.update(status=result['status'],exit_code=result.get('exit_code'),summary_sha256=sha(attempt/'run/run_summary.json'))

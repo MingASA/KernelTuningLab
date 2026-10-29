@@ -71,7 +71,9 @@ class _Session:
             raise ValueError('LLM/Kernel GPU UUID mismatch')
         self.mode=resource_mode;before=time.monotonic()
         self.lease_token=COORDINATOR.register(manifest['model_id'],mode=resource_mode,device_uuid=actual,
-            identity={'model_id':manifest['model_id'],'manifest_sha256':manifest_sha},
+            identity={'model_id':manifest['model_id'],'manifest_sha256':manifest_sha,
+                'loader_source_sha256':digest_file(__file__),'attention_backend':'sdpa','dtype':'bfloat16',
+                'torch':torch.__version__,'transformers':transformers.__version__},
             synchronize=lambda:torch.cuda.synchronize(),resident_bytes=manifest['weights_bytes'] if resource_mode=='single_card_resident' else 0)
         try:
             self.tokenizer=transformers.AutoTokenizer.from_pretrained(manifest['local_path'],local_files_only=True,trust_remote_code=False)

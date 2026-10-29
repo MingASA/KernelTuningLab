@@ -192,7 +192,7 @@ class PublicModelClient:
         try:
             for attempt in range(self.spec.max_retries+1):
                 if self.transport is None:self.authorization.check(self.spec,self.requests)
-                self.requests+=1;before=time.perf_counter();request_id=None
+                self.requests+=1;before=time.perf_counter();request_id=None;value=None
                 try:
                     payload=canonical_json(body).encode()
                     if self.transport is not None:value,headers=self.transport(payload)
@@ -215,6 +215,8 @@ class PublicModelClient:
                     time.sleep(min(2.,.25*2**attempt))
                 except Exception as exc:
                     events.append({'attempt':attempt,'status':'error','error':redact(type(exc).__name__+': '+str(exc)),
+                        'request_id':request_id,'response':redact(value),
+                        'usage_when_available':value.get('usage') if isinstance(value,dict) else None,
                         'network_and_service_wall_s':time.perf_counter()-before,'billing':'unknown; ambiguous timeout is not retried'})
                     raise
             usage=result['usage'];price=None

@@ -99,9 +99,15 @@ def test_reviewed_full_sdk_program_contract_development_freeze_test(tmp_path,mon
     before=programs.feedback(artifact);assert before['development_feedback']['test_labels_read'] is False
     assert programs.freeze(artifact)['source_sha256']==hashlib.sha256(program.read_bytes()).hexdigest()
     with pytest.raises(ValueError,match='frozen'):programs.evaluate(artifact,file,stage='development')
-    spec['split']='test';file.write_text(json.dumps(spec))
+    spec['split']='test';spec['shapes']=[{'M':3,'N':4,'K':6}];file.write_text(json.dumps(spec))
     assert programs.evaluate(artifact,file,stage='test')['status']=='passed'
     assert programs.verify(artifact)['test_exposed'] is True
     assert programs.feedback(artifact)==before
+    child=tmp_path/'version2'
+    descendant=programs.submit(child,response=response,program=program,algorithm_ref='generated/constructive_v1@1.0.0',parent=artifact,
+        provenance={'route':'C','provider':'test','model':'none','evidence_level':'contract_fixture_not_LLM'})
+    assert descendant['inherited_exposed_tasks']==programs.verify(artifact)['exposed_tasks']
+    programs.review(child,'test-reviewer');spec['split']='validation';file.write_text(json.dumps(spec))
+    with pytest.raises(ValueError,match='parent exposed'):programs.evaluate(child,file,stage='development')
     (artifact/'program.py').write_text('# altered')
     with pytest.raises(ValueError,match='changed'):programs.verify(artifact)

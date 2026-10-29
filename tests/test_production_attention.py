@@ -67,3 +67,15 @@ print('native JIT definitions loaded on CPU, no CUDA device initialized')
 '''
     result=subprocess.run([sys.executable,'-c',script],env={**os.environ,'CUDA_VISIBLE_DEVICES':''},capture_output=True,text=True,timeout=45)
     assert result.returncode==0,result.stderr
+
+
+def test_constexpr_disabled_pdl_dependency_hashing_keeps_original_body_and_no_global_patch(monkeypatch):
+    pytest.importorskip('torch');triton=pytest.importorskip('triton')
+    import triton.language as language
+    for name in ('gdc_launch_dependents','gdc_wait'):monkeypatch.delattr(language.extra.cuda,name,raising=False)
+    decode,_=sglang_decode.native_api()
+    assert decode.__ktlab_missing_pdl_intrinsics__==('gdc_launch_dependents','gdc_wait')
+    assert not hasattr(language.extra.cuda,'gdc_wait') # no installed/global mutation
+    affected=[value for value in vars(decode).values() if hasattr(value,'src') and 'tl.extra.cuda.gdc_' in value.src]
+    assert len(affected)>=2
+    for function in affected:assert function.cache_key

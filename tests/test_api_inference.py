@@ -56,3 +56,14 @@ def test_http_hostname_does_not_hide_a_local_gpu_service():
         with pytest.raises(APIAuthorizationRequired):require_public_service_location(endpoint)
     def local_dns(*args,**kwargs):return [(2,1,6,'',('127.0.0.1',443))]
     with pytest.raises(APIAuthorizationRequired):require_public_service_location('https://looks-remote.example/v1/responses',resolver=local_dns)
+
+
+def test_incomplete_response_evidence_and_usage_are_retained_even_when_rejected(tmp_path):
+    response={'id':'truncated-fixture','usage':{'prompt_tokens':11,'completion_tokens':4},
+        'choices':[{'finish_reason':'length','message':{'content':'{"partial":'}}]}
+    log=tmp_path/'calls.jsonl'
+    client=PublicModelClient(provider(),log_path=log,transport=lambda payload:(response,{'x-request-id':'failed-output-fixture'}))
+    with pytest.raises(ProviderResponseError):client.invoke({'shape':{'M':1}},system='JSON only')
+    row=json.loads(log.read_text());assert row['events'][0]['response']==response
+    assert row['events'][0]['request_id']=='failed-output-fixture'
+    assert row['events'][0]['usage_when_available']['completion_tokens']==4 and row['result'] is None
