@@ -195,7 +195,13 @@
     "paired_ablation_budget": 4,
     "paired_ablation_seeds": [
       7
-    ]
+    ],
+    "structured_output": {
+      "primary": true,
+      "grammar": "full statically feasible set, not a random pool; actual HF model logits choose token branches; removes revealed configs without changing any selected config",
+      "allowance": "complete static set<=50000configs,<=15s build,<=1000000token nodes; otherwise explicit refusal",
+      "freeform_pilots": "greedy and sampled original outputs/repetitions retained as output-contract ablations; no automatic heuristic substitution"
+    }
   },
   "user_route_C": {
     "model": "Qwen/Qwen3.8-27B",

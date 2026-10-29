@@ -14,7 +14,7 @@ from kernel_tuning_lab.space import ConfigSpace
 def setup(tmp_path,monkeypatch,texts):
     manifest={'model_id':'unit-not-real-model','full_weight_hashes':True};file=tmp_path/'manifest.json';file.write_text(json.dumps(manifest));sha=hashlib.sha256(file.read_bytes()).hexdigest()
     class Fixture:
-        def infer(self,messages,seed,max_tokens,decoding='greedy'):
+        def infer(self,messages,seed,max_tokens,decoding='greedy',constraint=None):
             return {'text':texts.pop(0),'messages':list(messages),'input_token_ids':[],'output_token_ids':[],
                 'decoding':decoding,
                 'output_tokens':2,'upload_wall_s':0.,'generation_wall_s':0.,

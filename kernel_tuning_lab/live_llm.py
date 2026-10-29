@@ -77,7 +77,7 @@ class _Session:
         self.model.eval();self.load_s=time.monotonic()-before;self.loading_info=loading_metadata(info)
         self.parameter_count=sum(p.numel() for p in self.model.parameters())
         if self.parameter_count<100_000_000:raise ValueError('not the expected complete local language model')
-    def infer(self,messages,seed,max_tokens,decoding='greedy'):
+    def infer(self,messages,seed,max_tokens,decoding='greedy',constraint=None):
         torch=self.torch;before_bytes=torch.cuda.memory_allocated();before=time.monotonic()
         prompt=self.tokenizer.apply_chat_template(messages,add_generation_prompt=True,tokenize=False,
             enable_thinking=False,preserve_thinking=False,reasoning_effort='low')
@@ -89,11 +89,17 @@ class _Session:
             'CPU_model_load_wall_s':self.load_s,'parameter_count':self.parameter_count,'loading_info':self.loading_info}
         params={'max_new_tokens':max_tokens,'do_sample':decoding=='sampled','max_time':90}
         if decoding=='sampled':params.update(temperature=.7,top_p=.8,top_k=20,repetition_penalty=1.)
+        prefix_fn=None
+        if constraint is not None:
+            eos=self.model.generation_config.eos_token_id;eos=eos if isinstance(eos,list) else [eos]
+            offset=cpu_inputs['input_ids'].shape[-1]
+            prefix_fn=lambda batch,ids:constraint.allowed(ids[offset:].tolist(),eos)
         try:
             torch.cuda.synchronize();start=time.monotonic();self.model.to('cuda:0');torch.cuda.synchronize()
             row['upload_wall_s']=time.monotonic()-start;inputs=cpu_inputs.to('cuda:0')
             start=time.monotonic()
-            with torch.inference_mode():result=self.model.generate(**inputs,**params)
+            with torch.inference_mode():result=self.model.generate(**inputs,**params,
+                **({'prefix_allowed_tokens_fn':prefix_fn} if prefix_fn is not None else {}))
             torch.cuda.synchronize();row['generation_wall_s']=time.monotonic()-start
             ids=result[0,inputs['input_ids'].shape[-1]:].tolist()
             eos=self.model.generation_config.eos_token_id
@@ -119,7 +125,7 @@ class _Session:
 
 
 class LiveDecision:
-    def __init__(self,seed=0,*,model_manifest,manifest_sha256,max_new_tokens=192,max_retries=2,decoding='greedy'):
+    def __init__(self,seed=0,*,model_manifest,manifest_sha256,max_new_tokens=192,max_retries=2,decoding='greedy',structured_output=False):
         blob=Path(model_manifest).read_bytes()
         if hashlib.sha256(blob).hexdigest()!=manifest_sha256:raise ValueError('frozen local model manifest mismatch')
         self.manifest=json.loads(blob)
@@ -127,6 +133,8 @@ class LiveDecision:
         self.sha=manifest_sha256;self.seed=seed;self.max_tokens=max_new_tokens;self.retries=max_retries;self.output=None
         if decoding not in ('greedy','sampled'):raise ValueError('decoding is greedy or sampled; no implicit profile fallback')
         self.decoding=decoding
+        if type(structured_output) is not bool:raise ValueError('structured_output is boolean')
+        self.structured=structured_output;self.grammar=None;self.grammar_context=None
         if type(max_retries) is not int or not 0<=max_retries<=2 or not 64<=max_new_tokens<=512:raise ValueError('bounded live inference settings required')
         self.diagnostics={'model_id':self.manifest['model_id'],'actual_model_calls':0,'model_retries':0,
             'upload_wall_s':0.,'generation_wall_s':0.,'offload_wall_s':0.,'output_tokens':0,
@@ -138,7 +146,9 @@ class LiveDecision:
             'inference_backend':'Transformers5.8.1/sdpa/bfloat16','model_context':'target revealed history only',
             'versions':{name:importlib.metadata.version(name) for name in ('torch','transformers','accelerate','safetensors')},
             'isolation':'sequential same GPU, full weight offload before Kernel','max_new_tokens':self.max_tokens,
-            'decoding':self.decoding,'sampling_profile':{'temperature':.7,'top_p':.8,'top_k':20,'repetition_penalty':1.} if self.decoding=='sampled' else None}
+            'decoding':self.decoding,'structured_output':self.structured,
+            'grammar':'complete static feasible set; no performance labels; exclude revealed configs' if self.structured else None,
+            'sampling_profile':{'temperature':.7,'top_p':.8,'top_k':20,'repetition_penalty':1.} if self.decoding=='sampled' else None}
     def bind_trial(self,*,output_dir,identity):self.output=Path(output_dir)
     def suggest(self,hardware,operator,shape,space,history,budget,batch_size=1):
         if budget.exhausted(0,0):return []
@@ -153,10 +163,29 @@ class LiveDecision:
         messages=[{'role':'system','content':system},{'role':'user','content':canonical_json(task)}]
         if self.sha not in _SESSIONS:_SESSIONS[self.sha]=_Session(self.manifest)
         session=_SESSIONS[self.sha]
+        if self.structured:
+            context=(hardware.id,operator.id,shape.id,space.fingerprint)
+            if self.grammar is None:
+                from .token_constraints import ConfigTokenTrie
+                began=time.monotonic()
+                built=space.build_feasible(hardware,operator,shape,
+                    budget=SpaceBuildBudget(max_nodes=500000,max_wall_time_s=15,max_configs=50000))
+                if not built.complete:raise ValueError('full static output grammar cannot be built within its declared allowance: '+built.status)
+                self.grammar=ConfigTokenTrie(built.configs,session.tokenizer);self.grammar_context=context
+                if self.grammar.max_output_tokens>self.max_tokens:
+                    raise ValueError('declared output token cap cannot cover the full config grammar')
+                self.diagnostics['grammar']={'mode':'HF prefix_allowed_tokens_fn; actual model logits choose every branch',
+                    'full_static_configs':len(built.configs),'token_nodes':len(self.grammar.edges),
+                    'max_output_tokens':self.grammar.max_output_tokens,
+                    'build_wall_s':time.monotonic()-began,'space_build':dict(built.diagnostics)}
+            if context!=self.grammar_context:raise ValueError('one live decoder cannot mix task contexts')
+            self.grammar.exclude(seen)
+            if not self.grammar.remaining:self.last_proposal_status='complete_static_set_exhausted';return []
+            self.diagnostics['grammar']['remaining_configs']=self.grammar.remaining
         for attempt in range(self.retries+1):
             self.diagnostics['actual_model_calls']+=1
             call_started=time.monotonic()
-            try:row=session.infer(messages,self.seed+len(history)*1009+attempt,self.max_tokens,self.decoding)
+            try:row=session.infer(messages,self.seed+len(history)*1009+attempt,self.max_tokens,self.decoding,self.grammar)
             except Exception as exc:
                 failed={'model_manifest_sha256':self.sha,'observation_index':len(history),'attempt':attempt,
                     'messages':messages,'error':type(exc).__name__+': '+str(exc),
@@ -185,5 +214,5 @@ class LiveDecision:
 
 ASSETS=(SearchAlgorithmDefinition('llm/live_local_decision','1.0.0',LiveDecision,
     SearchCapabilities(required_parameters=('BLOCK_M','BLOCK_N','BLOCK_K','num_warps','num_stages','GROUP_M')),
-    source_files=('local_llm.py','external_search.py'),
+    source_files=('local_llm.py','external_search.py','token_constraints.py'),
     metadata={'scope':'B: real small-model next-step decisions; weights offloaded between actions; no dedicated performance-model training'}),)
