@@ -99,6 +99,16 @@ def test_native_smac_exhaustion_after_all_finite_points_is_not_a_contract_failur
     assert engine.diagnostics['native_space_exhausted'] and engine.diagnostics['tells']>=3
 
 
+def test_warm_smac_uses_native_additional_initial_design_then_native_model():
+    warm=[{'x':3,'y':6},{'x':4,'y':6}]
+    engine=SMACSearch(seed=7,warm_start_configs=warm,warm_start_source={'split':'train','fixture':True})
+    rows,_,_=drive(engine,12)
+    assert {KernelConfig(c).id for c in warm}<={r.config.id for r in rows[:4]}
+    assert engine.diagnostics['warm_initial_configs']==2
+    assert engine.diagnostics['total_initial_design_requested']==4
+    assert engine.diagnostics['model_fitted'] and engine.diagnostics['proposals_with_fitted_model']>0
+
+
 def test_smac_structured_equality_mapping_preserves_feasibility():
     space=ConfigSpace({'x':tuple(range(8)),'y':tuple(range(8))},rules=(Relation('x','==','y'),))
     engine=SMACSearch(seed=2);rows,_,_=drive(engine,4,space)

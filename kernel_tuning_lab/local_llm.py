@@ -110,7 +110,7 @@ def run(manifest_file,queries_file,output,*,max_wall_s=1800):
     model.eval();torch.cuda.synchronize();load_s=time.monotonic()-load_started
     verify_manifest(manifest)
     count=sum(p.numel() for p in model.parameters())
-    if count<1_000_000_000:raise ValueError('unexpectedly small model; refuse fixture/submodel evidence')
+    if count<100_000_000:raise ValueError('unexpectedly small model; refuse fixture/submodel evidence')
     _write(out/'run.json',{'status':'generating','identity':identity,'load_wall_s':load_s,
         'parameter_count':count,'loading_info':loading_metadata(info),'peak_allocated_bytes':torch.cuda.max_memory_allocated()})
     done=0

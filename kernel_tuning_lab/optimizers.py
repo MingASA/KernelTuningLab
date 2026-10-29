@@ -73,12 +73,17 @@ class _Audit:
 class SMACSearch(_Audit):
     name = 'smac_rf'
 
-    def __init__(self, seed=0, initial_design_size=4, max_proposals=128, max_native_trials=10_000):
+    def __init__(self, seed=0, initial_design_size=4, max_proposals=128, max_native_trials=10_000,
+                 warm_start_configs=None,warm_start_source=None):
         super().__init__(seed)
         if any(type(v) is not int or v < 1 for v in (initial_design_size,max_proposals,max_native_trials)):
             raise ValueError('positive native optimizer limits required')
         self.initial_design_size = initial_design_size; self.max_proposals = max_proposals
         self.max_native_trials = max_native_trials; self.engine = None; self.pending = None
+        self.warm_start_configs=tuple(KernelConfig(c) for c in (warm_start_configs or ()))
+        if len(self.warm_start_configs)>=initial_design_size or len({c.id for c in self.warm_start_configs})!=len(self.warm_start_configs):
+            raise ValueError('warm configs must be distinct and leave at least one native initial-design point')
+        self.warm_start_source=warm_start_source
         self.told = set(); self.context = None; self.temporary = None
         self.diagnostics.update(engine='SMAC native ask/tell',versions={n:PINS[n] for n in ('smac','ConfigSpace')},
             initial_design_requested=initial_design_size,asks=0,tells=0,static_rejections=0,
@@ -167,7 +172,17 @@ class SMACSearch(_Audit):
             directory = Path(self.temporary.name)
         scenario=Scenario(cs,deterministic=True,n_trials=self.max_native_trials,seed=self.seed,
                           n_workers=1,output_directory=directory,crash_cost=1e12)
-        design=Facade.get_initial_design(scenario,n_configs=self.initial_design_size,max_ratio=1.0)
+        additional=[]
+        if self.warm_start_configs and space.conditional:
+            raise ValueError('native warm initialization currently supports unconditional domains only')
+        for config in self.warm_start_configs:
+            if not space.validate(config,hardware,operator,shape).valid or space.normalize(config).id!=config.id:
+                raise ValueError('warm source config is outside the authoritative current space')
+            additional.append(CS.Configuration(cs,values={name:encoders[name][canonical_json(config.get(name))] for name in domains}))
+        design=Facade.get_initial_design(scenario,n_configs=self.initial_design_size-len(additional),
+            max_ratio=1.0,additional_configs=additional)
+        self.diagnostics.update(warm_initial_configs=len(additional),warm_start_source=self.warm_start_source,
+            total_initial_design_requested=self.initial_design_size)
         self.engine=Facade(scenario,initial_design=design,intensifier=Facade.get_intensifier(scenario,max_config_calls=1),
                            target_function=None,logging_level=False,overwrite=True)
         # CPU resource control, retaining the upstream model and its seed.
