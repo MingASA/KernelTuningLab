@@ -237,8 +237,23 @@ def native_temporary_bytes(shape,dtype,configuration,chunk_size):
         'scope':'source-derived first/full-chunk buffers; native dynamic allocations, not ctx-owned workspace; transient alignment, allocator and Graph capture may retain more'}
 
 
+class _ActualLaunchTrace(shared._KernelTrace):
+    def __getitem__(self,grid):
+        original=super().__getitem__(grid)
+        def launch(*args,**kwargs):
+            compiled=original(*args,**kwargs);slot=str(self.index-1)
+            actual=self.ctx.metadata['experiment_annotations']['actual_launch_parameters'][slot]
+            metadata=getattr(compiled,'metadata',None)
+            for name in ('num_warps','num_stages'):
+                value=getattr(metadata,name,None)
+                actual[name]=value
+            actual['launch_option_evidence']='returned compiled.metadata; missing values remain unknown'
+            return compiled
+        return launch
+
+
 def build(ctx,*,mode,**configuration):
-    package,module,identity=native_api();torch=ctx.torch;trace=shared._KernelTrace(module.fused_moe_kernel,ctx);inputs=ctx.inputs
+    package,module,identity=native_api();torch=ctx.torch;trace=_ActualLaunchTrace(module.fused_moe_kernel,ctx);inputs=ctx.inputs
     env=native_environment();chunk=env.VLLM_FUSED_MOE_CHUNK_SIZE
     expected_launches=2*((ctx.shape.get('M')+chunk-1)//chunk)
     annotations=ctx.metadata.setdefault('experiment_annotations',{})
