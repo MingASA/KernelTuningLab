@@ -49,6 +49,10 @@ def test_all_native_assets_can_be_discovered_without_production_installations():
     c=AssetCatalog()
     for provider in (gemlite,flute,vllm_moe):provider.register_assets(c)
     assert len(c.list('operator'))==2 and len(c.list('kernel'))==9
+    for asset in c.list():
+        if hasattr(asset,'source_files'):
+            names={__import__('pathlib').Path(name).name for name in asset.source_files}
+            assert {'inputs.py','torch_context.py'}<=names
 
 
 def test_moe_correctness_inputs_are_not_hidden_below_absolute_tolerance():

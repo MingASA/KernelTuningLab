@@ -160,7 +160,7 @@ def build(ctx,*,mode,**configuration):
 
 
 def register_assets(catalog):
-    src=(__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
+    src=sources.declaration_sources(__file__)
     op=OperatorDefinition('production/routed_moe_silu','1.0.0',('M','H','I','E','TOP_K'),('float16','bfloat16'),generate,reference,
         tolerances={'float16':(.01,.01),'bfloat16':(.02,.02)},parameters={'route_distribution':'balanced'},validate=validate,
         validation_shapes=(ShapeSpec({'M':17,'H':128,'I':256,'E':4,'TOP_K':2}),),source_files=src,

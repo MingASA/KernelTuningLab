@@ -137,7 +137,7 @@ def build(ctx,*,backend,**parameters):
 
 
 def register_assets(catalog):
-    src=(__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
+    src=sources.declaration_sources(__file__)
     op=OperatorDefinition('production/attention_prefill','1.0.0',('B','H_Q','H_KV','D','Q_LEN','KV_LEN'),('float16','bfloat16'),
         generate,reference,parameters={'mask':'causal'},tolerances={'float16':(.005,.005),'bfloat16':(.02,.02)},validate=validate,
         validation_shapes=(ShapeSpec({'B':1,'H_Q':4,'H_KV':2,'D':64,'Q_LEN':129,'KV_LEN':129}),),source_files=src,

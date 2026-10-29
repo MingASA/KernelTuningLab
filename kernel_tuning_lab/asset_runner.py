@@ -154,6 +154,11 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
 
 def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tuple[str, ...], lease,
                    inherited_fds: tuple[int, ...] = (),worker_environment=None) -> dict:
+    from .inference_resources import COORDINATOR,ResourceIsolationError
+    try:COORDINATOR.assert_worker_handoff()
+    except ResourceIsolationError as exc:
+        _archives(output,lease.metadata)
+        return _save_failure(output,'failed',_error(exc),phase='resource_handoff',exit_code=2)
     # Parse before moving the old metadata: the user may resume using the
     # archived experiment.json from this very output directory.
     try:

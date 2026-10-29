@@ -73,6 +73,8 @@ LocalModelClient只用完整指纹的已有checkpoint，B/C共用任务。默认
 
 资源上下文进入测量和失败缓存；常驻OOM仅属于该上下文，不永久禁用架构。合作门禁CPU线程测试已通过；“无模型/常驻静默/推理后warmup”的新GPU验收待空卡，旧LLM证据不能冒充新驻留协议已测。
 
+驻留的B在同一v2 worker内推理和测量。监督worker是进程边界：父进程有本地模型时不能把其Python锁当成子worker的静默证明。当前显式拒绝这种跨worker交接；C的生成客户端在整个生成阶段结束后close，再开始整批开发评测。没有每候选卸载要求，也未实现远程/独立GPU服务的认证worker桥接。旧自定义HTTP入口即使声明separate_device，也不能用于CUDA测量。源码身份同时显式绑定已知input mixer与严格FP32参考辅助文件，避免只改辅助文件时命中旧缓存。
+
 C完整程序入口：`ktlab ai-program submit/review/check/development/feedback/freeze/test/show`。原文、原程序、人工/静态编辑、源码SHA和父版本分别保存；必须明确可信审查后才执行。契约与开发评测用原v2 Runner/Store，冻结后不能继续同版本开发；读取test前持久化exposure。开发反馈不输出test路径/标签。受审进程不继承任意凭据环境，但不是恶意Python文件系统沙箱。CPU工作流fixture不算新LLM实测。
 
 迭代子版本继承父版本的测试曝光任务ID，预算/seed变化不能把已暴露Shape重新标为盲测；与检查/开发已见任务重叠的test明确标为retest。仍需外部划分/来源审计，不能防御故意隐瞒父版本的可信调用者。截断、refusal等失败响应也保留原文、request ID和可用usage；本地加载/生成失败有独立日志，不产生候选性能。

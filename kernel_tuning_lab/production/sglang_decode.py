@@ -139,7 +139,7 @@ def build(ctx,*,mode,BLOCK_N=None,num_warps=None,num_stages=None,MAX_KV_SPLITS=N
 
 
 def register_assets(catalog):
-    src=(__file__,sources.__file__,pdl_compat.__file__,str(sources.ROOT/'manifest.json'))
+    src=sources.declaration_sources(__file__,pdl_compat.__file__)
     op=OperatorDefinition('production/paged_decode','1.0.0',('B','H_Q','H_KV','D','MAX_SEQ','PAGE_SIZE'),('float16','bfloat16'),
         generate,reference,parameters={'length_pattern':'ragged'},validate=validate,
         tolerances={'float16':(.005,.005),'bfloat16':(.02,.02)},source_files=src,

@@ -64,9 +64,12 @@ def test_http_gpu_placement_and_response_limits_fail_before_measurements():
         with pytest.raises(ValueError,match='finite'):ExternalSearch(command=['python'],timeout_s=invalid)
     with pytest.raises(ValueError,match='response limit'):ExternalSearch(command=['python'],max_response_bytes=-1)
     endpoint=ExternalSearch(endpoint='http://127.0.0.1:1',model_id='not-contacted')
-    with pytest.raises(ValueError,match='verify placement externally'):
+    with pytest.raises(ValueError,match='does not verify GPU placement'):
         endpoint.suggest(HardwareSpec('fixture',architecture='sm_89'),O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
     assert endpoint.diagnostics['calls']==0
+    declared=ExternalSearch(endpoint='http://127.0.0.1:1',inference_resource='separate_device')
+    with pytest.raises(ValueError,match='does not verify GPU placement'):
+        declared.suggest(HardwareSpec('fixture',architecture='sm_89'),O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
     verbose=ExternalSearch(command=[sys.executable,'-c','print("x"*10000)'],max_response_bytes=16,max_retries=0)
     assert verbose.suggest(H,O,S,ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))==[]
     assert verbose.diagnostics['calls']==1

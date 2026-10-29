@@ -43,3 +43,17 @@ def test_same_thread_recursive_overlap_rejected_and_resource_budget_is_context_s
             with gate.measurement_window(H):pass
     with pytest.raises(ResourceContextLimit):gate.check_known_allocation(H,30)
     gate.unregister(token);gate.check_known_allocation(H,30)
+
+
+def test_resident_parent_cannot_spawn_an_unregistered_measurement_worker(tmp_path,monkeypatch):
+    from kernel_tuning_lab.inference_resources import COORDINATOR
+    from kernel_tuning_lab.asset_runner import execute_asset_experiment
+    token=COORDINATOR.register('fixture-resident-parent',mode='single_card_resident',device_uuid='fixture-device',
+        identity={'fixture':True},synchronize=lambda:None,resident_bytes=4)
+    try:
+        monkeypatch.setattr('subprocess.Popen',lambda *a,**k:pytest.fail('must reject before starting a worker'))
+        result=execute_asset_experiment(tmp_path/'unread-spec.json',tmp_path/'rejected')
+        assert result['phase']=='resource_handoff' and result['exit_code']==2 and not result['physical_gpu_validated']
+        # Same-process measurements remain permitted with persistent weights.
+        with COORDINATOR.measurement_window(H) as proof:assert proof['resident_weights_may_remain']
+    finally:COORDINATOR.unregister(token)

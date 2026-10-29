@@ -173,7 +173,7 @@ def build(ctx,*,family,mode,**params):
 
 
 def register_assets(catalog):
-    source_files=(__file__,suite_inputs.__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
+    source_files=sources.declaration_sources(__file__,suite_inputs.__file__)
     operator=suite_inputs.operator_definition()
     catalog.register(operator)
     catalog.register(KernelDefinition('production/gemlite_default','1.0.0',operator.ref,partial(build,family=None,mode='native'),

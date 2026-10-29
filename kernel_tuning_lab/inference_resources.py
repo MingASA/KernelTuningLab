@@ -58,6 +58,10 @@ class ProcessCoordinator:
         with self._lock:
             if self.phase!='idle':raise ResourceIsolationError('cannot unregister an active GPU producer')
             self.participants.pop(token,None)
+    def assert_worker_handoff(self):
+        with self._lock:
+            if any(p.mode!='remote_api' for p in self.participants.values()):
+                raise ResourceIsolationError('registered inference cannot silently cross a supervised-worker boundary: close the generation phase/client first; same-process B may stay resident, external worker quiescence handoff is not implemented')
     def resource_identity(self):
         # PIDs, nonce and dynamic allocator statistics are proof/cost metadata,
         # not stable measurement-cache identities.

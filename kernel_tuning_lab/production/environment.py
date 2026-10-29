@@ -72,7 +72,7 @@ def installed_identity(backend,package,*,native_default=False):
     # Include behavior-changing options without logging private paths/values.
     extras['runtime_option_sha256']=stable_id({k:v for k,v in os.environ.items() if any(k.startswith(p) for p in prefixes)})
     versions={}
-    for name in ('torch','triton'):
+    for name in ('torch','triton','numpy'):
         try:versions[name]=importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:versions[name]=None
     return {'backend':backend,'installed_version':version,'source_revision':pin['revision'],
@@ -81,7 +81,7 @@ def installed_identity(backend,package,*,native_default=False):
 
 def vendored_identity(backend):
     pin=sources.manifest()[backend];versions={}
-    for name in ('torch','triton'):
+    for name in ('torch','triton','numpy'):
         try:versions[name]=importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:versions[name]=None
     return {'source_revision':pin['revision'],'verified_sources':{name:file_identity(sources.source(backend,name)) for name in pin['files']},

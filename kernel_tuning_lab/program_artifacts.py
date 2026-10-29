@@ -81,6 +81,8 @@ def evaluate(directory,spec_path,*,stage):
     with OutputLease(directory/'workflow-lock'):
         value=verify(directory)
         if not value['review']:raise ValueError('review generated code before executing its SDK plugin')
+        from .inference_resources import COORDINATOR
+        COORDINATOR.assert_worker_handoff()
         if stage=='test' and not value['frozen']:raise ValueError('freeze the exact program version before test')
         if stage!='test' and (value['frozen'] or value['test_exposed']):raise ValueError('cannot develop an exposed/frozen version; submit a new version with explicit exposure lineage')
         spec=json.loads(spec_path.read_text())

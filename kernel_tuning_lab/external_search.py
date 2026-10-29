@@ -151,8 +151,8 @@ class ExternalSearch:
 
     def suggest(self,hardware,operator,shape,space,history,budget,batch_size=1):
         if budget.exhausted(0,0):return []
-        if self.endpoint and hardware.architecture.startswith('sm_') and self.inference_resource not in ('cpu','separate_device'):
-            raise ValueError('CUDA experiments require HTTP inference_resource=cpu or separate_device; verify placement externally before using the endpoint')
+        if self.endpoint and hardware.architecture.startswith('sm_'):
+            raise ValueError('legacy HTTP inference_resource declaration does not verify GPU placement/quiescence; use the public API client or owned cooperative local provider')
         if self.card and case_id(hardware,operator,shape) in self.card.get('training_case_ids',[]):
             raise ValueError('model training manifest overlaps the target evaluation case')
         task=describe_task(hardware,operator,shape,space,history,budget)

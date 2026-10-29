@@ -64,6 +64,18 @@ def pin(backend):
         'source_sha256':{k:v['sha256'] for k,v in data['files'].items()}}
 
 
+def declaration_sources(module,*helpers):
+    """Explicit shared reference/input/identity dependencies for suite assets.
+
+    Python cannot infer arbitrary transitive imports. These known helpers must
+    affect identity before a cache hit, not just post-run input hashes.
+    """
+    from . import inputs,contracts
+    from .. import torch_context
+    return tuple(dict.fromkeys((module,__file__,inputs.__file__,contracts.__file__,torch_context.__file__,
+        str(ROOT/'manifest.json'),*helpers)))
+
+
 def jit_module(backend,relative,namespace,*,name):
     """Original definitions/decorators with only dependency imports supplied.
 

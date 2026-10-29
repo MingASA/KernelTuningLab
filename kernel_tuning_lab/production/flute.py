@@ -131,7 +131,7 @@ def build(ctx,*,mode,**parameters):
 
 def register_assets(catalog):
     op=suite_inputs.operator_definition();catalog.register(op)
-    src=(__file__,suite_inputs.__file__,sources.__file__,str(sources.ROOT/'manifest.json'))
+    src=sources.declaration_sources(__file__,suite_inputs.__file__)
     compiled_profile=None
     if os.environ.get('KT_FLUTE_BUILD_MANIFEST'):
         compiled_profile=json.loads(Path(os.environ['KT_FLUTE_BUILD_MANIFEST']).read_text())
