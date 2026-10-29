@@ -54,3 +54,14 @@ def test_small_model_presentation_has_scalar_choices_without_nested_defaults():
     assert task['space']['choices']=={'x':[1,2],'y':[4,8]}
     assert 'parameters' not in task['space'] and 'allowed_responses' not in task
     assert set(task['response_contract']['required_keys'])=={'x','y'}
+
+
+def test_bare_config_pilot_response_gets_only_a_lossless_envelope(tmp_path,monkeypatch):
+    policy=setup(tmp_path,monkeypatch,['{"x":2}'])
+    result=policy.suggest(HardwareSpec('unit'),OperatorSpec('fixture'),ShapeSpec({'M':1}),
+        ConfigSpace({'x':(1,2)}).read_only(),SearchHistory(),SearchBudget(1))
+    assert result[0].params=={'x':2}
+    row=json.loads((tmp_path/'llm-live-calls.jsonl').read_text())
+    assert row['text']=='{"x":2}' and row['response_form']=='bare_complete_config_lossless_envelope'
+    for bad in ['{"x":[1,2]}','{"x":1,"latency_ms":0.1}','{"other":1}']:
+        with pytest.raises(ValueError):live_llm.parse_decision(bad,{'x'})

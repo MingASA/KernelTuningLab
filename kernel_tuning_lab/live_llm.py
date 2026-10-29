@@ -41,12 +41,17 @@ def decision_task(hardware,operator,shape,space,history,budget):
     return task
 
 
-def parse_decision(text):
+def parse_decision(text,parameter_keys=None):
     text=text.strip()
     if '</think>' in text:text=text.rsplit('</think>',1)[1].strip()
     if text.startswith('```') and text.endswith('```'):
         text=text.split('\n',1)[1].rsplit('```',1)[0].strip()
     value=json.loads(text)
+    if (parameter_keys is not None and isinstance(value,dict) and set(value)==set(parameter_keys)
+            and all(not isinstance(v,(dict,list)) for v in value.values())):
+        # A real 0.8B pilot returned every legal scalar but omitted the outer
+        # envelope. This changes no proposed parameter and is logged explicitly.
+        return {'config':value,'response_form':'bare_complete_config_lossless_envelope'}
     if not isinstance(value,dict) or set(value)-{'config','rationale'} or not isinstance(value.get('config'),dict):
         raise ValueError('a complete {"config": {...}} decision is required')
     return value
@@ -125,7 +130,7 @@ class LiveDecision:
     @property
     def runtime_identity(self):
         return {'manifest_sha256':self.sha,'model_id':self.manifest['model_id'],
-            'source_sha256':digest_file(__file__),'feature_version':'scalar-choice-v2+observed-failures',
+            'source_sha256':digest_file(__file__),'feature_version':'scalar-choice-v3+lossless-envelope+observed-failures',
             'inference_backend':'Transformers5.8.1/sdpa/bfloat16','model_context':'target revealed history only',
             'isolation':'sequential same GPU, full weight offload before Kernel','max_new_tokens':self.max_tokens}
     def bind_trial(self,*,output_dir,identity):self.output=Path(output_dir)
@@ -157,11 +162,12 @@ class LiveDecision:
             self.diagnostics['output_tokens']+=row['output_tokens']
             self.diagnostics['upload_wall_s']+=row['upload_wall_s'];self.diagnostics['generation_wall_s']+=row['generation_wall_s'];self.diagnostics['offload_wall_s']+=row['offload_and_release_wall_s']
             try:
-                action=parse_decision(row['text']);config=space.normalize(action['config'])
+                action=parse_decision(row['text'],space.domains);config=space.normalize(action['config'])
                 if set(action['config'])!=set(space.domains):raise ValueError('all declared fields must be explicitly predicted')
                 valid=space.validate(config,hardware,operator,shape)
                 if not valid.valid or config.id in seen:raise ValueError('illegal/repeated decision: '+str(valid.reasons))
                 row['accepted_config']=dict(config.params);row['static_valid']=True
+                row['response_form']=action.get('response_form','config_envelope')
             except Exception as exc:
                 row['static_valid']=False;row['rejection']=type(exc).__name__+': '+str(exc)
             with (self.output/'llm-live-calls.jsonl').open('a') as f:f.write(canonical_json(row)+'\n')
