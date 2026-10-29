@@ -23,6 +23,24 @@ from .models import canonical_json
 _SESSIONS={}
 
 
+def decision_task(hardware,operator,shape,space,history,budget):
+    """Lossless finite domains with an unambiguous scalar-output contract.
+
+    Small models copied the old nested parameter-description objects instead
+    of choosing a value in a real H800 pilot. Flatten only the presentation;
+    the authoritative space/constraints and final validation are unchanged.
+    """
+    task=describe_task(hardware,operator,shape,space,history,budget)
+    specs=task['space'].pop('parameters')
+    task['space']['choices']={name:list(space.domains[name]) for name in specs}
+    task['space']['active_when']={name:spec['active_when'] for name,spec in specs.items() if spec['active_when']}
+    task['history']=[{**value,'failure_reason':record.failure_reason} for value,record in zip(task['history'],history)]
+    task.pop('allowed_responses')
+    task['response_contract']={'config':'one JSON object: every choice name maps to ONE scalar from its allowed choices; never an array or a domain-description object',
+        'required_keys':list(specs),'no_repeated_configuration':True}
+    return task
+
+
 def parse_decision(text):
     text=text.strip()
     if '</think>' in text:text=text.rsplit('</think>',1)[1].strip()
@@ -71,8 +89,13 @@ class _Session:
             with torch.inference_mode():result=self.model.generate(**inputs,max_new_tokens=max_tokens,do_sample=False,max_time=90)
             torch.cuda.synchronize();row['generation_wall_s']=time.monotonic()-start
             ids=result[0,inputs['input_ids'].shape[-1]:].tolist()
+            eos=self.model.generation_config.eos_token_id
+            eos=set(eos if isinstance(eos,list) else [eos])
             row.update(output_token_ids=ids,input_tokens=inputs['input_ids'].shape[-1],output_tokens=len(ids),
-                text=self.tokenizer.decode(ids,skip_special_tokens=True),peak_allocated_bytes=torch.cuda.max_memory_allocated())
+                text=self.tokenizer.decode(ids,skip_special_tokens=True),peak_allocated_bytes=torch.cuda.max_memory_allocated(),
+                finish_reason='eos' if ids and ids[-1] in eos else 'token_or_time_limit',
+                generation_parameters={'max_new_tokens':max_tokens,'do_sample':False,'max_time':90},
+                chat_template_options={'enable_thinking':False,'preserve_thinking':False,'reasoning_effort':'low'})
         finally:
             start=time.monotonic();inputs=result=None
             self.model.to('cpu')
@@ -102,7 +125,7 @@ class LiveDecision:
     @property
     def runtime_identity(self):
         return {'manifest_sha256':self.sha,'model_id':self.manifest['model_id'],
-            'source_sha256':digest_file(__file__),'feature_version':'shape-space-v1+observed-failures',
+            'source_sha256':digest_file(__file__),'feature_version':'scalar-choice-v2+observed-failures',
             'inference_backend':'Transformers5.8.1/sdpa/bfloat16','model_context':'target revealed history only',
             'isolation':'sequential same GPU, full weight offload before Kernel','max_new_tokens':self.max_tokens}
     def bind_trial(self,*,output_dir,identity):self.output=Path(output_dir)
@@ -114,9 +137,8 @@ class LiveDecision:
             return list(space.complete({},hardware,operator,shape,count=min(batch_size,budget.max_evaluations),
                 rng=random.Random(self.seed+len(history)),exclude_ids=seen,
                 budget=SpaceBuildBudget(max_nodes=20000,max_wall_time_s=1)).configs)
-        task=describe_task(hardware,operator,shape,space,history,budget)
-        task['history']=[{**v,'failure_reason':r.failure_reason} for v,r in zip(task['history'],history)]
-        system='You choose the next GPU GEMM configuration. Output only {"config": {all declared parameter keys}} as JSON. All choices must be in the declared domains and must not repeat attempted configurations. You may use only the supplied revealed history; no unobserved performance or speedup is known. Fused W4 unpacks inside GEMM; pipeline W4 dequantizes then GEMMs and optionally reduces Split-K on every invocation. Scores must not be returned as measured latency.'
+        task=decision_task(hardware,operator,shape,space,history,budget)
+        system='Choose the next GPU GEMM configuration. Return only JSON with a config object. For each parameter name in choices, choose exactly ONE scalar number from that list. Do not return lists or copy the space description. Include every parameter key. Do not repeat an attempted configuration. You may use only the supplied revealed history; no unobserved performance or speedup is known. Fused W4 unpacks inside GEMM; pipeline W4 dequantizes then GEMMs and optionally reduces Split-K on every invocation. Do not return predicted latency.'
         messages=[{'role':'system','content':system},{'role':'user','content':canonical_json(task)}]
         if self.sha not in _SESSIONS:_SESSIONS[self.sha]=_Session(self.manifest)
         session=_SESSIONS[self.sha]

@@ -50,3 +50,16 @@ def test_generated_rule_scores_full_space_and_can_use_only_revealed_history(tmp_
 def test_protocol_fixture_evidence_cannot_be_loaded_as_a_real_model_artifact(tmp_path):
     p,sha=artifact(tmp_path,{'kind':'llm_static_predictions','generation_evidence':{'evidence_level':'protocol_fixture_not_a_real_model'}})
     with pytest.raises(ValueError,match='real-local-model'):FrozenPrediction(artifact=p,artifact_sha256=sha)
+
+
+def test_generated_nonfinite_preferences_are_never_proposed_after_finite_points_exhaust(tmp_path):
+    pytest.importorskip('numpy')
+    space=ConfigSpace({'BLOCK_M':(16,32),'BLOCK_N':(32,),'BLOCK_K':(32,),
+        'num_warps':(4,),'num_stages':(1,),'GROUP_M':(1,)})
+    p,sha=artifact(tmp_path,{'kind':'llm_generated_rule',
+        'generation_evidence':{'evidence_level':'real_local_model_inference','fixture_not_actual_model':True},
+        'scope':{'architectures':['mock'],'kernel_refs':[O.implementation]},
+        'score_expression':'log2(BLOCK_M-16)'})
+    policy=GeneratedRule(artifact=p,artifact_sha256=sha)
+    result=policy.suggest(H,O,S,space.read_only(),SearchHistory(),SearchBudget(2),batch_size=2)
+    assert len(result)==1 and result[0].get('BLOCK_M')==32

@@ -140,6 +140,7 @@ class GeneratedRule:
         scores[~finite]=np.inf
         order=np.argsort(scores,kind='stable');result=[]
         for index in order:
+            if not finite[int(index)]:continue
             c=configs[int(index)]
             if c.id in seen:continue
             result.append(c);seen.add(c.id)

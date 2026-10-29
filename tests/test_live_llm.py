@@ -45,3 +45,12 @@ def test_live_invalid_outputs_never_fall_back_to_heuristic_or_fake_measurement(t
 def test_decision_parser_rejects_code_and_prediction_as_latency():
     assert live_llm.parse_decision('```json\n{"config":{"x":1}}\n```')['config']=={'x':1}
     with pytest.raises(ValueError):live_llm.parse_decision('{"config":{"x":1},"latency_ms":0.1}')
+
+
+def test_small_model_presentation_has_scalar_choices_without_nested_defaults():
+    space=ConfigSpace({'x':(1,2),'y':(4,8)})
+    task=live_llm.decision_task(HardwareSpec('unit'),OperatorSpec('fixture'),ShapeSpec({'M':1}),
+        space.read_only(),SearchHistory(),SearchBudget(2))
+    assert task['space']['choices']=={'x':[1,2],'y':[4,8]}
+    assert 'parameters' not in task['space'] and 'allowed_responses' not in task
+    assert set(task['response_contract']['required_keys'])=={'x','y'}
