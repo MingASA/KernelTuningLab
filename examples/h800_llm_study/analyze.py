@@ -89,12 +89,13 @@ def train_feedback(paths):
 
 
 def method(trial):
+    options=trial.get('algorithm_options',{})
     if trial['algorithm'].startswith('llm/live_'):
         return 'B/'+(trial.get('algorithm_runtime') or {}).get('model_id','unresolved-model').split('/')[-1]
     if trial['algorithm'].startswith('llm/generated_'):
-        return 'C/'+Path(trial['algorithm_options']['artifact']).stem
-    if trial['algorithm']=='smac_rf@1.0.0' and trial['algorithm_options'].get('warm_start_configs'):
-        return 'SMAC/train-prior'
+        return 'C/'+Path(options['artifact']).stem.replace('-final','')
+    if trial['algorithm']=='smac_rf@1.0.0' and options.get('warm_start_configs'):
+        return 'SMAC/train-prior' if trial.get('status')!='not_run' else 'SMAC/preflight-rejected-original'
     return trial['algorithm'].split('@')[0]
 
 
@@ -103,7 +104,10 @@ def evaluate(paths):
     bundles=[load_bundle(p) for p in paths];records={};trials=[];calls={}
     for data,rows in bundles:
         records.update(rows)
+        jobs={j['id']:j for j in data['manifest']['jobs']}
         for t in data['summary']['trials']:
+            if 'algorithm_options' not in t:
+                t['algorithm_options']=jobs[t['job_id']]['experiment']['algorithms'][0].get('options',{})
             if any(rows[rid].split!='test' for rid in t.get('record_ids',[])):
                 raise ValueError('target report cannot include development observations')
             # Validation is charged separately and never helps a search curve.
@@ -143,7 +147,7 @@ def evaluate(paths):
                 'physical_attempts':sum(not e['cache_hit'] for e in prefix),
                 'cache_observations':sum(e['cache_hit'] for e in prefix),
                 'failed_measurements':sum(e['status']!='success' for e in prefix),
-                'trial_wall_s':t['wall_time_s'],'prefix_wall_s':prefix[-1]['elapsed_wall_time_s'] if prefix else None,
+                'trial_wall_s':t.get('wall_time_s'),'prefix_wall_s':prefix[-1]['elapsed_wall_time_s'] if prefix else None,
                 'full_trial_algorithm_cost_ms':t.get('algorithm_costs_ms'),
                 'physical_compile_ms':sum(e['physical_compile_time_ms'] for e in prefix),
                 'physical_measurement_wall_s':sum(e['physical_measurement_wall_time_s'] for e in prefix),

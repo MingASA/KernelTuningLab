@@ -24,3 +24,20 @@ def test_rule_prompt_refuses_test_labels_and_does_not_reveal_frozen_test_shapes(
 def test_generated_policy_is_validated_without_rewriting_model_program():
     assert extract_rule('```json\n{"score_expression":"BLOCK_M+num_warps","rationale":"fixture"}\n```')['score_expression']=='BLOCK_M+num_warps'
     with pytest.raises(SyntaxError):extract_rule('{"score_expression":"BLOCK_M+","rationale":"fixture"}')
+
+
+def test_research_preparation_is_cpu_safe_and_previews_same_full_tasks(tmp_path):
+    from examples.h800_llm_study.prepare import prepare
+    from kernel_tuning_lab.research import expand_research
+    model=tmp_path/'model.json';model.write_text(json.dumps({'full_weight_hashes':True,'fixture':'not an actual model'}))
+    rule=tmp_path/'rule.json';rule.write_text(json.dumps({'generation_evidence':{'evidence_level':'real_local_model_inference','fixture_not_actual_model':True}}))
+    spec=prepare(model,rule);plan=expand_research(spec)
+    assert plan['planned']['jobs']==18 and plan['planned']['max_observations']==144
+    assert spec['algorithms'][4]['options']['structured_output']
+
+
+def test_preflight_rejection_stays_separate_from_corrected_warm_result():
+    from examples.h800_llm_study.analyze import method
+    trial={'algorithm':'smac_rf@1.0.0','algorithm_options':{'warm_start_configs':[{'x':1}]},'status':'not_run'}
+    assert method(trial)=='SMAC/preflight-rejected-original'
+    trial['status']='passed';assert method(trial)=='SMAC/train-prior'
