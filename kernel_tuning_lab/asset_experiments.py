@@ -76,6 +76,7 @@ class ValidationBudget:
     max_wall_time_s: float = 30.0
     seed: int = 17
     trust_claims: bool = True
+    configs: dict[str, tuple[dict[str, Any], ...]] = field(default_factory=dict)
 
     def __post_init__(self):
         for key in ("max_configs", "max_cases", "seed"):
@@ -87,6 +88,14 @@ class ValidationBudget:
             raise ValueError("validation requires a finite hard wall deadline")
         if not isinstance(self.trust_claims, bool):
             raise ValueError("validation.trust_claims must be boolean")
+        if not isinstance(self.configs,dict) or any(not isinstance(key,str) or '@' not in key for key in self.configs):
+            raise ValueError('validation.configs maps versioned kernel refs to explicit configuration lists')
+        normalized={}
+        for key,values in self.configs.items():
+            if not isinstance(values,(list,tuple)) or not values or any(not isinstance(value,dict) for value in values):
+                raise ValueError('validation.configs requires nonempty lists of configuration objects')
+            canonical_json(values);normalized[key]=tuple(deepcopy(values))
+        object.__setattr__(self,'configs',normalized)
 
 
 @dataclass(frozen=True)
