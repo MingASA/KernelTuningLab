@@ -280,7 +280,7 @@ def generate_research_report(output_dir):
     trial_errors = any(t["status"] == "failed" for t in trials)
     status = ("generated" if manifest["status"] == "generated" else
               "interrupted" if statuses["interrupted"] else
-              "failed" if statuses["failed"] or statuses["timeout"] or measured_failures or trial_errors else
+              "failed" if statuses["failed"] or statuses["timeout"] or trial_errors else
               "partial" if any(s != "passed" for s in statuses) or manifest["status"] != "finished" or
                   any(t["status"] in {"partial", "not_run", "interrupted"} for t in trials) else "passed")
     interrupted_code = next((j.get("result", {}).get("exit_code", 130) for j in jobs if j["status"] == "interrupted"), 130)
@@ -296,13 +296,16 @@ def generate_research_report(output_dir):
         "validation_wall_time_s": sum(j.get("validation_wall_time_s", 0.0) for j in jobs),
         "job_wall_time_s": sum(j.get("wall_time_s", 0.0) for j in jobs),
         "failed_measurement_observations": measured_failures, "failure_events": len(failures),
+        'search_outcome':'completed_with_rejected_candidates' if status=='passed' and measured_failures else status,
+        'candidate_failures_by_status':dict(Counter(row['status'] for t in trials for row in t['observations_trace'] if row['status']!='success')),
+        'strict_correctness_notice':'Candidate failures remain failed and never rank; completed search is not a claim every candidate passed. Independent acceptance failures still fail the job.',
         "known_physical_compile_time_ms": sum(t.get("physical_compile_time_ms") or 0 for t in trials),
         "unknown_compile_cost_attempts": len(incomplete) + sum(t["observations"] > 0 and not t.get("trace_available", False) for t in trials),
         "physical_compile_time_ms": None if incomplete or any(t["observations"] and not t.get("trace_available", False) for t in trials)
             else sum(t.get("physical_compile_time_ms") or 0 for t in trials),
         "physical_measurement_wall_time_s": sum(t.get("physical_measurement_wall_time_s") or 0 for t in trials) + sum(a["wall_time_s"] for a in incomplete if a["stage"] == "research"),
         "algorithm_costs_ms": {key: sum((t.get("algorithm_costs_ms") or {}).get(key, 0) for t in trials)
-            for key in ("factory_ms", "proposal_ms", "feedback_ms")},
+            for key in ("factory_ms", "proposal_ms", "feedback_ms","shutdown_ms")},
         "algorithm_cost_trace_complete": all(t.get("algorithm_costs_ms") is not None for t in trials if "trial_id" in t),
         "incomplete_attempts": incomplete,
         "cost_trace_complete": not incomplete and not statuses["timeout"] and not statuses["interrupted"] and all(t.get("trace_available", t["observations"] == 0) for t in trials),

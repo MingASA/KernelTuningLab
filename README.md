@@ -25,6 +25,8 @@ python3 -m venv .venv
 
 当前开发分支 `research/space-production-integration` 新增可行空间构造、SMAC3/Kernel Tuner 原生优化器、三条外部 AI 接口与固定 vLLM0.8.5 Marlin 插件。它们的安装、单命令示例和逐项证据见 **[SPACE_PRODUCTION.md](docs/SPACE_PRODUCTION.md)**；CPU 契约、真实 GPU 覆盖和未完成实验分别列出。
 
+生产套件开发继续在 `platform/production-suite-readiness`：GemLite W4/W2、FLUTE W3、FlexAttention、SGLang paged decode、vLLM MoE的默认/显式入口，以及统一API/本地AI、合作驻留门禁和有限配置表。见 **[PRODUCTION_SUITE.md](docs/PRODUCTION_SUITE.md)**。源码、构建、加载和GPU验收分别标记；旧的大规模模型/算法比较保持暂停。
+
 当前 `main` 尚未包含这套验证交付；上述命令固定到已验证源码。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
 
 ## 添加实现或算法
@@ -59,7 +61,7 @@ flowchart LR
 | T1 GEMM / L2 / L3 | C64的10 Shape×64配置×3输入seed真实矩阵；[第一阶段研究](docs/RESEARCH_PHASE1.md) |
 | 扩展tile、Shape-generic、交付审计 | [第二阶段研究与验收](docs/RESEARCH_PHASE2.md)逐项标注通过、部分通过、未执行与限制 |
 | 真实跨GPU Anchor / 迁移 | [5060 Ti / 4090 / H800](docs/CROSS_GPU_PHASE1.md)各192条FP16观测，8160条离线Replay及18条真实在线轨迹；有限16候选与软件差异有明确边界 |
-| 可行空间 / 原生优化器 / 生产W4 | [本轮报告](docs/SPACE_PRODUCTION.md)：SMAC/KT在完整声明空间运行；4090原生Marlin、AI接口与有限L3实际分派；真实LLM尚未运行 |
+| 可行空间 / 原生优化器 / 生产W4 | [早期报告](docs/SPACE_PRODUCTION.md)：SMAC/KT完整声明空间、4090原生Marlin及有限L3；后续[真实LLM审查](docs/H800_LLM_REVIEW.md)与[生产套件工程验收](docs/PRODUCTION_SUITE.md)分别保留协议和证据范围 |
 | H20/H200及更广Hopper路径 | [迁移检查单](docs/GPU_MIGRATION.md)；H20/H200未执行，H800的MoE TMA/完整proposal-suite仍未验证 |
 | Mock / Replay | Mock是合成性能；Replay揭示已有标签，均不产生新GPU测量 |
 

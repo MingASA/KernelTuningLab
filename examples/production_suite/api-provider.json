@@ -1,0 +1,13 @@
+{
+  "kind": "public_api",
+  "configuration": {
+    "provider": "openai-compatible-explicit-provider",
+    "endpoint": "https://api.openai.com/v1/responses",
+    "model": "SELECT_AN_EXPLICITLY_AUTHORIZED_MODEL",
+    "protocol": "responses",
+    "structured_output": "json_object",
+    "inference_location": "remote_public_api",
+    "max_retries": 1,
+    "timeout_s": 60
+  }
+}

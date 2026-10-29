@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-acceptance-sglang_decode-float16",
+  "plugins": [
+    "kernel_tuning_lab.production.sglang_decode"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    17
+  ],
+  "algorithms": [
+    {
+      "asset": "grid@1.0.0"
+    }
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "warmup": 5,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 64,
+    "workspace_memory_limit_bytes": 536870912,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 3,
+      "max_cases": 0,
+      "max_wall_time_s": 240,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "equal",
+      "operator": "production/paged_decode@1.0.0",
+      "parameters": {
+        "length_pattern": "equal"
+      },
+      "kernels": [
+        "production/sglang_paged_native@1.0.0",
+        "production/sglang_paged_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "B": 4,
+          "H_Q": 8,
+          "H_KV": 2,
+          "D": 64,
+          "MAX_SEQ": 129,
+          "PAGE_SIZE": 16
+        }
+      ]
+    },
+    {
+      "name": "ragged",
+      "operator": "production/paged_decode@1.0.0",
+      "parameters": {
+        "length_pattern": "ragged"
+      },
+      "kernels": [
+        "production/sglang_paged_native@1.0.0",
+        "production/sglang_paged_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "B": 4,
+          "H_Q": 8,
+          "H_KV": 2,
+          "D": 64,
+          "MAX_SEQ": 129,
+          "PAGE_SIZE": 16
+        }
+      ]
+    }
+  ],
+  "max_jobs": 16
+}

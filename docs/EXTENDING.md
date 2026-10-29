@@ -206,6 +206,10 @@ ktlab run --spec examples/extensions/gpu_gemm.json --output artifacts/extensions
 
 ## 10. 结果入口
 
+生产扩展可设置`KernelDefinition.execution_identity`，一个CPU安全的无参回调，返回JSON兼容的实际安装源码/二进制/选择表身份。v2在缓存查询前调用；构建后才记录binary SHA不能防止旧缓存跨二进制复用。不要在回调中初始化GPU或运行优化器，声明其辅助源码依赖。详情及真实生产插件见[PRODUCTION_SUITE.md](PRODUCTION_SUITE.md)。
+
+外部AI的config/partial/region/query与受审完整Searcher工作流见[生产套件示例](../examples/production_suite/README.md)。接口fixture、真实本地模型、真实付费API是不同证据；核心包不要求模型SDK。生成代码必须受审，环境转发不等于恶意代码沙箱。
+
 | 文件 | 内容 |
 | --- | --- |
 | `preflight.json` | 资产/入口/空间/算法实际预检结果，含失败与 deferred 原因 |

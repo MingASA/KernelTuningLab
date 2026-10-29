@@ -342,7 +342,7 @@ ASSETS=(SearchAlgorithmDefinition('unit/hook','1.0.0',Hook),)
     assert execute_asset_experiment(spec,output)['status']=='passed'
     first=json.loads((output/'trials.json').read_text())[0]
     assert first['algorithm_diagnostics']['optimizer']=={'feedback_count':2,'bound':True}
-    assert set(first['algorithm_costs_ms'])=={'factory_ms','proposal_ms','feedback_ms'}
+    assert set(first['algorithm_costs_ms'])=={'factory_ms','proposal_ms','feedback_ms','shutdown_ms'}
     assert execute_asset_experiment(spec,output)['status']=='passed'
     resumed=json.loads((output/'trials.json').read_text())[0]
     assert resumed['cache_hits']==2 and resumed['physical_evaluations']==0

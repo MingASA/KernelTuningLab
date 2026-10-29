@@ -39,6 +39,7 @@ def drive(searcher,count,space=None,cache=None):
                 metadata={'correctness_verified':True,'fixture':'synthetic native optimizer CPU contract'})
             physical+=1
         record=cache[config.id];records.append(record);searcher.observe(deepcopy(record),cache_hit=cached)
+    if callable(getattr(searcher,'close',None)):searcher.close()
     return records,physical,cache
 
 
@@ -78,7 +79,8 @@ def test_kernel_tuner_adapter_reaches_real_evolution_and_flushes_final_feedback(
     engine=KernelTunerDE(seed=19,population_size=4)
     rows,_,_=drive(engine,16)
     assert len(rows)==16 and engine.diagnostics['completed_generations']>=1
-    assert engine.diagnostics['feedback_records']==16 and engine.diagnostics['computational_replays']>=16
+    assert engine.diagnostics['feedback_records']==16 and engine.diagnostics['native_invocations']==1
+    assert engine.diagnostics['computational_replays']==0
     assert engine.diagnostics['new_physical_measurements_by_optimizer']==0
 
 
@@ -167,3 +169,24 @@ def test_kernel_tuner_adapter_matches_direct_upstream_evolution():
     finally:
         random.setstate(python_state);np.random.set_state(numpy_state)
     assert direct==[r.config.id for r in ours]
+
+
+def test_native_callback_preserves_legacy_sequence_and_host_rng_and_closes():
+    import numpy as np
+    random.seed(101);np.random.seed(101);before=(random.getstate(),np.random.get_state())
+    engine=KernelTunerDE(seed=7,population_size=4)
+    callback,_,_=drive(engine,16)
+    after=(random.getstate(),np.random.get_state())
+    assert before[0]==after[0] and all((a==b).all() if hasattr(a,'shape') else a==b for a,b in zip(before[1],after[1]))
+    replay,_,_=drive(KernelTunerDE(seed=7,population_size=4,execution_mode='replay'),16)
+    assert [r.config.id for r in callback]==[r.config.id for r in replay]
+    assert not engine.callback.thread.is_alive()
+
+
+def test_native_callback_passes_full_sdk_history_only_protocol():
+    from kernel_tuning_lab.acceptance import check_algorithm
+    from kernel_tuning_lab.optimizers import ASSETS
+    definition=next(a for a in ASSETS if a.id=='kernel_tuner_de')
+    space=ConfigSpace({'x':tuple(range(8)),'y':tuple(range(8))})
+    result=check_algorithm(definition,{'population_size':4},7,HW,OP,SHAPE,space)
+    assert result['status']=='passed'

@@ -9,21 +9,20 @@ from typing import NamedTuple,Optional,Tuple
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..torch_context import strict_fp32_reference
-from . import native_sources as sources
-from .inputs import _counter
+from . import native_sources as sources,environment
+from .inputs import _counter,counter_scalar
 
 KNOBS={'BLOCK_N':(32,64,128),'num_warps':(2,4,8),'num_stages':(1,2,3),'MAX_KV_SPLITS':(1,2,4,8,16)}
 
 
 def paged_layout(batch,max_seq,page_size,pattern,seed):
-    import numpy as np
     if pattern not in ('equal','ragged'):raise ValueError('length pattern must be equal/ragged')
     lengths=[max_seq]*batch
     if pattern=='ragged':
         boundaries=[1,max(1,page_size-1),min(max_seq,page_size+1),max_seq]
         lengths=[min(max_seq,boundaries[i%4]) for i in range(batch)]
     pages_per_sequence=(max_seq+page_size-1)//page_size;pages=batch*pages_per_sequence
-    physical=np.argsort(_counter(pages,seed^0x4251),kind='stable')
+    physical=sorted(range(pages),key=lambda i:(counter_scalar(i,seed^0x4251),i))
     indices=[];indptr=[0]
     for b,length in enumerate(lengths):
         indices.extend(int(physical[b*pages_per_sequence+t//page_size])*page_size+t%page_size for t in range(length))
@@ -147,5 +146,6 @@ def register_assets(catalog):
     for mode in ('native','explicit'):
         space=SpaceDefinition({k:ParameterSpec(v) for k,v in KNOBS.items()} if mode=='explicit' else {},name='SGLang native '+mode+' launch profile')
         catalog.register(KernelDefinition('production/sglang_paged_'+mode,'1.0.0',op.ref,partial(build,mode=mode),space,
-            runtime='cuda',supports=support,source_files=src,metadata={'pin':sources.pin('sglang'),'numerical_body':'unchanged pinned upstream JIT definitions',
+            runtime='cuda',supports=support,source_files=src,execution_identity=partial(environment.vendored_identity,'sglang'),
+            metadata={'pin':sources.pin('sglang'),'numerical_body':'unchanged pinned upstream JIT definitions',
             'launch_patch':'explicit wrapper proxy changes only actual stage1 tile/warp/stage; scheduler cap/grid/workspace/stage2 coherent'}))

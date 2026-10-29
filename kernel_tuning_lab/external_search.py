@@ -21,6 +21,7 @@ import urllib.request
 from .sdk import SearchAlgorithmDefinition,KernelConfig,SpaceBuildBudget
 from .models import canonical_json
 from .datasets import case_id
+from .process_environment import reviewed_environment
 
 
 def _sha(data):return hashlib.sha256(data).hexdigest()
@@ -44,7 +45,7 @@ def describe_task(hardware,operator,shape,space,history,budget):
             'verified':r.correctness_verified,'latency_ms':r.median_ms if r.correctness_verified else None} for r in history],
         'attempted_config_ids':sorted(history.attempted_config_ids),
         'remaining_budget':{'observations':budget.max_evaluations,'wall_s':budget.max_wall_time_s},
-        'allowed_responses':['config','partial','region'],'notice':'No oracle, filesystem path, frozen labels, or predictions-as-measurements are provided.'}
+        'allowed_responses':['config','partial','region','query'],'notice':'No oracle, filesystem path, frozen labels, or predictions-as-measurements are provided.'}
 
 
 class ExternalSearch:
@@ -120,7 +121,7 @@ class ExternalSearch:
                 # output, not a sandbox or a hard disk-write quota.
                 with tempfile.TemporaryFile() as stdout,tempfile.TemporaryFile() as stderr:
                     subprocess.run(self.command,input=request,stdout=stdout,stderr=stderr,
-                        timeout=self.timeout_s,env={**os.environ,'CUDA_VISIBLE_DEVICES':''},check=True)
+                        timeout=self.timeout_s,env=reviewed_environment(cpu_only=True),check=True)
                     stdout.seek(0);blob=stdout.read(self.max_response_bytes+1)
                 if len(blob)>self.max_response_bytes:raise ValueError('external response too large')
                 response=json.loads(blob)

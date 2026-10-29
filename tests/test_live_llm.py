@@ -20,7 +20,7 @@ def setup(tmp_path,monkeypatch,texts):
                 'output_tokens':2,'upload_wall_s':0.,'generation_wall_s':0.,
                 'offload_and_release_wall_s':0.,'all_parameters_on_CPU_before_Kernel':True,
                 'CUDA_allocated_before_bytes':0,'CUDA_allocated_after_bytes':0}
-    monkeypatch.setitem(live_llm._SESSIONS,sha,Fixture())
+    monkeypatch.setitem(live_llm._SESSIONS,(sha,'single_card_resident'),Fixture())
     policy=live_llm.LiveDecision(model_manifest=file,manifest_sha256=sha,max_retries=1)
     policy.bind_trial(output_dir=tmp_path,identity={})
     return policy

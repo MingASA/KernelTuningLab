@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-acceptance-vllm_moe-float16",
+  "plugins": [
+    "kernel_tuning_lab.production.vllm_moe"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    17
+  ],
+  "algorithms": [
+    {
+      "asset": "grid@1.0.0"
+    }
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "warmup": 5,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 64,
+    "workspace_memory_limit_bytes": 536870912,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 3,
+      "max_cases": 0,
+      "max_wall_time_s": 240,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "balanced",
+      "operator": "production/routed_moe_silu@1.0.0",
+      "parameters": {
+        "route_distribution": "balanced"
+      },
+      "kernels": [
+        "production/vllm_moe_native@1.0.0",
+        "production/vllm_moe_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 17,
+          "H": 128,
+          "I": 256,
+          "E": 4,
+          "TOP_K": 2
+        }
+      ]
+    },
+    {
+      "name": "skewed",
+      "operator": "production/routed_moe_silu@1.0.0",
+      "parameters": {
+        "route_distribution": "skewed"
+      },
+      "kernels": [
+        "production/vllm_moe_native@1.0.0",
+        "production/vllm_moe_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 17,
+          "H": 128,
+          "I": 256,
+          "E": 4,
+          "TOP_K": 2
+        }
+      ]
+    }
+  ],
+  "max_jobs": 16
+}

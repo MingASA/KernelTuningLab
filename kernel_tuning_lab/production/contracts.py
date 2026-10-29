@@ -9,8 +9,21 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Mapping
+from types import MappingProxyType
 
-from ..models import canonical_json,stable_id
+from ..models import canonical_json,stable_id,KernelConfig
+
+
+def _immutable(value):
+    if isinstance(value,Mapping):return MappingProxyType({key:_immutable(v) for key,v in value.items()})
+    if isinstance(value,(list,tuple)):return tuple(_immutable(v) for v in value)
+    canonical_json(value);return value
+
+
+def _plain(value):
+    if isinstance(value,Mapping):return {key:_plain(v) for key,v in value.items()}
+    if isinstance(value,tuple):return [_plain(v) for v in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -22,11 +35,17 @@ class NativeCandidate:
     preparation: Mapping=field(default_factory=dict)
     compiled: bool | None=None
 
+    def __post_init__(self):
+        object.__setattr__(self,'parameters',_immutable(self.parameters))
+        object.__setattr__(self,'preparation',_immutable(self.preparation))
+
     @property
-    def id(self):return stable_id(self.to_dict())
+    def id(self):return stable_id({k:v for k,v in self.to_dict().items() if k!='compiled'})
+    @property
+    def config(self):return KernelConfig(_plain(self.parameters))
     def to_dict(self):
-        return {'native_id':self.native_id,'parameters':dict(self.parameters),'family':self.family,
-            'packing_key':self.packing_key,'preparation':dict(self.preparation),'compiled':self.compiled}
+        return {'native_id':self.native_id,'parameters':_plain(self.parameters),'family':self.family,
+            'packing_key':self.packing_key,'preparation':_plain(self.preparation),'compiled':self.compiled}
 
 
 @dataclass(frozen=True)

@@ -7,9 +7,11 @@ transports are always labelled protocol fixtures, never real API evidence.
 from __future__ import annotations
 from dataclasses import dataclass,field
 import hashlib
+import ipaddress
 import json
 import math
 import os
+import socket
 from pathlib import Path
 import time
 import urllib.error
@@ -21,6 +23,20 @@ from .models import canonical_json
 
 class APIAuthorizationRequired(RuntimeError):pass
 class ProviderResponseError(RuntimeError):pass
+
+
+def require_public_service_location(endpoint,*,resolver=socket.getaddrinfo):
+    """HTTP alone is no GPU-location proof. Private/local services need the
+    separately verified worker protocol, which this public client does not own.
+    """
+    host=urllib.parse.urlsplit(endpoint).hostname
+    try:addresses=[ipaddress.ip_address(host)]
+    except ValueError:
+        if host=='localhost' or host.endswith('.localhost'):raise APIAuthorizationRequired('local inference service requires a verified cooperative worker')
+        try:addresses=[ipaddress.ip_address(row[4][0]) for row in resolver(host,443,type=socket.SOCK_STREAM)]
+        except OSError as exc:raise APIAuthorizationRequired('cannot verify public inference-service placement') from exc
+    if not addresses or any(not address.is_global for address in addresses):
+        raise APIAuthorizationRequired('private/local endpoint is not verified separate inference; use the cooperative local provider')
 
 
 @dataclass(frozen=True)
@@ -46,6 +62,8 @@ class APIProvider:
         if self.protocol not in ('chat_completions','responses'):raise ValueError('unsupported official wire protocol')
         if not self.model or not self.provider:raise ValueError('explicit provider and model are required')
         if self.structured_output not in ('none','json_object','json_schema'):raise ValueError('declare supported output format')
+        if self.inference_location not in ('remote_public_api','cpu_service','separate_device','single_card_resident'):
+            raise ValueError('explicit inference placement required')
         if not 0<self.timeout_s<=300 or type(self.max_retries) is not int or not 0<=self.max_retries<=3:
             raise ValueError('finite API request/retry limits required')
         if not 1<=self.max_response_bytes<=16*1024**2:raise ValueError('bounded provider response required')
@@ -63,6 +81,8 @@ class APIAuthorization:
     authorization_ref: str | None=None
 
     def __post_init__(self):
+        if type(self.allow_paid_requests) is not bool or type(self.allow_task_metadata_egress) is not bool:
+            raise ValueError('authorization flags must be explicit JSON booleans, not strings')
         if type(self.max_requests) is not int or not 1<=self.max_requests<=10000:
             raise ValueError('explicit finite integer request allowance required')
 
@@ -142,9 +162,9 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class PublicModelClient:
-    def __init__(self,spec,*,authorization=None,log_path=None,transport=None):
+    def __init__(self,spec,*,authorization=None,log_path=None,transport=None,resource_token=None):
         self.spec=spec;self.authorization=authorization or APIAuthorization();self.log_path=Path(log_path) if log_path else None
-        self.transport=transport;self.requests=0
+        self.transport=transport;self.requests=0;self.resource_token=resource_token
     def invoke(self,task,*,system,route='B',sampling=None,schema=None,max_output_tokens=1024):
         task=outbound_task({**task,'route':route})
         outbound_task({'notice':system})
@@ -155,6 +175,11 @@ class PublicModelClient:
             host=urllib.parse.urlsplit(self.spec.endpoint).hostname
             if host in ('localhost','127.0.0.1','::1') and self.spec.inference_location=='remote_public_api':
                 raise APIAuthorizationRequired('HTTP transport does not prove inference uses a separate GPU; local placement/quiescence required')
+            if self.spec.inference_location!='remote_public_api':
+                # This client cannot synchronize an external service's CUDA
+                # context. A string declaration must never whitelist its PID.
+                raise APIAuthorizationRequired('external local/private service needs a verified worker placement/quiescence protocol; use the cooperative in-process local provider meanwhile')
+            require_public_service_location(self.spec.endpoint)
             secret=os.environ.get(self.spec.key_env)
             if not secret:raise APIAuthorizationRequired('authorized credential environment variable is unavailable')
         else:secret=None

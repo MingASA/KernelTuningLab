@@ -11,7 +11,7 @@ import threading
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..torch_context import strict_fp32_reference
-from . import native_sources as sources
+from . import native_sources as sources,environment
 from .inputs import _counter
 
 VERSION='0.30.0';_NATIVE_LOCK=threading.RLock()
@@ -50,19 +50,29 @@ def write_native_table(path,table):
     return read_native_table(path)
 
 
-def generate(ctx,seed):
+def logical_arrays(shape,parameters,seed):
     import numpy as np
-    torch=ctx.torch;m,h,i,e,t=(ctx.shape.get(k) for k in ('M','H','I','E','TOP_K'));device=f'cuda:{ctx.device}';dtype=getattr(torch,ctx.operator.dtype)
-    def values(shape,salt):
-        a=((_counter(int(np.prod(shape)),seed^salt)%17).astype(np.int16)-8).reshape(shape).astype(np.float32)/64
-        return torch.from_numpy(a).to(device,dtype=dtype)
+    m,h,i,e,t=(shape.get(k) for k in ('M','H','I','E','TOP_K'))
+    def values(dims,salt):
+        a=((_counter(int(np.prod(dims)),seed^salt)%17).astype(np.int16)-8).reshape(dims).astype(np.float32)/8
+        # Keep variance meaningful after two expert projections. The previous
+        # /64 for every tensor produced near-zero outputs where absolute
+        # tolerance could accept an all-zero implementation on tiny cases.
+        if len(dims)==3:a*=2/(dims[-1]**.5)
+        return a
     ids=(np.arange(m)[:,None]+np.arange(t)[None,:])%e
-    if ctx.operator.parameters['route_distribution']=='skewed':ids[np.arange(m)%5!=0]=np.arange(t)[None,:]
+    if parameters['route_distribution']=='skewed':ids[np.arange(m)%5!=0]=np.arange(t)[None,:]
     weights=(1+(_counter(m*t,seed^25)&7)).reshape(m,t).astype(np.float32);weights/=weights.sum(1,keepdims=True)
-    ctx.allocate_output('out',(m,h))
     return {'a':values((m,h),13),'w1':values((e,2*i,h),17),'w2':values((e,h,i),19),
-        'topk_ids':torch.from_numpy(ids.astype(np.int32)).to(device),
-        'topk_weights':torch.from_numpy(weights).to(device)}
+        'topk_ids':ids.astype(np.int32),'topk_weights':weights}
+
+
+def generate(ctx,seed):
+    torch=ctx.torch;m,h=(ctx.shape.get(k) for k in ('M','H'));device=f'cuda:{ctx.device}';dtype=getattr(torch,ctx.operator.dtype)
+    arrays=logical_arrays(ctx.shape,ctx.operator.parameters,seed)
+    ctx.allocate_output('out',(m,h))
+    return {key:torch.from_numpy(value).to(device,dtype=torch.int32 if key=='topk_ids' else torch.float32 if key=='topk_weights' else dtype)
+        for key,value in arrays.items()}
 
 
 def reference(ctx):
@@ -159,5 +169,6 @@ def register_assets(catalog):
     for mode in ('native','explicit'):
         space=SpaceDefinition({k:ParameterSpec(v) for k,v in KNOBS.items()},name='native shared two-stage MoE launch config') if mode=='explicit' else SpaceDefinition({},name='original vLLM native config table and fallback')
         catalog.register(KernelDefinition('production/vllm_moe_'+mode,'1.0.0',op.ref,partial(build,mode=mode),space,
-            runtime='cuda',supports=support,source_files=src,metadata={'pin':sources.pin('vllm'),'native_path':'fused_experts_impl + original override_config and try_get_optimal_moe_config',
+            runtime='cuda',supports=support,source_files=src,execution_identity=partial(environment.installed_identity,'vllm','vllm',native_default=mode=='native'),
+            metadata={'pin':sources.pin('vllm'),'native_path':'fused_experts_impl + original override_config and try_get_optimal_moe_config',
             'scope':'full routed expert computation with shared two-stage config, not single Grouped GEMM','fallback':'none; missing/incompatible native package is explicit'}))

@@ -24,6 +24,17 @@ def triton_flex(Q):
     assert flex_attention.generated_configuration(['requested = {"BLOCK_M":64}'])==[]
 
 
+def test_compatibility_path_exposes_actual_source_identity_and_same_documented_knobs():
+    import ast
+    from kernel_tuning_lab.production import native_sources as sources
+    for profile in ('pytorch','pytorch213'):
+        tree=ast.parse(sources.source(profile,'torch/nn/attention/flex_attention.py').read_text())
+        options=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='FlexKernelOptions')
+        fields={n.target.id for n in options.body if isinstance(n,ast.AnnAssign) and isinstance(n.target,ast.Name)}
+        assert set(flex_attention.KNOBS)|{'BACKEND','PRESCALE_QK','ROWS_GUARANTEED_SAFE','BLOCKS_ARE_CONTIGUOUS'}<=fields
+    assert sources.pin('pytorch213')['revision']=='cf30153c4c131c8164ee7798e5022d810682e2cb'
+
+
 def test_real_page_indices_preserve_ragged_lengths_and_do_not_form_contiguous_kv():
     layout=sglang_decode.paged_layout(4,129,16,'ragged',7)
     assert layout['seq_lens']==[1,15,17,129]
@@ -33,6 +44,14 @@ def test_real_page_indices_preserve_ragged_lengths_and_do_not_form_contiguous_kv
     assert indices!=list(range(len(indices)))
     other=sglang_decode.paged_layout(4,129,16,'ragged',7)
     assert layout==other
+
+
+def test_pure_python_page_counter_matches_original_numpy_without_changing_inputs():
+    np=pytest.importorskip('numpy')
+    from kernel_tuning_lab.production.inputs import _counter,counter_scalar
+    for seed in (0,17,2**32-1):
+        expected=_counter(64,seed).tolist()
+        assert [counter_scalar(i,seed) for i in range(64)]==expected
 
 
 def test_native_jit_loading_without_a_device_is_not_gpu_execution():

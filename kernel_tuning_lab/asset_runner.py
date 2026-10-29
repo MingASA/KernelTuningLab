@@ -133,7 +133,7 @@ def _interrupt_measurement(output: Path, progress: dict, reason: str, *, status:
 
 
 def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, check_only: bool = False,
-                             plugins: tuple[str, ...] = (), inherited_fds: tuple[int, ...] = ()) -> dict:
+                             plugins: tuple[str, ...] = (), inherited_fds: tuple[int, ...] = (),worker_environment=None) -> dict:
     """Run untrusted-in-behavior extensions in a disposable supervised process.
 
     Local Python plugins are trusted code, not a security sandbox. The parent
@@ -144,7 +144,7 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
     try:
         with OutputLease(output) as lease:
             return _execute_owned(source, output, check_only=check_only, plugins=plugins, lease=lease,
-                                  inherited_fds=inherited_fds)
+                                  inherited_fds=inherited_fds,worker_environment=worker_environment)
     except OutputDirectoryBusyError as exc:
         # A rejected concurrent caller must not overwrite the owner's progress,
         # worker log, approval marker, or archived experiment.
@@ -153,7 +153,7 @@ def execute_asset_experiment(spec_path: str | Path, output_dir: str | Path, *, c
 
 
 def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tuple[str, ...], lease,
-                   inherited_fds: tuple[int, ...] = ()) -> dict:
+                   inherited_fds: tuple[int, ...] = (),worker_environment=None) -> dict:
     # Parse before moving the old metadata: the user may resume using the
     # archived experiment.json from this very output directory.
     try:
@@ -188,7 +188,7 @@ def _execute_owned(source: Path, output: Path, *, check_only: bool, plugins: tup
             if os.name == "posix":
                 process_options["pass_fds"] = tuple(dict.fromkeys((*process_options.get("pass_fds", ()), *inherited_fds)))
             process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=os.name == "posix",
-                                       **process_options)
+                                       env=worker_environment,**process_options)
         except OSError as exc:
             return _save_failure(output, "failed", _error(exc), phase="worker_startup", exit_code=2)
         timeout = None

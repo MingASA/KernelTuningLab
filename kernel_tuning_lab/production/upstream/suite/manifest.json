@@ -231,6 +231,47 @@
         "git_blob_sha": "d83301bed19fa1a125877e4b67d280b04001cc41",
         "sha256": "78dec0e85e0c040304515f64ccf8f2c6a7a2e5b9f1124a2138a97d9a02585541",
         "vendored": "vllm/activation.py"
+      },
+      "vllm/model_executor/layers/fused_moe/utils.py": {
+        "git_blob_sha": "cfc3be3e8e12c4e241a90a2c5054f746c01f5045",
+        "sha256": "a93a0bded4008db19d8b38370526ae34fafb9c8278e5b4f60acb6acc8fdc1850",
+        "vendored": "vllm/utils.py"
+      },
+      "vllm/model_executor/layers/fused_moe/modular_kernel.py": {
+        "git_blob_sha": "120c9e985753c51d1a4048ed6ae58279bd41f4db",
+        "sha256": "8dc4e0dbbf35b3aac8add63ca6f2a7bbfdadaabbd60826e24598b22c7d8e5c22",
+        "vendored": "vllm/modular_kernel.py"
+      },
+      "vllm/_custom_ops.py": {
+        "git_blob_sha": "3311215016a728fc4bfc46ff2c7bdf97b1a0f3a5",
+        "sha256": "236af80568375bc41ed7f0fa28067e29efd5c77a6cf49f24d796312fa3870e43",
+        "vendored": "vllm/_custom_ops.py"
+      }
+    }
+  },
+  "pytorch213": {
+    "repository": "pytorch/pytorch",
+    "revision": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+    "files": {
+      "torch/nn/attention/flex_attention.py": {
+        "vendored": "pytorch213/flex_attention_api.py",
+        "git_blob_sha": "3e32fcea137292be91aa91815a9205d66ad567b2",
+        "sha256": "4ce9bddba535239a1b02dc3647e31c970e53c95969e249ddfcda259b17d979a6"
+      },
+      "torch/_inductor/kernel/flex/flex_attention.py": {
+        "vendored": "pytorch213/flex_attention.py",
+        "git_blob_sha": "cb11e897d320683fd2cba6d9e6815370c9399e76",
+        "sha256": "0e849dfeb3488b6838323285c7d23ef9c9bb2191ac5ce94893696bd7b117db21"
+      },
+      "torch/_inductor/kernel/flex/flex_decoding.py": {
+        "vendored": "pytorch213/flex_decoding.py",
+        "git_blob_sha": "ac26e310a0e86ed230fb0e534123596b2f7f071e",
+        "sha256": "03a875846318fe876c4350ed5c88f0dbac2086bf84ef2e7dbe706c7c23397fad"
+      },
+      "torch/_inductor/kernel/flex/common.py": {
+        "vendored": "pytorch213/common.py",
+        "git_blob_sha": "edc721261c5f7c2ec0a51efa5d35e5a7b50ab127",
+        "sha256": "8514dd1a18d314f593a055331def93cc4d8f742982d477c8d762cad3bb7996f8"
       }
     }
   }

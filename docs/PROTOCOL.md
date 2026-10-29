@@ -16,6 +16,12 @@ Version/content/scope-bound submitter declarations can skip numerical comparison
 
 ## Multi-case online research
 
+Production assets additionally bind actual installed source/binary and selector-table identities before the measurement-cache lookup through the optional SDK execution-identity hook. Native candidate identity excludes its learned compilation availability; source expressibility, compiled subset, static feasibility and measured correctness are separate axes. Raw explicit requests, native pruning/canonicalization and actually executed configurations are recorded separately.
+
+Cooperative inference deployment (exclusive/no model, remote API, admitted separate device, same-card resident serial, explicit phase offload) is part of environment/protocol identity. A same-process producer lease blocks new work and synchronizes the actual producer context for the whole preparation/validation/warmup/measurement phase. Resident weights may remain. Memory counters, empty_cache, a caller-side sync or one utilization sample do not prove an external service quiet. Compare these contexts only when an experiment explicitly defines that comparison; context-limited OOM is not permanent architecture infeasibility.
+
+Generated full Searcher programs retain original text, edits, explicit review, development feedback, freeze identity and target exposure before execution. Development feedback excludes target labels. Provider inference, network/retry, candidate completion, optimizer proposal/feedback/shutdown and physical measurement costs remain separate. Protocol fixtures and offline Replay never become real API/model/GPU observations.
+
 `ktlab research` expands a strict `kind=research` configuration into original v2
 jobs, serially across algorithms, Kernels, dtypes, seeds and budgets. Each job
 keeps its own supervised preflight/acceptance/trials. A compatible shared v2

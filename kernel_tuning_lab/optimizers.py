@@ -267,28 +267,36 @@ class _NeedObservation(Exception):
 class KernelTunerDE(_Audit):
     name='kernel_tuner_constraint_de'
 
-    def __init__(self,seed=0,population_size=8,max_generations=512,native_wall_s=10):
+    def __init__(self,seed=0,population_size=8,max_generations=512,native_wall_s=10,execution_mode='callback'):
         super().__init__(seed)
         if type(population_size) is not int or population_size<1 or type(max_generations) is not int or max_generations<1:
             raise ValueError('positive population/generation limits required')
         self.population_size=population_size;self.max_generations=max_generations;self.native_wall_s=native_wall_s
+        if execution_mode not in ('callback','replay'):raise ValueError('native DE execution_mode is callback or explicit legacy replay')
+        self.execution_mode=execution_mode;self.callback=None
         self.configs=None;self.known={};self.next_config=None;self.told=set()
         self.diagnostics.update(engine='Kernel Tuner native constraint-aware differential_evolution',
             versions={'kernel_tuner':PINS['kernel_tuner']},population_requested=population_size,
             computational_replays=0,internal_cached_evaluations=0,native_repair_calls=0,
-            completed_generations=0,feedback_records=0,
-            adaptation='Complete feasible Searchspace; seeded native QMC; fixed equal-size QMC bug; deterministic native computation replay, no benchmark replacement')
+            completed_generations=0,feedback_records=0,native_invocations=0,execution_mode=execution_mode,
+            adaptation='Complete feasible Searchspace; seeded native QMC; fixed equal-size QMC bug; '+
+                ('persistent native callback, one reconstruction on process resume' if execution_mode=='callback' else 'explicit legacy deterministic computation replay')+'; no benchmark replacement')
 
     def _initialize(self,space,hardware,operator,shape):
         _require('kernel_tuner')
         from kernel_tuner.strategies import diff_evo
         self.space=space;self.context=(hardware,operator,shape)
+        if any(spec.kind=='categorical' and len(space.domains[name])>1 for name,spec in space.parameter_specs.items()):
+            raise ValueError('native numeric DE does not assign a continuous distance to variable tactic/backend categories; choose a compatible native optimizer')
         result=space.build_feasible(hardware,operator,shape,budget=SpaceBuildBudget(max_nodes=500_000,max_wall_time_s=15,max_configs=50_000))
         if not result.complete:
             raise ValueError('Kernel Tuner DE requires a complete feasible set within its explicit build budget; '+result.status)
         if not result.configs:
             self.last_proposal_status='proven_empty';self.configs=();return
         self.configs=result.configs
+        if len(self.configs)==1:
+            from .asset_runner import AssetNotApplicableError
+            raise AssetNotApplicableError('native DE mutation is undefined on one feasible point; use explicit Grid/expert execution, not a renamed fallback')
         self.space_diagnostics={'strategy':'complete_feasible_native_searchspace',**result.diagnostics}
         self.diagnostics.update(feasible_count=len(self.configs),population_effective=min(self.population_size,len(self.configs)),
             upstream_source_sha256=_source_hash(diff_evo.differential_evolution))
@@ -365,26 +373,41 @@ class KernelTunerDE(_Audit):
             encoding='verified_latency_ms' if record.correctness_verified else 'native failure marker, not measured latency',cache_hit=cache_hit)
         # Flush the final population's feedback too. The resulting next request
         # is pending only; it never causes an unbudgeted measurement.
-        self.next_config=self._run_native() if len(self.known)<len(self.configs) else None
+        if self.execution_mode=='callback':
+            self.next_config=self.callback.advance(deepcopy(record))
+        else:self.next_config=self._run_native() if len(self.known)<len(self.configs) else None
         self.diagnostics['pending_unmeasured_proposal']=self.next_config is not None
 
     def suggest(self,hardware,operator,shape,space,history,budget,batch_size=1):
         if budget.exhausted(0,0):return []
         if self.configs is None:self._initialize(space,hardware,operator,shape)
         self.known.update({r.config.id:deepcopy(r) for r in history})
+        if self.callback is not None and self.callback.pending is not None:
+            previous=next((r for r in history if r.config.id==self.callback.pending.id),None)
+            if previous is not None and previous.id not in self.told:self.observe(previous,cache_hit=True)
         if not self.configs or len(self.known)>=len(self.configs):self.last_proposal_status='searcher_exhausted';return []
-        candidate=self.next_config or self._run_native();self.next_config=None
+        if self.execution_mode=='callback':
+            if self.callback is None:
+                from .kt_callback import NativeDECallback
+                self.callback=NativeDECallback(self)
+            candidate=self.next_config or self.callback.pending or self.callback.advance()
+        else:candidate=self.next_config or self._run_native()
+        self.next_config=None
         if candidate is None:return []
         if candidate.id in history.attempted_config_ids or any(r.config.id==candidate.id for r in history):
             raise ValueError('native DE reconstruction returned a revealed point; refuse silent substitution')
         self._event('ask',config=dict(candidate.params),generations_completed=self.diagnostics['completed_generations'])
         return [candidate]
 
+    def close(self):
+        if self.callback is not None:self.callback.close()
+
 
 ASSETS=(
     SearchAlgorithmDefinition('smac_rf','1.0.0',SMACSearch,
         metadata={'upstream':'https://github.com/automl/SMAC3','version':'2.4.1','license':'BSD-3-Clause'}),
     SearchAlgorithmDefinition('kernel_tuner_de','1.0.0',KernelTunerDE,
-        capabilities=SearchCapabilities(max_cardinality=50_000),
+        capabilities=SearchCapabilities(max_cardinality=50_000,min_cardinality=2,parameter_kinds=('integer','real','boolean')),
+        source_files=('kt_callback.py',),
         metadata={'upstream':'https://github.com/KernelTuner/kernel_tuner/tree/1.5.0','version':'1.5.0','license':'Apache-2.0'}),
 )

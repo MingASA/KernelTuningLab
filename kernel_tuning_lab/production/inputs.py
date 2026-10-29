@@ -49,6 +49,14 @@ def _counter(count,seed):
     return x^(x>>16)
 
 
+def counter_scalar(index,seed):
+    """Same uint32 mixer for tiny CPU layout metadata, no NumPy dependency."""
+    mask=0xffffffff;x=(index & mask)^(seed & mask)
+    x=((x^(x>>16))*0x7feb352d)&mask
+    x=((x^(x>>15))*0x846ca68b)&mask
+    return x^(x>>16)
+
+
 def portable_arrays(m,n,k,seed):
     import numpy as np
     if k%128 or n%64 or min(m,n,k)<1:raise ValueError('common Marlin cohort requires K%128=N%64=0 and positive dimensions')

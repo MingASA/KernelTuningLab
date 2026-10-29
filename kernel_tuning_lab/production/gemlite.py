@@ -10,7 +10,7 @@ import time
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..models import stable_id
-from . import native_sources as sources,suite_inputs
+from . import native_sources as sources,suite_inputs,environment
 from .contracts import ConfigurationMapping
 
 VERSION='0.6.0.post2'
@@ -82,8 +82,7 @@ def native_api():
     spec=importlib.util.find_spec('gemlite')
     if spec is None:raise RuntimeError('optional GemLite package is not installed')
     root=Path(spec.origin).parent.parent
-    files=['gemlite/core.py','gemlite/dtypes.py','gemlite/bitpack.py',
-        *('gemlite/triton_kernels/'+x+'.py' for x in FAMILIES.values())]
+    files=[name for name in sources.manifest()['gemlite']['files'] if name.endswith('.py')]
     identity=sources.native_component(root,'gemlite',files)
     module=importlib.import_module('gemlite.core')
     return module,identity
@@ -179,7 +178,8 @@ def register_assets(catalog):
     catalog.register(operator)
     catalog.register(KernelDefinition('production/gemlite_default','1.0.0',operator.ref,partial(build,family=None,mode='native'),
         SpaceDefinition({},name='native GemLite family/cache/autotune expert'),runtime='cuda',supports=_support,
-        source_files=source_files,metadata={'pin':sources.pin('gemlite'),'cost':'native internal tuning separate from research observations'}))
+        source_files=source_files,execution_identity=partial(environment.installed_identity,'gemlite','gemlite',native_default=True),
+        metadata={'pin':sources.pin('gemlite'),'cost':'native internal tuning separate from research observations'}))
     for family in FAMILIES:
         configs=declared_configs(family);keys=configs[0].keys()
         domains={key:tuple(dict.fromkeys(c[key] for c in configs)) for key in keys}
@@ -190,6 +190,7 @@ def register_assets(catalog):
             name='GemLite '+family+' explicit declared launch knobs')
         catalog.register(KernelDefinition('production/gemlite_'+family.lower(),'1.0.0',operator.ref,
             partial(build,family=family,mode='explicit'),space,runtime='cuda',supports=_support,source_files=source_files,
+            execution_identity=partial(environment.installed_identity,'gemlite','gemlite'),
             metadata={'pin':sources.pin('gemlite'),'native_default_pruner':'not applied to explicit path; hard semantic constraints only',
                 'native_family':family,'source_declared_candidates':len(configs),'effective_parameters':list(keys)}))
 

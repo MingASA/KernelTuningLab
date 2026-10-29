@@ -1,4 +1,4 @@
-"""PyTorch2.14 native FlexAttention inference, scoped backend launch options."""
+"""Pinned native FlexAttention inference with a verified2.13 compatibility path."""
 from __future__ import annotations
 import ast
 from functools import partial
@@ -10,9 +10,10 @@ from pathlib import Path
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..torch_context import strict_fp32_reference
-from . import native_sources as sources
+from . import native_sources as sources,environment
 
 KNOBS={'BLOCK_M':(32,64,128),'BLOCK_N':(32,64,128),'num_warps':(4,8),'num_stages':(1,2,3)}
+SOURCE_PROFILES={'2.14.0':'pytorch','2.13.0':'pytorch213'}
 
 
 def kernel_options(shape,mask,*,backend,parameters):
@@ -92,7 +93,7 @@ def validate(ctx):
 
 def support(h,o,s):
     try:
-        if importlib.metadata.version('torch').split('+')[0]!='2.14.0':return 'fixed FlexAttention2.14 requires a private compatible Torch2.14 environment; original environment unchanged'
+        if importlib.metadata.version('torch').split('+')[0] not in SOURCE_PROFILES:return 'fixed PyTorch2.14 or source-verified2.13 compatibility environment required; no global/shared upgrade'
     except importlib.metadata.PackageNotFoundError:return 'optional Torch2.14 dependency unavailable'
     return None
 
@@ -100,7 +101,9 @@ def support(h,o,s):
 def build(ctx,*,backend,**parameters):
     torch=ctx.torch;native=importlib.import_module('torch.nn.attention.flex_attention')
     root=Path(torch.__file__).parent.parent
-    identity=sources.native_component(root,'pytorch',['torch/nn/attention/flex_attention.py'])
+    version=torch.__version__.split('+')[0]
+    profile=SOURCE_PROFILES[version]
+    identity=sources.native_component(root,profile,[f for f in sources.manifest()[profile]['files'] if f.startswith('torch/')])
     options=kernel_options(ctx.shape,ctx.operator.parameters['mask'],backend=backend,parameters=parameters)
     block_mask=None
     if ctx.operator.parameters['mask']=='causal':
@@ -120,7 +123,7 @@ def build(ctx,*,backend,**parameters):
     actual=generated_configuration(codes)
     if parameters and actual!=[parameters]:
         raise RuntimeError('cannot confirm one actual Flex Triton configuration equals request; generated metadata='+str(actual))
-    ctx.metadata.setdefault('experiment_annotations',{}).update(backend='PyTorch FlexAttention',version='2.14.0',source_identity=identity,
+    ctx.metadata.setdefault('experiment_annotations',{}).update(backend='PyTorch FlexAttention',version=torch.__version__,source_identity=identity,
         requested_configuration=dict(parameters),actual_generated_configurations=actual,
         generated_source_sha256=[hashlib.sha256(c.encode()).hexdigest() for c in codes],
         backend_request=backend,actual_backend='Triton template observed' if actual else 'unknown native AUTO/FLASH path; not inferred from request',
@@ -144,5 +147,6 @@ def register_assets(catalog):
         explicit=backend=='TRITON'
         space=SpaceDefinition({k:ParameterSpec(v) for k,v in KNOBS.items()} if explicit else {},name='native Flex '+backend)
         catalog.register(KernelDefinition('production/flex_'+backend.lower(),'1.0.0',op.ref,partial(build,backend=backend),space,
-            runtime='cuda',supports=support,source_files=src,metadata={'pin':sources.pin('pytorch'),
+            runtime='cuda',supports=support,source_files=src,execution_identity=partial(environment.installed_identity,'pytorch','torch'),
+            metadata={'pin':sources.pin('pytorch'),'compatible_source_pin':sources.pin('pytorch213'),
             'native_backend':backend,'explicit_forward_launch':explicit,'unsupported_option_policy':'reject, never treat passed kwargs as proof'}))

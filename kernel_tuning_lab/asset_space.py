@@ -197,6 +197,8 @@ def check_algorithm_compatibility(definition: SearchAlgorithmDefinition, space) 
     if specifications is None:
         specifications = {name: ParameterSpec(values) for name, values in space.domains.items()}
     reasons = []
+    if space.cardinality<capabilities.min_cardinality:
+        reasons.append(f'algorithm requires at least {capabilities.min_cardinality} declared candidates')
     unsupported = {specification.kind for specification in specifications.values()} - set(capabilities.parameter_kinds)
     if unsupported:
         reasons.append("algorithm does not support parameter kinds: " + ", ".join(sorted(unsupported)))

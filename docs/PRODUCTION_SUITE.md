@@ -28,4 +28,55 @@ API客户端支持标准Chat Completions与Responses wire格式，显式provider
 - `kernel_tuning_lab.production.flute`：W3原生调优/缓存与显式结构模板，ID由结构参数反解，不作连续距离。编译集合在可靠build manifest缺失时保持unknown。
 - `kernel_tuning_lab.production.vllm_moe`：生产原生配置表/默认回退与显式共享配置，完整专家路径含对齐、激活、加权归约及已标明的输出copy。原生nearest-M的插入顺序tie-break在导入导出中保留。
 
-注册不导入生产依赖或启动GPU。执行时加载固定原生包/源码与二进制身份，不提供Torch计算替身。`native_sources.py`只提取原始host函数；数值计算始终使用原生实现。后续还有Attention、统一AI动作/驻留、持久原生优化器和L3分派集成，不能将当前阶段写成最终完成。
+注册不导入生产依赖或启动GPU。执行时加载固定原生包/源码与二进制身份，不提供Torch计算替身。`native_sources.py`提取原始host函数或原封的JIT定义，数值计算始终使用原生实现。
+
+- `production.flex_attention`：原生AUTO/TRITON/TRITON_DECODE/FLASH分别建资产，仅TRITON前向暴露tile/warp/stage；显式路径核对实际Inductor生成参数。增加固定Torch2.13.0兼容路径`cf30153c4c131c8164ee7798e5022d810682e2cb`，四个相关文件已与上游和本机安装逐字节核对，执行时继续核对，不将其报告为2.14运行结果。
+- `production.sglang_decode`：原始paged索引、标准CUDA GQA/MQA wrapper、原生GPU Split-KV scheduler和两阶段merge；profile cap8明确记录，不冒充SGLang服务的全局默认。
+
+## 有界CPU审计与实际构建
+
+以下为FP16、group128及**规划128SM**下的源码静态审计，不是物理支持声明。依赖可用性独立报告；实际执行未绕过依赖或准入。每空间10秒/100000节点，报告Python tracemalloc峰值，不冒充RSS或显存。首个3秒Split-K构建未完成的记录保留，没有把前缀冒充完整集合。
+
+| 显式空间 | 声明/原生候选 | 静态硬约束通过 | 编译/正确性 |
+|---|---:|---:|---|
+| GemLite GEMM | 2500（原max列表2000，补原专家使用的stage2） | 1500 | GPU待验 |
+| GemLite Split-K | 7500 | 4500 | GPU待验 |
+| GemLite GEMV / RevSplit-K | 150 / 120 | 150 / 120 | GPU待验 |
+| FLUTE W3结构模板 | 36 | 32 | 编译6/36，GPU待验 |
+| Flex TRITON forward | 54 | 54 | 生成配置解析CPU测试通过 |
+| SGLang paged decode | 135 | 135 | 原始JIT定义CPU加载通过 |
+| vLLM共享两阶段MoE | 2400 | 2400 | 官方两个原生扩展CPU加载通过 |
+
+复现：`PYTHONPATH=. python scripts/audit_production_spaces.py --wall-seconds 10 --planning-sm-count 128 --output artifacts/production/audit.json`。按需构造是有界、非均匀的跨分支重启；native模板保留类别和结构属性，不制造连续ID距离。静态通过不代表编译或数值通过。
+
+GemLite已从固定源码构建wheel。FLUTE在私有CUDA12.4/GCC11.2.1/Torch2.6环境用单CPU编译worker构建int3 ID `0,1,2,8,9,10`，目标sm89/sm90，420.38秒；6551376bytes，SHA256 `c8d43e3073cf8a104396dcf6d1fc463c0492ce7b4809073bddca89a244861464`。扩展在CUDA不可见时加载通过。原数值headers未改，只限制生成dispatch和私有CUTLASS include路径；6模板不等于6个物理编译Kernel。首个GCC8.5编译失败保留；复现入口`scripts/build_flute_subset.py`，不安装系统编译器。
+
+vLLM0.30官方wheel在私有overlay安装，Torch2.13+cu132下两个stable-libtorch扩展CPU加载通过且CUDA未初始化。完整Python路径仍须完整可选依赖，导入失败逐次保留。安装、二进制加载、Python加载和GPU执行不能相互替代。
+
+## 身份、成本与优化器
+
+SDK新增可选无参`KernelDefinition.execution_identity`：在**缓存查询之前**绑定实际安装源码、选定扩展SHA、软件版本、配置表及相关运行选项。文件hash按size/mtime/ctime缓存，开销进入preflight/cache墙钟。新增回归验证“插件声明不变，原生文件变化→不命中旧测量”。不要在worker执行期间修改其依赖。
+
+逻辑输入和config相关packing均做完整hash。FLUTE按TileP准备并单列准备成本；Split-K/StreamK初始化与归约均在完整GPU计划。MoE由原wrapper根据BM重建对齐元数据，两个GEMM共享配置；路由网络不计入。小用例增加“全零输出不能通过”的输入强度负对照，容差未放宽。
+
+SMAC2.4.1/ConfigSpace1.2.2、Kernel Tuner1.5.0仍为可选依赖。KT DE默认持久callback执行原生算法，缺反馈时挂起；进程恢复时重建已揭示前缀。旧模式须显式`execution_mode=replay`。原生轨迹、恢复、重复反馈、host RNG和SDK契约测试通过；类别变量不作连续坐标，单点或不完整空间明确拒绝，不回退Random。1200点CPU合成问题B64：旧65次计算重放/2523次内部重复访问，新1次原生调用/33次内部缓存访问；约0.843秒与0.307秒。这是适配CPU成本，不能当作GPU算法胜利。提议、反馈、shutdown分别记账。
+
+## API/本地AI与资源协议
+
+A为已有专用模型，本轮不训练；B为直接决策；C为生成/迭代完整Searcher或规则。API/本地是部署方式。`ai/standard_provider@1.0.0`支持public_api、local_model、cpu_process，共用config/partial/region/有界space-query协议；不绑定GEMM六个字段、不要求大空间完整trie。平台补全、规范化和回退单独记录，不能归功于模型。旧完整小空间trie仍可显式选择。
+
+API实现官方[Responses及结构化输出](https://developers.openai.com/api/docs/guides/structured-outputs)和Chat Completions薄协议，默认不读key、不联网；endpoint/model、付费和数据出站需显式授权。请求数上限为**每客户端**，多job需先计算总调用上限。原文、usage、request ID、重试及网络/总耗时保留，未知费用保持unknown。超时不伪装成模型格式错误重试。fixture不是API实测，本轮没有真实API授权。
+
+LocalModelClient只用完整指纹的已有checkpoint，B/C共用任务。默认每trial/client只加载一次、权重常驻；同进程合作lease阻止新推理提交，由实际生产者同步，再覆盖候选准备、验证、warmup和测量。allocator/empty_cache不是静默证明。stage_offload为显式回退；C优先按整批生成/开发评测切换。另卡模式先独立获准和准入，再用ProcessCoordinator登记实际UUID及owned synchronize；不会自动占第二张卡。外部同卡HTTP服务缺可信合作协议时拒绝，不能凭HTTP、同UID或一次利用率当作隔离。
+
+资源上下文进入测量和失败缓存；常驻OOM仅属于该上下文，不永久禁用架构。合作门禁CPU线程测试已通过；“无模型/常驻静默/推理后warmup”的新GPU验收待空卡，旧LLM证据不能冒充新驻留协议已测。
+
+C完整程序入口：`ktlab ai-program submit/review/check/development/feedback/freeze/test/show`。原文、原程序、人工/静态编辑、源码SHA和父版本分别保存；必须明确可信审查后才执行。契约与开发评测用原v2 Runner/Store，冻结后不能继续同版本开发；读取test前持久化exposure。开发反馈不输出test路径/标签。受审进程不继承任意凭据环境，但不是恶意Python文件系统沙箱。CPU工作流fixture不算新LLM实测。
+
+## 原生规则、配置表与验收入口
+
+`production.dispatch`把原ShapeDispatcher接到普通执行入口。export_table复用同实现/同协议PerformanceMatrix与SelectionResult，表绑定hardware/operator/kernel指纹、Config Budget和shape；未知输入拒绝。`production/config_table@1.0.0`通过原Runner实际调用显式候选。配置数、物理编译数、packing副本、代码字节、Graph分别保存，未知保留null。vLLM原生表读写保留nearest-M插入顺序tie-break；GemLite cache/pruner、FLUTE tuner仍独立保留，不能称为同K预算规则。
+
+`python scripts/prepare_production_suite.py --backend gemlite --bits 2 --output artifacts/w2.json`生成有界规格；其余backend为flute/flex_attention/sglang_decode/vllm_moe。也可直接用`examples/production_suite/*.json`。先`ktlab research --spec ... --write-only --output ...`核对预算，在准入空卡及独立兼容环境执行同命令去掉write-only。每实现至多3研究观测，独立验收另计；原生默认内部调优可能远多于3，受worker期限约束并单列成本。相同命令恢复，失败原日志保留。FP16/BF16分别生成，不扩展性能排名矩阵。
+
+私有证据入口`artifacts/PRODUCTION_SUITE_CURRENT.json`。旧PAUSE_REQUESTED仍有效，不自动恢复旧研究；异机备份无授权目标，单列待办。大型数据库、wheel、编译目录和服务器信息不入公开Git。

@@ -11,7 +11,7 @@ from pathlib import Path
 import time
 
 from ..sdk import KernelDefinition,ParameterSpec,SpaceDefinition,ExecutionPlan,ExecutionStep
-from . import native_sources as sources,suite_inputs
+from . import native_sources as sources,suite_inputs,environment
 from .contracts import NativeCandidate,preparation_identity
 
 VERSION='0.4.2'
@@ -47,16 +47,18 @@ def host_rules():
 
 
 def template_id(parameters,bits=3):
-    match=[int(c.native_id) for c in candidates(bits) if dict(c.parameters)==dict(parameters)]
+    match=[int(c.native_id) for c in candidates(bits) if set(parameters)<=set(c.parameters)
+        and all(c.parameters[k]==v for k,v in parameters.items())]
     if len(match)!=1:raise ValueError('structural parameters do not name one original FLUTE template')
     return match[0]
 
 
-def hard_support(config,ctx):
+def hard_support(config,ctx,*,fixed_parameters=None):
     n=ctx.shape.get('N');k=ctx.shape.get('K');m=ctx.shape.get('M');bits=ctx.operator.parameters['bits']
     if bits!=3:return 'this production FLUTE cohort is explicitly uniform signed int3'
-    if n%16 or (n//16)%config.get('TileP'):return 'original int3 packing requires N/16 divisible by template TileP'
-    tid=template_id(config.params,bits)
+    parameters={**(fixed_parameters or {}),**dict(config.params)}
+    tid=template_id(parameters,bits);tile_p=template_configs()[(bits,tid)]['TileP']
+    if n%16 or (n//16)%tile_p:return 'original int3 packing requires N/16 divisible by template TileP'
     if ctx.hardware.sm_count and not host_rules()['is_template_supported'](m,n,k,bits,tid,ctx.hardware.sm_count):
         return 'original FLUTE0.4.2 is_template_supported predicate rejects this input/template/SM count'
     return None
@@ -137,14 +139,19 @@ def register_assets(catalog):
     available=candidates(3,None if compiled_profile is None else compiled_profile['compiled_templates'].get('3',[]))
     rows=tuple(dict(c.parameters) for c in available if c.compiled is not False)
     if not rows:raise ValueError('this compiled profile has no W3 templates; not a proof the upstream W3 space is empty')
-    domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
+    all_domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
+    fixed={k:v[0] for k,v in all_domains.items() if len(v)==1}
+    domains={k:v for k,v in all_domains.items() if len(v)>1}
+    rows=tuple({k:c[k] for k in domains} for c in rows)
     space=SpaceDefinition({k:ParameterSpec(v,kind='categorical' if isinstance(v[0],str) else 'integer') for k,v in domains.items()},
-        constraints=(hard_support,),candidates=rows,name='FLUTE actual structured int3 template set')
+        constraints=(partial(hard_support,fixed_parameters=fixed),),candidates=rows,name='FLUTE actual structured int3 template set')
     metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),
-        'compiled_profile':compiled_profile,'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
+        'compiled_profile':compiled_profile,'fixed_template_attributes':fixed,
+        'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
         'packing_dependency':'TileP + bits + logical weights','ID_semantics':'native template_id resolved from structural parameters, never a continuous coordinate'}
-    catalog.register(KernelDefinition('production/flute_w3_explicit','1.0.0',op.ref,partial(build,mode='explicit'),space,
-        runtime='cuda',supports=_support,source_files=src,metadata=metadata))
+    catalog.register(KernelDefinition('production/flute_w3_explicit','1.0.0',op.ref,partial(build,mode='explicit',**fixed),space,
+        runtime='cuda',supports=_support,source_files=src,metadata=metadata,execution_identity=partial(environment.installed_identity,'flute','flute')))
     catalog.register(KernelDefinition('production/flute_w3_default','1.0.0',op.ref,partial(build,mode='native'),
         SpaceDefinition({},name='native FLUTE template tuning/cache'),runtime='cuda',supports=_support,source_files=src,
-        metadata={**metadata,'cost':'original upstream internal tuning is paid separately, never hidden inside platform search observations'}))
+        metadata={**metadata,'cost':'original upstream internal tuning is paid separately, never hidden inside platform search observations'},
+        execution_identity=partial(environment.installed_identity,'flute','flute',native_default=True)))

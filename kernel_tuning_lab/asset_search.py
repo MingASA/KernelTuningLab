@@ -71,7 +71,8 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
     status = "passed"
     stop_reason = "evaluation_budget"
     searcher = None
-    algorithm_costs = {'factory_ms': 0.0, 'proposal_ms': 0.0, 'feedback_ms': 0.0}
+    searcher_closed=False
+    algorithm_costs = {'factory_ms': 0.0, 'proposal_ms': 0.0, 'feedback_ms': 0.0,'shutdown_ms':0.0}
     def algorithm_call(label, callback, *args, **kwargs):
         before = time.perf_counter()
         try:
@@ -130,6 +131,14 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             stream.write(canonical_json(event) + "\n")
 
     def finish():
+        nonlocal searcher_closed,status,stop_reason
+        if not searcher_closed and searcher is not None:
+            searcher_closed=True
+            close=getattr(searcher,'close',None)
+            if callable(close):
+                try:algorithm_call('shutdown_ms',close)
+                except Exception as exc:
+                    note_failure('algorithm_shutdown',exc);status='failed';stop_reason='algorithm_shutdown_failed'
         successes = [record for record in records if record.successful]
         fastest_observed = min(successes, key=lambda record: (record.median_ms, record.config.id), default=None)
         verified_rows = [record for record in successes if _correctness(record)[0]]

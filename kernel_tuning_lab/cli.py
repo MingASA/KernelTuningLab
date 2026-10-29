@@ -474,6 +474,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ktlab", description="Kernel Tuning Research Lab v0.1")
     parser.add_argument("--plugin", action="append", default=[], metavar="MODULE_OR_PATH", help="explicitly load a trusted Python extension; repeatable")
     sub = parser.add_subparsers(dest="command", required=True)
+    ai_program=sub.add_parser('ai-program',help='review/check/evaluate/freeze a generated SDK Searcher; trusted code, no sandbox')
+    ai_actions=ai_program.add_subparsers(dest='program_action',required=True)
+    for action in ('submit','review','check','development','freeze','test','feedback','show'):
+        command=ai_actions.add_parser(action);command.add_argument('--artifact',required=True)
+        if action=='submit':
+            command.add_argument('--response',required=True);command.add_argument('--program',required=True)
+            command.add_argument('--algorithm-ref',required=True);command.add_argument('--provenance',required=True)
+            command.add_argument('--edited-program');command.add_argument('--parent')
+        if action=='review':command.add_argument('--reviewed-by',required=True)
+        if action in ('check','development','test'):command.add_argument('--spec',required=True)
+    def program_workflow(args):
+        from . import program_artifacts as programs
+        action=args.program_action
+        if action=='submit':return programs.submit(args.artifact,response=args.response,program=args.program,
+            algorithm_ref=args.algorithm_ref,provenance=json.loads(Path(args.provenance).read_text()),edited_program=args.edited_program,parent=args.parent)
+        if action=='review':return programs.review(args.artifact,args.reviewed_by)
+        if action in ('check','development','test'):return programs.evaluate(args.artifact,args.spec,stage=action)
+        return getattr(programs,'verify' if action=='show' else action)(args.artifact)
+    ai_program.set_defaults(handler=program_workflow)
     for name, description in (("run", "accept and search registered Kernel/algorithm assets"),
                               ("check", "automatically accept registered assets without research search")):
         asset_run = sub.add_parser(name, help=description)
@@ -649,4 +668,4 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"error": type(exc).__name__, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
-    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite", "research"} else 0
+    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite", "research", "ai-program"} else 0

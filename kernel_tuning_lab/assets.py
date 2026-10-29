@@ -360,11 +360,12 @@ class SearchCapabilities:
     required_parameters: tuple[str, ...] = ()
     max_dimensions: int | None = None
     max_cardinality: int | None = None
+    min_cardinality: int = 1
 
     def __post_init__(self) -> None:
         if not self.parameter_kinds or set(self.parameter_kinds) - set(_PARAMETER_KINDS):
             raise ValueError("algorithm parameter_kinds must contain supported finite parameter kinds")
-        for value in (self.max_dimensions, self.max_cardinality):
+        for value in (self.max_dimensions, self.max_cardinality,self.min_cardinality):
             if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 1):
                 raise ValueError("algorithm dimension/cardinality limits must be positive integers")
         if not isinstance(self.supports_constraints, bool) or not isinstance(self.supports_conditional, bool):
@@ -391,6 +392,7 @@ class OperatorDefinition(_Asset):
     source_files: tuple[str, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)
     api_version: int = 1
+
     # factory(parameters: Mapping, requested_shapes: tuple[ShapeSpec, ...])
     #     -> tuple[ShapeSpec | Mapping[str, int], ...]
     validation_case_factory: Callable | None = None
@@ -460,6 +462,7 @@ class KernelDefinition(_Asset):
     claims: tuple[Any, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)
     api_version: int = 1
+    execution_identity: Callable | None = None
 
     def __post_init__(self) -> None:
         _check_asset_header(self)
@@ -467,6 +470,8 @@ class KernelDefinition(_Asset):
             raise ValueError("Kernel operator reference and runtime are required")
         if not callable(self.build) or (self.supports is not None and not callable(self.supports)):
             raise TypeError("Kernel build/supports entries must be callable")
+        if self.execution_identity is not None and not callable(self.execution_identity):
+            raise TypeError('execution_identity must be a CPU-safe no-argument callback')
         if not isinstance(self.space, SpaceDefinition):
             raise TypeError("Kernel space must be a SpaceDefinition")
         if isinstance(self.dtypes, str) or isinstance(self.architectures, str) or any(not isinstance(value, str) or not value for value in (*self.dtypes, *self.architectures)):
@@ -494,6 +499,7 @@ class KernelDefinition(_Asset):
                 "architectures": list(self.architectures), "parameter_map": dict(self.parameter_map),
                 "metadata": _jsonable(self.metadata),
                 "space": self.space.to_dict(), "build": callable_identity(self.build),
+                **({'execution_identity':callable_identity(self.execution_identity)} if self.execution_identity else {}),
                 "supports": callable_identity(self.supports) if self.supports else None,
                 "source_files": _source_manifest(self.source_files, (self.build, self.supports))}
 

@@ -36,10 +36,18 @@ class BenchmarkRunner:
 
     def measure(self, hardware: HardwareSpec, operator: OperatorSpec, shape: ShapeSpec, config: KernelConfig,
                 space: ConfigSpace, split: str = "train", resume: bool = True) -> MeasurementRecord:
+        from .inference_resources import COORDINATOR
+        with COORDINATOR.measurement_window(hardware):
+            return self._measure_serial(hardware,operator,shape,config,space,split=split,resume=resume)
+
+    def _measure_serial(self,hardware,operator,shape,config,space,split='train',resume=True):
         started = time.perf_counter()
         self.last_cache_hit = False
         environment = self.adapter.environment()
+        from .inference_resources import COORDINATOR
+        environment['inference_resource_context']=COORDINATOR.resource_identity()
         protocol = {**self.adapter.protocol_metadata(),
+                    'inference_resource_context':COORDINATOR.resource_identity(),
                     "measurement_driver_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                     "config_space": {"name": space.name, "fingerprint": space.fingerprint,
                                      "cardinality": space.cardinality}}
@@ -68,7 +76,8 @@ class BenchmarkRunner:
 
         compile_ms = 0.0
         samples: tuple[float, ...] = ()
-        metadata = {"protocol": protocol}
+        from copy import deepcopy
+        metadata = {"protocol": protocol,'resource_quiescence':deepcopy(COORDINATOR.last_proof)}
         if getattr(space, 'advisory_callbacks', ()):
             metadata['constraint_advisories'] = space.assess(config, hardware, operator, shape)
         phase_costs = {"preflight_and_cache": (time.perf_counter() - started) * 1000}
@@ -137,6 +146,10 @@ class BenchmarkRunner:
                       RecordStatus.CORRECTNESS_ERROR if phase == "correctness" else RecordStatus.RUNTIME_ERROR)
             reason = f"{phase}: {type(exc).__name__}: {exc}"
             metadata["traceback"] = traceback.format_exc(limit=8)
+            from .inference_resources import COORDINATOR,ResourceContextLimit
+            if isinstance(exc,ResourceContextLimit) or ('out of memory' in str(exc).lower() and COORDINATOR.participants):
+                metadata['failure_class']='resource_context_memory_limit'
+                metadata['failure_scope']='current registered model/workspace/software context, not permanent architecture support'
             samples = ()
             if phase == "correctness":
                 details = metadata.setdefault("correctness", {})

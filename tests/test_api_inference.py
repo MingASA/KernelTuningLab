@@ -48,3 +48,11 @@ def test_provider_capabilities_and_outbound_boundary_are_not_guessed():
     with pytest.raises(ValueError):outbound_task({'private_source':'do not send'})
     with pytest.raises(ValueError):outbound_task({'development_feedback':{'test_labels_read':True,'observations':[]}})
     with pytest.raises(ValueError):APIAuthorization(max_requests=float('nan'))
+
+
+def test_http_hostname_does_not_hide_a_local_gpu_service():
+    from kernel_tuning_lab.api_inference import require_public_service_location
+    for endpoint in ('https://127.0.0.2/v1/responses','https://10.1.2.3/v1/chat/completions','https://test.localhost/v1/responses'):
+        with pytest.raises(APIAuthorizationRequired):require_public_service_location(endpoint)
+    def local_dns(*args,**kwargs):return [(2,1,6,'',('127.0.0.1',443))]
+    with pytest.raises(APIAuthorizationRequired):require_public_service_location('https://looks-remote.example/v1/responses',resolver=local_dns)

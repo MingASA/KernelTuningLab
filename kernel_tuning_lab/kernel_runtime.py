@@ -23,7 +23,7 @@ from typing import Any, Callable
 
 from .backends.base import BackendUnavailableError
 from .claims import CorrectnessClaim, claim_matches
-from .models import HardwareSpec, KernelConfig, OperatorSpec, RecordStatus, ShapeSpec
+from .models import HardwareSpec, KernelConfig, OperatorSpec, RecordStatus, ShapeSpec,canonical_json
 from .space import ValidationResult
 
 
@@ -64,6 +64,9 @@ class ExecutionContext:
             if self.torch is None:
                 raise BackendUnavailableError("CUDA context has no loaded PyTorch runtime")
             torch_dtype = getattr(self.torch, dtype) if isinstance(dtype, str) else dtype
+            from .inference_resources import COORDINATOR
+            width=self.torch.empty((),device='cpu',dtype=torch_dtype).element_size()
+            COORDINATOR.check_known_allocation(self.hardware,math.prod(shape)*width,self.workspace_bytes)
             value = self.torch.empty(shape, dtype=torch_dtype, device=f"cuda:{self.device}")
             if fill is not None:
                 value.fill_(fill)
@@ -429,6 +432,14 @@ class AssetKernelAdapter:
                   "kernel_ref": self.kernel.ref, "kernel_fingerprint": self.kernel.fingerprint,
                   "operator_ref": self.operator_definition.ref, "operator_fingerprint": self.operator_definition.fingerprint,
                   "runtime_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+        from .inference_resources import COORDINATOR
+        result['inference_resource_context']=COORDINATOR.resource_identity()
+        if self.kernel.execution_identity is not None:
+            # Resolve installed source/binary/cache-policy identity BEFORE
+            # Runner's cache lookup, not only in post-build annotations.
+            identity=self.kernel.execution_identity()
+            canonical_json(identity)
+            result['native_execution_identity']=identity
         if self.kernel.runtime == "cuda":
             torch = self._load_cuda()
             if not self._driver_probed:
@@ -451,7 +462,9 @@ class AssetKernelAdapter:
         return result
 
     def protocol_metadata(self) -> dict[str, Any]:
+        from .inference_resources import COORDINATOR
         return {"contract": "asset_kernel_v1", "kernel_ref": self.kernel.ref,
+                'inference_resource_context':COORDINATOR.resource_identity(),
                 "kernel_fingerprint": self.kernel.fingerprint, "operator_ref": self.operator_definition.ref,
                 "operator_fingerprint": self.operator_definition.fingerprint,
                 "measurement_scope": "initialize followed by all ordered execution steps",

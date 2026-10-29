@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-acceptance-gemlite-float16-w4",
+  "plugins": [
+    "kernel_tuning_lab.production.gemlite"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    17
+  ],
+  "algorithms": [
+    {
+      "asset": "grid@1.0.0"
+    }
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "warmup": 5,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 64,
+    "workspace_memory_limit_bytes": 536870912,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 3,
+      "max_cases": 0,
+      "max_wall_time_s": 240,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "w4-M1",
+      "operator": "production/uniform_lowbit_gemm@1.0.0",
+      "parameters": {
+        "bits": 4,
+        "group_size": 128
+      },
+      "kernels": [
+        "production/gemlite_default@1.0.0",
+        "production/gemlite_gemv_revsplitk@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 1,
+          "N": 512,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "w4-M33",
+      "operator": "production/uniform_lowbit_gemm@1.0.0",
+      "parameters": {
+        "bits": 4,
+        "group_size": 128
+      },
+      "kernels": [
+        "production/gemlite_default@1.0.0",
+        "production/gemlite_gemm_splitk@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 33,
+          "N": 512,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "w4-M128",
+      "operator": "production/uniform_lowbit_gemm@1.0.0",
+      "parameters": {
+        "bits": 4,
+        "group_size": 128
+      },
+      "kernels": [
+        "production/gemlite_default@1.0.0",
+        "production/gemlite_gemm@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 128,
+          "N": 512,
+          "K": 512
+        }
+      ]
+    }
+  ],
+  "max_jobs": 16
+}
