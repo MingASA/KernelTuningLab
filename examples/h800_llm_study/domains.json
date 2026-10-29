@@ -1,0 +1,273 @@
+[
+  {
+    "kernel": "triton/t1_gemm@1.0.0",
+    "parameters": {
+      "BLOCK_M": {
+        "values": [
+          16,
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 16,
+        "description": "Output rows per CTA",
+        "unit": null
+      },
+      "BLOCK_N": {
+        "values": [
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Output columns per CTA",
+        "unit": null
+      },
+      "BLOCK_K": {
+        "values": [
+          32,
+          64
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Reduction elements per pipelined dot iteration",
+        "unit": null
+      },
+      "num_warps": {
+        "values": [
+          4,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 4,
+        "description": "Triton compiler warps per CTA",
+        "unit": null
+      },
+      "num_stages": {
+        "values": [
+          2,
+          3
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 2,
+        "description": "Triton compiler software-pipeline stages",
+        "unit": null
+      },
+      "GROUP_M": {
+        "values": [
+          1,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "M tiles grouped before advancing N (clamped at tail)",
+        "unit": null
+      }
+    }
+  },
+  {
+    "kernel": "triton/w4a16_gemm@1.0.0",
+    "parameters": {
+      "BLOCK_M": {
+        "values": [
+          16,
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 16,
+        "description": "Output row tile for each GEMM program",
+        "unit": null
+      },
+      "BLOCK_N": {
+        "values": [
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Contiguous output-column GEMM tile",
+        "unit": null
+      },
+      "BLOCK_K": {
+        "values": [
+          32,
+          64
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Reduction tile decoded inside each fused GEMM loop",
+        "unit": null
+      },
+      "num_warps": {
+        "values": [
+          4,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 4,
+        "description": "Warps per Triton program",
+        "unit": null
+      },
+      "num_stages": {
+        "values": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Compiler software-pipeline stages for GEMM",
+        "unit": null
+      },
+      "GROUP_M": {
+        "values": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Number of M tiles grouped before advancing along N for L2 reuse",
+        "unit": null
+      },
+      "SPLIT_K": {
+        "values": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Independent K partitions; values above one add timed FP32 partial reduction",
+        "unit": null
+      }
+    }
+  },
+  {
+    "kernel": "triton_pipeline/w4a16_gemm@1.0.0",
+    "parameters": {
+      "BLOCK_M": {
+        "values": [
+          16,
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 16,
+        "description": "Output row tile for each GEMM program",
+        "unit": null
+      },
+      "BLOCK_N": {
+        "values": [
+          32,
+          64,
+          128
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Contiguous output-column GEMM tile",
+        "unit": null
+      },
+      "BLOCK_K": {
+        "values": [
+          32,
+          64
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 32,
+        "description": "Reduction tile decoded inside each fused GEMM loop",
+        "unit": null
+      },
+      "num_warps": {
+        "values": [
+          4,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 4,
+        "description": "Warps per Triton program",
+        "unit": null
+      },
+      "num_stages": {
+        "values": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Compiler software-pipeline stages for GEMM",
+        "unit": null
+      },
+      "GROUP_M": {
+        "values": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Number of M tiles grouped before advancing along N for L2 reuse",
+        "unit": null
+      },
+      "SPLIT_K": {
+        "values": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 1,
+        "description": "Independent K partitions; values above one add timed FP32 partial reduction",
+        "unit": null
+      },
+      "DEQUANT_BLOCK_SIZE": {
+        "values": [
+          128,
+          256,
+          512,
+          1024
+        ],
+        "kind": "integer",
+        "active_when": {},
+        "default": 128,
+        "description": "Materialized dequantization tile independent of GEMM BLOCK_K",
+        "unit": "elements"
+      }
+    }
+  }
+]

@@ -162,9 +162,9 @@
     ],
     "mode": "real next-action decisions with revealed target history",
     "target_budget": 16,
-    "paired_large_model": "Qwen/Qwen3.8-27B on same task/history/backend, seed7/prefixB1/B4 only",
+    "paired_large_model": "same H800/offload/backend for one seed/prefixB1/B4; generation vs transfer costs separate",
     "model_size_and_release_family_confounded": true,
-    "isolation": "same admitted H800, inference then full CPU offload, synchronize,empty_cache and allocated-byte barrier before Kernel",
+    "isolation": "same admitted H800, full model CPU offload and CUDA allocated-byte barrier between each real inference and Kernel measurement",
     "separate_costs": [
       "CPUload",
       "upload",
@@ -172,7 +172,8 @@
       "offload",
       "model_retry",
       "Kernelcompile_validation_measurement"
-    ]
+    ],
+    "small_model_final_choice": "0.8B and4B, compare both; no trained performance model"
   },
   "user_route_C": {
     "model": "Qwen/Qwen3.8-27B",
