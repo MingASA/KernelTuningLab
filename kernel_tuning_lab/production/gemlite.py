@@ -10,7 +10,7 @@ import time
 
 from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
 from ..models import stable_id
-from . import native_sources as sources,suite_inputs,environment
+from . import native_sources as sources,suite_inputs,environment,gemlite_compat
 from .contracts import ConfigurationMapping
 
 VERSION='0.6.0.post2'
@@ -82,8 +82,9 @@ def native_api():
     spec=importlib.util.find_spec('gemlite')
     if spec is None:raise RuntimeError('optional GemLite package is not installed')
     root=Path(spec.origin).parent.parent
-    files=[name for name in sources.manifest()['gemlite']['files'] if name.startswith('gemlite/') and name.endswith('.py')]
+    files=[name for name in sources.manifest()['gemlite']['files'] if name.startswith('gemlite/') and name.endswith('.py') and name!='gemlite/dtypes.py']
     identity=sources.native_component(root,'gemlite',files)
+    identity['optional_dtype_registration']=gemlite_compat.verify_dtype_source(root)
     module=importlib.import_module('gemlite.core')
     return module,identity
 
@@ -173,7 +174,7 @@ def build(ctx,*,family,mode,**params):
 
 
 def register_assets(catalog):
-    source_files=sources.declaration_sources(__file__,suite_inputs.__file__)
+    source_files=sources.declaration_sources(__file__,suite_inputs.__file__,gemlite_compat.__file__)
     operator=suite_inputs.operator_definition()
     catalog.register(operator)
     catalog.register(KernelDefinition('production/gemlite_default','1.0.0',operator.ref,partial(build,family=None,mode='native'),

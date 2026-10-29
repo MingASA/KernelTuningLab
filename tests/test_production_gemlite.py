@@ -48,3 +48,25 @@ def test_runtime_source_verification_accepts_a_wheel_without_source_setup_py(tmp
         result,identity=gemlite.native_api()
         assert result is module and 'setup.py' not in identity['source_git_blobs']
     finally:gemlite.native_api.cache_clear()
+
+
+def test_optional_e8m0_registration_keeps_a16_maps_without_fabricating_a_dtype():
+    import ast
+    from enum import Enum
+    from types import SimpleNamespace
+    import pytest
+    from kernel_tuning_lab.production import native_sources,gemlite_compat
+    original=native_sources.source('gemlite','gemlite/dtypes.py').read_text()
+    def execute(source):
+        tree=ast.parse(source);torch_names={n.attr for n in ast.walk(tree) if isinstance(n,ast.Attribute) and isinstance(n.value,ast.Name) and n.value.id=='torch'}
+        tl_names={n.attr for n in ast.walk(tree) if isinstance(n,ast.Attribute) and isinstance(n.value,ast.Name) and n.value.id=='tl'}
+        torch=SimpleNamespace(**{name:object() for name in torch_names if name!='float8_e8m0fnu'})
+        tl=SimpleNamespace(**{name:object() for name in tl_names});namespace={'torch':torch,'tl':tl,'Enum':Enum}
+        nodes=[n for n in tree.body if not isinstance(n,(ast.Import,ast.ImportFrom))]
+        exec(compile(ast.Module(body=nodes,type_ignores=[]),'pinned-dtypes-host-only','exec'),namespace)
+        return namespace,torch
+    with pytest.raises(AttributeError,match='float8_e8m0fnu'):execute(original)
+    result,torch=execute(gemlite_compat.optional_e8m0_source().decode())
+    assert not hasattr(torch,'float8_e8m0fnu') and 19 not in result['DTYPE_TO_TORCH']
+    assert result['DTYPE_TO_TORCH'][1] is torch.float16 and result['DTYPE_TO_TORCH'][2] is torch.bfloat16
+    assert result['TORCH_TO_DTYPE'][torch.float16]==result['DType'].FP16
