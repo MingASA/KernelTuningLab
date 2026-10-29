@@ -64,6 +64,14 @@ def _write(path,value):
     temp=path.with_suffix(path.suffix+'.tmp');temp.write_text(canonical_json(value)+'\n');temp.replace(path)
 
 
+def loading_metadata(value):
+    """Transformers5 loading reports contain sets; retain all structured data."""
+    if isinstance(value,dict):return {k:loading_metadata(v) for k,v in value.items()}
+    if isinstance(value,(set,frozenset)):return [loading_metadata(v) for v in sorted(value,key=str)]
+    if isinstance(value,(list,tuple)):return [loading_metadata(v) for v in value]
+    return value
+
+
 def run(manifest_file,queries_file,output,*,max_wall_s=1800):
     started=time.monotonic();out=Path(output);out.mkdir(parents=True,exist_ok=True)
     if (out/'generations.jsonl').exists():raise ValueError('inference output already exists; use a fresh attempt and retain previous evidence')
@@ -104,7 +112,7 @@ def run(manifest_file,queries_file,output,*,max_wall_s=1800):
     count=sum(p.numel() for p in model.parameters())
     if count<1_000_000_000:raise ValueError('unexpectedly small model; refuse fixture/submodel evidence')
     _write(out/'run.json',{'status':'generating','identity':identity,'load_wall_s':load_s,
-        'parameter_count':count,'loading_info':info,'peak_allocated_bytes':torch.cuda.max_memory_allocated()})
+        'parameter_count':count,'loading_info':loading_metadata(info),'peak_allocated_bytes':torch.cuda.max_memory_allocated()})
     done=0
     for q in queries:
         if time.monotonic()-started>=max_wall_s:raise TimeoutError('finite whole-inference wall allowance exhausted')

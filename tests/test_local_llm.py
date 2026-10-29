@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from kernel_tuning_lab.local_llm import checkpoint_manifest,verify_manifest
+from kernel_tuning_lab.local_llm import checkpoint_manifest,verify_manifest,loading_metadata,_write
 
 
 def test_existing_checkpoint_complete_shards_and_tokenizer_are_fingerprinted(tmp_path):
@@ -29,3 +29,9 @@ def test_changed_weights_and_nonlocal_paths_are_rejected(tmp_path):
     with pytest.raises(ValueError,match='weight changed'):verify_manifest(result)
     (tmp_path/'model.safetensors.index.json').write_text('{"weight_map":{"x":"../forbidden.safetensors"}}')
     with pytest.raises(ValueError,match='complete local safetensors'):checkpoint_manifest(tmp_path,'unit')
+
+
+def test_transformers_set_loading_report_is_preserved_as_stable_JSON(tmp_path):
+    original={'missing_keys':set(),'unexpected_keys':{'mtp.b','mtp.a'},'nested':{'converted':{'x'}},'sizes':(2,4)}
+    normalized=loading_metadata(original);file=tmp_path/'loading.json';_write(file,normalized)
+    assert json.loads(file.read_text())=={'missing_keys':[],'unexpected_keys':['mtp.a','mtp.b'],'nested':{'converted':['x']},'sizes':[2,4]}
