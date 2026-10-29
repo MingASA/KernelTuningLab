@@ -1,0 +1,1154 @@
+{
+  "schema_version": 1,
+  "test_labels_read": false,
+  "observations": [
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "GROUP_M": 8,
+        "SPLIT_K": 8,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.006097749806940556,
+      "record_id": "b703640cfcf51773bd0faf00",
+      "seed": 7,
+      "source_context_id": "12fb788fe1b61d3f00b72425",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 32,
+        "GROUP_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.0065020001493394375,
+      "record_id": "663bec1975c11e0b31051a3d",
+      "seed": 7,
+      "source_context_id": "12fb788fe1b61d3f00b72425",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "GROUP_M": 1,
+        "SPLIT_K": 16,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.007025000173598528,
+      "record_id": "fab78a698483fc7ad61acca7",
+      "seed": 7,
+      "source_context_id": "12fb788fe1b61d3f00b72425",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "GROUP_M": 1,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.02636375091969967,
+      "record_id": "26cadd8380ab358b1ce63821",
+      "seed": 7,
+      "source_context_id": "12fb788fe1b61d3f00b72425",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 4,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.036955248564481735,
+      "record_id": "2082bae7a2b2243f825d8fcc",
+      "seed": 7,
+      "source_context_id": "12fb788fe1b61d3f00b72425",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "GROUP_M": 1,
+        "SPLIT_K": 16,
+        "num_stages": 1,
+        "num_warps": 8
+      },
+      "latency_ms": 0.005698250140994787,
+      "record_id": "b1e62621df1bca147e2bd923",
+      "seed": 7,
+      "source_context_id": "b5ab656a61dc815b2823fc37",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "GROUP_M": 1,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.0057020001113414764,
+      "record_id": "92d0c634d9db00875ccd4289",
+      "seed": 7,
+      "source_context_id": "b5ab656a61dc815b2823fc37",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "GROUP_M": 2,
+        "SPLIT_K": 16,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.005862500052899122,
+      "record_id": "3dc27bed98b32fc74f6de4af",
+      "seed": 7,
+      "source_context_id": "b5ab656a61dc815b2823fc37",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "GROUP_M": 1,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.028195500373840332,
+      "record_id": "44a7106d716f2ac229fb238a",
+      "seed": 7,
+      "source_context_id": "b5ab656a61dc815b2823fc37",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 4,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.03117924928665161,
+      "record_id": "94ae2f21ebde9ce03bf0a37e",
+      "seed": 7,
+      "source_context_id": "b5ab656a61dc815b2823fc37",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "GROUP_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004648999776691198,
+      "record_id": "a35a4fce02aeab84bd2a3ccc",
+      "seed": 7,
+      "source_context_id": "7ee9f26266c9cabc1bac2260",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "GROUP_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.004668000154197216,
+      "record_id": "dc8a65180df3c1b8aedb41e4",
+      "seed": 7,
+      "source_context_id": "7ee9f26266c9cabc1bac2260",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 32,
+        "GROUP_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.004895499907433987,
+      "record_id": "8cec0a8915842c0412e5c50b",
+      "seed": 7,
+      "source_context_id": "7ee9f26266c9cabc1bac2260",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 64,
+        "BLOCK_N": 64,
+        "GROUP_M": 1,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.026141749694943428,
+      "record_id": "a7d2f12b3851534126e12fa8",
+      "seed": 7,
+      "source_context_id": "7ee9f26266c9cabc1bac2260",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_fused@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 4,
+        "SPLIT_K": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.031370751559734344,
+      "record_id": "3a3cb90b4b5e509570ad7522",
+      "seed": 7,
+      "source_context_id": "7ee9f26266c9cabc1bac2260",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 4,
+        "SPLIT_K": 4,
+        "num_stages": 4,
+        "num_warps": 4
+      },
+      "latency_ms": 0.007231499999761581,
+      "record_id": "5f11901c1d6c98f07068bf11",
+      "seed": 7,
+      "source_context_id": "64c7cee995834330f0885e3f",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 2,
+        "SPLIT_K": 1,
+        "num_stages": 4,
+        "num_warps": 8
+      },
+      "latency_ms": 0.007584750186651945,
+      "record_id": "72a355cd1e40e547c3a3b09a",
+      "seed": 7,
+      "source_context_id": "64c7cee995834330f0885e3f",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 1,
+        "SPLIT_K": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.007599750068038702,
+      "record_id": "c7942384a7763538a52957b5",
+      "seed": 7,
+      "source_context_id": "64c7cee995834330f0885e3f",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 4,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.0226454995572567,
+      "record_id": "e0198cfee9b0cfafb7ec7d02",
+      "seed": 7,
+      "source_context_id": "64c7cee995834330f0885e3f",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 2,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.023080749437212944,
+      "record_id": "81ba1389667dba2f22e95859",
+      "seed": 7,
+      "source_context_id": "64c7cee995834330f0885e3f",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 1,
+        "SPLIT_K": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.00738675007596612,
+      "record_id": "a5d403865c523bdfb07e0a5e",
+      "seed": 7,
+      "source_context_id": "22d76f33b36bea2a911b48d8",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 4,
+        "SPLIT_K": 4,
+        "num_stages": 4,
+        "num_warps": 4
+      },
+      "latency_ms": 0.007683000061661005,
+      "record_id": "42df789efdcf4635b4c2c1d2",
+      "seed": 7,
+      "source_context_id": "22d76f33b36bea2a911b48d8",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 512,
+        "GROUP_M": 2,
+        "SPLIT_K": 8,
+        "num_stages": 4,
+        "num_warps": 4
+      },
+      "latency_ms": 0.007773499935865402,
+      "record_id": "d558d65623f4713382390410",
+      "seed": 7,
+      "source_context_id": "22d76f33b36bea2a911b48d8",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 4,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.025381499901413918,
+      "record_id": "a6d34a997929baef55f3707a",
+      "seed": 7,
+      "source_context_id": "22d76f33b36bea2a911b48d8",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 1,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.025992749258875847,
+      "record_id": "fea8247c016f6a96e2646a57",
+      "seed": 7,
+      "source_context_id": "22d76f33b36bea2a911b48d8",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 4,
+        "SPLIT_K": 8,
+        "num_stages": 4,
+        "num_warps": 4
+      },
+      "latency_ms": 0.006233499851077795,
+      "record_id": "d556d81ca96d6c4041729546",
+      "seed": 7,
+      "source_context_id": "51ce834c4cdb5eef235433fc",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 512,
+        "GROUP_M": 2,
+        "SPLIT_K": 8,
+        "num_stages": 4,
+        "num_warps": 4
+      },
+      "latency_ms": 0.006403000093996525,
+      "record_id": "9e64fd7a01d9b20bfb8fa8ed",
+      "seed": 7,
+      "source_context_id": "51ce834c4cdb5eef235433fc",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "DEQUANT_BLOCK_SIZE": 1024,
+        "GROUP_M": 1,
+        "SPLIT_K": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.006427499931305647,
+      "record_id": "f4baeeae0592dcbac2f141e8",
+      "seed": 7,
+      "source_context_id": "51ce834c4cdb5eef235433fc",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 2,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.022377250716090202,
+      "record_id": "aec06143996e219aa9fdb6f4",
+      "seed": 7,
+      "source_context_id": "51ce834c4cdb5eef235433fc",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "DEQUANT_BLOCK_SIZE": 128,
+        "GROUP_M": 1,
+        "SPLIT_K": 1,
+        "num_stages": 1,
+        "num_warps": 4
+      },
+      "latency_ms": 0.022378750145435333,
+      "record_id": "f72c74ed6f588e683f9ba236",
+      "seed": 7,
+      "source_context_id": "51ce834c4cdb5eef235433fc",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004609750118106604,
+      "record_id": "8f4212ba235735be7582355f",
+      "seed": 7,
+      "source_context_id": "7ef130d98bf31cb78bfda02b",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004665500018745661,
+      "record_id": "90ccb545ca1121cd79a2883c",
+      "seed": 7,
+      "source_context_id": "7ef130d98bf31cb78bfda02b",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 64,
+        "GROUP_M": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004757499787956476,
+      "record_id": "fde50817b3c56d7a6e661aa4",
+      "seed": 7,
+      "source_context_id": "7ef130d98bf31cb78bfda02b",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "GROUP_M": 1,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.014056500047445297,
+      "record_id": "efdc521213599a6707b002db",
+      "seed": 7,
+      "source_context_id": "7ef130d98bf31cb78bfda02b",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 8,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.014676249586045742,
+      "record_id": "a7566339fa7559ffeeeee430",
+      "seed": 7,
+      "source_context_id": "7ef130d98bf31cb78bfda02b",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004414000082761049,
+      "record_id": "e1889984917f7e5dc9bd86bd",
+      "seed": 7,
+      "source_context_id": "2e22f9547c62e8177e4de027",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004423750098794699,
+      "record_id": "1d7f2e2351487bc794c89377",
+      "seed": 7,
+      "source_context_id": "2e22f9547c62e8177e4de027",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 32,
+        "GROUP_M": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.005448500160127878,
+      "record_id": "c7e3afa65b09ec45c7e4553d",
+      "seed": 7,
+      "source_context_id": "2e22f9547c62e8177e4de027",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "GROUP_M": 1,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.013929749839007854,
+      "record_id": "ffe4f8c34c0c6dadba9e82cc",
+      "seed": 7,
+      "source_context_id": "2e22f9547c62e8177e4de027",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 32,
+        "N": 1024
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 8,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.014097999781370163,
+      "record_id": "24e21676759400988699cfad",
+      "seed": 7,
+      "source_context_id": "2e22f9547c62e8177e4de027",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 8,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004383500199764967,
+      "record_id": "d11e972c1cbc709b51b2cd05",
+      "seed": 7,
+      "source_context_id": "dea9543b65b8c8c0c69c60fd",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 16,
+        "BLOCK_N": 32,
+        "GROUP_M": 1,
+        "num_stages": 3,
+        "num_warps": 4
+      },
+      "latency_ms": 0.004397999960929155,
+      "record_id": "87cb3d73636737a68eed0bcd",
+      "seed": 7,
+      "source_context_id": "dea9543b65b8c8c0c69c60fd",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 32,
+        "BLOCK_N": 32,
+        "GROUP_M": 1,
+        "num_stages": 3,
+        "num_warps": 8
+      },
+      "latency_ms": 0.0054892501793801785,
+      "record_id": "644117748fa06da44e20b0d9",
+      "seed": 7,
+      "source_context_id": "dea9543b65b8c8c0c69c60fd",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "GROUP_M": 1,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.013843250460922718,
+      "record_id": "69159b358234729274374d28",
+      "seed": 7,
+      "source_context_id": "dea9543b65b8c8c0c69c60fd",
+      "correctness_verified": true
+    },
+    {
+      "split": "train",
+      "kernel": "triton/t1_gemm@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 32,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "GROUP_M": 8,
+        "num_stages": 2,
+        "num_warps": 8
+      },
+      "latency_ms": 0.01385674998164177,
+      "record_id": "c3546db373843f623514b187",
+      "seed": 7,
+      "source_context_id": "dea9543b65b8c8c0c69c60fd",
+      "correctness_verified": true
+    }
+  ],
+  "source_acquisition": [
+    {
+      "stage": "train0-t1",
+      "bundle_sha256": "77de31b84789fda70ee77a29d1b4c2accdc73a87c739fffb965bfce4440b9571",
+      "source_commit": "31984fa2d2402aa98bb7a33da5fbf1c568cba114",
+      "observations": 144,
+      "new_research_attempts": 120,
+      "cache_observations": 24,
+      "independent_acceptance": 9,
+      "trial_wall_s": 49.44745716219768
+    },
+    {
+      "stage": "train0-fused",
+      "bundle_sha256": "1cd3d1891721e98f3f414887fc1f37f36b71178f50bad28bc2a9ab4d7e26cdd9",
+      "source_commit": "31984fa2d2402aa98bb7a33da5fbf1c568cba114",
+      "observations": 144,
+      "new_research_attempts": 144,
+      "cache_observations": 0,
+      "independent_acceptance": 9,
+      "trial_wall_s": 76.90315647888929
+    },
+    {
+      "stage": "train0-pipeline",
+      "bundle_sha256": "a4c0168ec3936a4d8afe0de56bd3e6ab2c1b9970990972dffb6b9d6ebde944b0",
+      "source_commit": "31984fa2d2402aa98bb7a33da5fbf1c568cba114",
+      "observations": 144,
+      "new_research_attempts": 144,
+      "cache_observations": 0,
+      "independent_acceptance": 9,
+      "trial_wall_s": 94.29983848659322
+    }
+  ],
+  "all_unique_research_records": 408,
+  "verified_research_records": 408,
+  "failures": [],
+  "source_prior": {
+    "controlled/w4a16_fused@1.0.0": {
+      "configs": [
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 128,
+          "BLOCK_N": 32,
+          "GROUP_M": 8,
+          "SPLIT_K": 16,
+          "num_stages": 1,
+          "num_warps": 4
+        },
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 32,
+          "BLOCK_N": 32,
+          "GROUP_M": 8,
+          "SPLIT_K": 16,
+          "num_stages": 2,
+          "num_warps": 8
+        }
+      ],
+      "scope": "configs observed on EVERY train shape; ranked against finite per-shape best-known",
+      "shared_config_count": 38,
+      "train_shapes": 3
+    },
+    "controlled/w4a16_pipeline@1.0.0": {
+      "configs": [
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 32,
+          "BLOCK_N": 64,
+          "DEQUANT_BLOCK_SIZE": 1024,
+          "GROUP_M": 1,
+          "SPLIT_K": 8,
+          "num_stages": 3,
+          "num_warps": 4
+        },
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 32,
+          "BLOCK_N": 64,
+          "DEQUANT_BLOCK_SIZE": 1024,
+          "GROUP_M": 4,
+          "SPLIT_K": 4,
+          "num_stages": 4,
+          "num_warps": 4
+        }
+      ],
+      "scope": "configs observed on EVERY train shape; ranked against finite per-shape best-known",
+      "shared_config_count": 38,
+      "train_shapes": 3
+    },
+    "triton/t1_gemm@1.0.0": {
+      "configs": [
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 16,
+          "BLOCK_N": 32,
+          "GROUP_M": 8,
+          "num_stages": 3,
+          "num_warps": 4
+        },
+        {
+          "BLOCK_K": 64,
+          "BLOCK_M": 16,
+          "BLOCK_N": 32,
+          "GROUP_M": 1,
+          "num_stages": 3,
+          "num_warps": 4
+        }
+      ],
+      "scope": "configs observed on EVERY train shape; ranked against finite per-shape best-known",
+      "shared_config_count": 38,
+      "train_shapes": 3
+    }
+  },
+  "compression": "top3/bottom2 distinct verified configs per train task, plus all failures; no validation/test labels"
+}

@@ -16,7 +16,7 @@ python -m kernel_tuning_lab.local_llm manifest \
 
 # --rule使用本轮封存的真实生成artifact，或你自己由真实模型生成并冻结的artifact。
 python -m examples.h800_llm_study.prepare \
-  --model-manifest ./model.json --rule ./rule1.json \
+  --model-manifest ./model.json --rule ./examples/h800_llm_study/frozen/rule1.json \
   --budget 8 --seed 7 --output ./study.json
 
 # 可先预览，完全不启动GPU或模型。

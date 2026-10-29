@@ -1,0 +1,32 @@
+[
+  {
+    "stage": "C-model-coldrepair",
+    "final_text": "{\"score_expression\": \"where(M < 64, 1, 0) + where(N < 64, 1, 0) + where(K < 64, 1, 0) + where(BLOCK_M > 64, 2, 0) + where(BLOCK_N > 64, 2, 0) + where(BLOCK_K > 64, 1, 0) + where(num_warps > 8, 10, 0) + where(num_stages > 3, 1, 0) + where(SPLIT_K > 1, 2, 0) + where(GROUP_M > 8, 1, 0) + where(DEQUANT_BLOCK_SIZE > 512, 1, 0)\", \"rationale\": \"Penalizes configurations with excessively large tiles or parallelism that likely exceed register/shared memory limits or cause low occupancy on H800. Prioritizes moderate tile sizes (BLOCK_M/N <= 64) and standard warp/stage counts to balance compute density and resource usage across the three GEMM variants.\"}",
+    "prompt_sha256": "923695a39b40799b38ce0bfbd84333567e5013036c39b440ed449100f7315287",
+    "model_id": "Qwen/Qwen3.8-27B",
+    "model_manifest_sha256": "671107f354e3d6e0eb72e6d422914e3b0844a4137948cce1122ca6666cf7981a",
+    "worker_source_sha256": "d7625e79472b6fa15b2ea91ba43daeb182722220e87b17346a79c19e0f878bd7",
+    "input_tokens": 1788,
+    "output_tokens": 245,
+    "generation_wall_s": 17.153814936056733,
+    "finish_reason": "eos",
+    "load_wall_s": 29.405675570014864,
+    "source_response_sha256": "97f6ceed0ef1f5b55e8fbca1e2e905af03b9f639c0f7404878a33c8037a4a4b7",
+    "privacy": "private full generation record includes physical UUID; immutable raw response checksum references the separately sealed evidence, not this sanitized subset"
+  },
+  {
+    "stage": "C-model-iterate",
+    "final_text": "{\n  \"score_expression\": \"where(M < 32, 0, where(M < 128, 1, 2)) + where(N < 64, 0, where(N < 128, 1, 2)) + where(BLOCK_M > 32, 10, 0) + where(BLOCK_N > 64, 10, 0) + where(BLOCK_K < 64, 5, 0) + where(num_warps > 4, 5, 0) + where(num_stages < 3, 5, 0) + where(SPLIT_K < 4, 5, 0) + where(GROUP_M < 4, 2, 0) + where(DEQUANT_BLOCK_SIZE < 512, 5, 0)\",\n  \"rationale\": \"Observations show small M/N shapes favor small tiles (BLOCK_M<=32, BLOCK_N<=64) to maximize occupancy, while large tiles (128) cause significant slowdowns. BLOCK_K=64, num_warps=4, and num_stages>=3 are consistently associated with the lowest latencies across all kernels. SPLIT_K>=4 and GROUP_M>=4 improve performance, particularly for the fused and pipeline kernels. DEQUANT_BLOCK_SIZE>=512 is preferred for the pipeline kernel.\"\n}",
+    "prompt_sha256": "0181cc3369ab4c290b72dee78bffe5cc6639693d13540d749f2218f68b9a6120",
+    "model_id": "Qwen/Qwen3.8-27B",
+    "model_manifest_sha256": "671107f354e3d6e0eb72e6d422914e3b0844a4137948cce1122ca6666cf7981a",
+    "worker_source_sha256": "d7625e79472b6fa15b2ea91ba43daeb182722220e87b17346a79c19e0f878bd7",
+    "input_tokens": 10572,
+    "output_tokens": 303,
+    "generation_wall_s": 24.029700241051614,
+    "finish_reason": "eos",
+    "load_wall_s": 19.20448720594868,
+    "source_response_sha256": "71d72b047a5e4b45b56700265db0f0719d956bd57b3024fc106079fd18ece97c",
+    "privacy": "private full generation record includes physical UUID; immutable raw response checksum references the separately sealed evidence, not this sanitized subset"
+  }
+]

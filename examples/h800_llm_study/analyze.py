@@ -5,6 +5,7 @@ the v2 research summary and original resource receipt. Raw bundles stay private.
 """
 from __future__ import annotations
 import argparse
+import ast
 from collections import defaultdict,Counter
 import hashlib
 import json
@@ -17,6 +18,31 @@ from kernel_tuning_lab.measurement_context import source_context_id
 from examples.h800_llm_study.design import protocol
 
 
+def audit_rule(expression):
+    """Conservative exact check: f(config)+g(scalar context) cannot adapt ranks.
+
+    Vector history/random features deliberately make this proof unknown. This
+    is a program-quality observation, never a reason to exclude a legal config.
+    """
+    from kernel_tuning_lab.llm_search import validate_expression,PARAMETERS,FEATURES
+    _,used=validate_expression(expression)
+    def terms(node):
+        if isinstance(node,ast.BinOp) and isinstance(node.op,(ast.Add,ast.Sub)):
+            return [*terms(node.left),*terms(node.right)]
+        return [node]
+    vector_features={'NEAREST_MS','NEAREST_DISTANCE','INCUMBENT_DISTANCE','UNCERTAINTY','RANDOM'}
+    mixed=[]
+    for node in terms(ast.parse(expression,mode='eval').body):
+        names={n.id for n in ast.walk(node) if isinstance(n,ast.Name)}
+        if names&set(PARAMETERS) and names&set(FEATURES):mixed.append(ast.unparse(node))
+    invariant=not mixed and not used&vector_features
+    return {'used_parameters':sorted(used&set(PARAMETERS)),'used_features':sorted(used&set(FEATURES)),
+        'context_config_mixed_terms':mixed,'proven_context_invariant_ranking_for_fixed_feasible_set':invariant,
+        'proof_scope':'additively separable scalar context offset; differing feasible sets can still change available candidates',
+        'uses_online_vector_feedback':bool(used&vector_features),
+        'action':'diagnostic only, original model expression unchanged'}
+
+
 def load_bundle(path):
     data=json.loads(Path(path).read_text());guard=data['batch']['resource_guard']
     if (guard['status'] not in ('passed','command_failed') or guard.get('external_processes_observed')!=0
@@ -26,15 +52,26 @@ def load_bundle(path):
     uuid=guard['gpu']['uuid'].lower().removeprefix('gpu-')
     for rid,record in records.items():
         if rid!=record.id:raise ValueError('StandardStore record identity changed')
+        if record.provenance!='measured':raise ValueError('GPU study cannot promote mock/imported records to live measurements')
         if record.hardware.metadata.get('device_uuid','').lower().removeprefix('gpu-')!=uuid:
             raise ValueError('physical measurement/guard device mismatch')
     for trial in data['summary']['trials']:
-        for row in trial.get('observations_trace',[]):
+        trace=trial.get('observations_trace',[])
+        if len(trace)!=trial['observations'] or ('record_ids' in trial and trial['record_ids']!=[r['record_id'] for r in trace]):
+            raise ValueError('summary observation/record ledger changed')
+        for row in trace:
             record=records[row['record_id']]
             if row['correctness_verified']!=record.correctness_verified:
                 raise ValueError('summary/record correctness disagree')
             if record.shape.dims!=trial['shape'] or record.seed!=trial['seed']:
                 raise ValueError('trace is not from the declared input/seed')
+            if row.get('config_id')!=record.config.id:
+                raise ValueError('trace configuration differs from the actual record')
+            expected=record.median_ms if record.correctness_verified else None
+            if row['latency_ms']!=expected:
+                raise ValueError('summary latency differs from raw samples')
+            if record.correctness_verified and record.metadata.get('correctness',{}).get('verified_on_gpu') is not True:
+                raise ValueError('successful study observation lacks GPU correctness evidence')
     return data,records
 
 
@@ -116,12 +153,14 @@ def evaluate(paths):
             prefix=str(Path(file).parent)
             raw=data['trial_files'].get(prefix+'/trial.json')
             if raw:calls[raw['trial_id']]=events
-    reference={};input_hashes=defaultdict(set);context_shapes=defaultdict(set)
+    reference={};input_hashes=defaultdict(set);context_shapes=defaultdict(set);physical_blocks=defaultdict(set)
     for t in trials:
         for event in t.get('observations_trace',[]):
             r=records[event['record_id']]
             key=(r.operator.implementation,r.hardware.id,r.shape.id,r.seed,source_context_id(r))
             context_shapes[(r.operator.implementation,r.hardware.id,r.shape.id,r.seed)].add(source_context_id(r))
+            physical_blocks[(r.operator.implementation,r.shape.id,r.seed,r.operator.dtype,
+                canonical_json(r.operator.parameters))].add(r.hardware.id)
             if r.correctness_verified:reference[key]=min(reference.get(key,math.inf),r.median_ms)
             integrity=r.metadata.get('correctness',{}).get('input_integrity',{})
             if r.correctness_verified and (integrity.get('status')!='passed' or not integrity.get('expected')):
@@ -129,6 +168,8 @@ def evaluate(paths):
             if integrity.get('expected'):input_hashes[key].add(canonical_json(integrity['expected']))
     if any(len(v)>1 for v in context_shapes.values()):
         raise ValueError('target methods mix measurement/source/software contexts')
+    if any(len(v)>1 for v in physical_blocks.values()):
+        raise ValueError('matched target methods used different physical GPUs; split the blocks before comparison')
     if any(len(v)>1 for v in input_hashes.values()):
         raise ValueError('same target case/seed had different input contents')
     rows=[];model_calls=[]
@@ -153,6 +194,7 @@ def evaluate(paths):
                 'physical_measurement_wall_s':sum(e['physical_measurement_wall_time_s'] for e in prefix),
                 'p90_p10_relative_width':statistics.median((e['p90_ms']-e['p10_ms'])/e['latency_ms'] for e in prefix if e['correctness_verified']) if verified else None,
                 'context_id':t.get('source_context_id')})
+            rows[-1]['hardware_id']=t.get('hardware_id')
         for e in calls.get(t.get('trial_id'),[]):
             model_calls.append({'method':method(t),'kernel':t['kernel'],'shape':t['shape'],'seed':t['seed'],
                 **{k:e.get(k) for k in ('observation_index','attempt','static_valid','rejection','error','input_tokens','output_tokens',

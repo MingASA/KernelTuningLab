@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "llm_generated_rule",
+  "version": "rule1-after-train-feedback",
+  "score_expression": "where(M < 32, 0, where(M < 128, 1, 2)) + where(N < 64, 0, where(N < 128, 1, 2)) + where(BLOCK_M > 32, 10, 0) + where(BLOCK_N > 64, 10, 0) + where(BLOCK_K < 64, 5, 0) + where(num_warps > 4, 5, 0) + where(num_stages < 3, 5, 0) + where(SPLIT_K < 4, 5, 0) + where(GROUP_M < 4, 2, 0) + where(DEQUANT_BLOCK_SIZE < 512, 5, 0)",
+  "model_rationale": "Observations show small M/N shapes favor small tiles (BLOCK_M<=32, BLOCK_N<=64) to maximize occupancy, while large tiles (128) cause significant slowdowns. BLOCK_K=64, num_warps=4, and num_stages>=3 are consistently associated with the lowest latencies across all kernels. SPLIT_K>=4 and GROUP_M>=4 improve performance, particularly for the fused and pipeline kernels. DEQUANT_BLOCK_SIZE>=512 is preferred for the pipeline kernel.",
+  "scope": {
+    "kernel_refs": [
+      "triton/t1_gemm@1.0.0",
+      "controlled/w4a16_fused@1.0.0",
+      "controlled/w4a16_pipeline@1.0.0"
+    ],
+    "architectures": [
+      "sm_90"
+    ]
+  },
+  "generation_evidence": {
+    "evidence_level": "real_local_model_inference",
+    "model_id": "Qwen/Qwen3.8-27B",
+    "manifest_sha256": "671107f354e3d6e0eb72e6d422914e3b0844a4137948cce1122ca6666cf7981a",
+    "worker_source_sha256": "d7625e79472b6fa15b2ea91ba43daeb182722220e87b17346a79c19e0f878bd7",
+    "query_bundle_sha256": "6b81173628a4d24e95705bc22072f7e354053cf08936191a68b8e020c6b93b9d"
+  },
+  "source_response_sha256": "71d72b047a5e4b45b56700265db0f0719d956bd57b3024fc106079fd18ece97c",
+  "source_prompt_sha256": "0181cc3369ab4c290b72dee78bffe5cc6639693d13540d749f2218f68b9a6120",
+  "agent_rewritten": false,
+  "development_feedback_sha256": "5d107d4e42ed31260969130c97a4d0165598f3346d02c3093a52c986f1854e92",
+  "test_labels_used_for_development": false,
+  "costs": {
+    "model_run_id": "6b81173628a4d24e95705bc22072f7e354053cf08936191a68b8e020c6b93b9d",
+    "model_load_wall_s": 19.20448720594868,
+    "generation_wall_s": 24.029700241051614,
+    "input_tokens": 10572,
+    "output_tokens": 303,
+    "scope": "Offline historical generation cost, count model load once per run, not once per trial"
+  }
+}

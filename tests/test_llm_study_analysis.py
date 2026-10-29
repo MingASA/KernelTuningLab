@@ -41,3 +41,10 @@ def test_preflight_rejection_stays_separate_from_corrected_warm_result():
     trial={'algorithm':'smac_rf@1.0.0','algorithm_options':{'warm_start_configs':[{'x':1}]},'status':'not_run'}
     assert method(trial)=='SMAC/preflight-rejected-original'
     trial['status']='passed';assert method(trial)=='SMAC/train-prior'
+
+
+def test_rule_mentions_shape_without_necessarily_changing_config_rank():
+    from examples.h800_llm_study.analyze import audit_rule
+    assert audit_rule('where(M<32,1,0)+BLOCK_M')['proven_context_invariant_ranking_for_fixed_feasible_set']
+    assert not audit_rule('M*BLOCK_M')['proven_context_invariant_ranking_for_fixed_feasible_set']
+    assert not audit_rule('UNCERTAINTY')['proven_context_invariant_ranking_for_fixed_feasible_set']
