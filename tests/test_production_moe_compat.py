@@ -78,7 +78,12 @@ def test_runtime_identity_tracks_table_contents_additions_and_environment(tmp_pa
     monkeypatch.setenv('KT_VLLM085_MOE_COMPONENTS',str(tmp_path))
     folder=tmp_path/Path(compat.MAIN).parent/'configs';folder.mkdir()
     table=folder/'one.json';table.write_text('{"a":1}')
-    before=compat.execution_identity();table.write_text('{"a":2}')
+    before=compat.execution_identity()
+    # Some filesystems return identical mtime/ctime for these same-size writes.
+    # Freeze the table's stat result to exercise that real failure deterministically.
+    stat=table.stat();original_stat=Path.stat
+    monkeypatch.setattr(Path,'stat',lambda self,*args,**kwargs:stat if self==table else original_stat(self,*args,**kwargs))
+    table.write_text('{"a":2}')
     edited=compat.execution_identity();assert edited!=before
     (folder/'two.json').write_text('{}');added=compat.execution_identity();assert added!=edited
     monkeypatch.setenv('VLLM_FUSED_MOE_CHUNK_SIZE','16');assert compat.execution_identity()!=added

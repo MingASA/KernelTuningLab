@@ -11,18 +11,28 @@ from ..models import stable_id
 from . import native_sources as sources
 
 
-@lru_cache(maxsize=2048)
-def _digest(filename,size,mtime_ns,ctime_ns):
+def _hash_file(filename):
     result=hashlib.sha256()
     with Path(filename).open('rb') as stream:
         for block in iter(lambda:stream.read(4*1024**2),b''):result.update(block)
     return result.hexdigest()
 
 
+@lru_cache(maxsize=2048)
+def _digest(filename,device,inode,size,mtime_ns,ctime_ns):
+    return _hash_file(filename)
+
+
 def file_identity(path):
     path=Path(path)
     if not path.is_file():return None
-    stat=path.stat();return _digest(str(path.resolve()),stat.st_size,stat.st_mtime_ns,stat.st_ctime_ns)
+    stat=path.stat()
+    # Source, selector tables and manifests can change within one filesystem
+    # timestamp tick. Hash these small inputs directly; stat keys alone cannot
+    # distinguish same-size in-place writes. Large native binaries remain
+    # immutable worker inputs, with replacement identity also bound to inode.
+    if stat.st_size<=1024**2:return _hash_file(path)
+    return _digest(str(path.resolve()),stat.st_dev,stat.st_ino,stat.st_size,stat.st_mtime_ns,stat.st_ctime_ns)
 
 
 def _snapshot(value):
