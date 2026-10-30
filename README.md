@@ -11,9 +11,8 @@
 Python ≥3.10，核心包无第三方运行依赖；CPU路径不需要Torch/Triton。
 
 ```bash
-git clone --branch research/5060ti-readiness https://github.com/MingASA/KernelTuningLab.git
+git clone --branch platform/production-stability-delivery https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
-git checkout --detach 35ac36ed66becf19271c9ed3e97950fb67a03d87
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 .venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/first-study
@@ -29,7 +28,9 @@ python3 -m venv .venv
 
 补充轮已完成[平台审查](docs/PRODUCTION_SUITE_AUDIT.md)及[真实AI与原生优化器的有限实测](docs/PRODUCTION_AI_FOLLOWUP.md)：7个新任务、640次揭示，保留全部失败和运行时修正。分支 `research/production-ai-followup`；单seed结果不作总体算法排名。
 
-当前 `main` 尚未包含这套验证交付；上述命令固定到已验证源码。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
+生产稳定性收尾见 **[PRODUCTION_STABILITY.md](docs/PRODUCTION_STABILITY.md)**：GemLite Split-K 元数据尾部修复、独立 FLUTE FP32 归约 profile、逐模板资源拒绝，以及 MoE 3200 点 CPU 构建从47.926秒降至0.501秒。分支 `platform/production-stability-delivery`，逐点证据与未验证路径明确分开，没有重跑旧研究矩阵。
+
+当前 `main` 尚未包含这套验证交付；精确交付 commit、源码bundle和校验值见交付receipt，复现实验请固定该commit。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
 
 ## 添加实现或算法
 

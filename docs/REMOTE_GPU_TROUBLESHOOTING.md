@@ -85,6 +85,17 @@ H800单80GB卡已实际完成完整Qwen3.8-27B BF16推理；小模型0.8B/1.7B/4
 
 ## 生产补充轮（2026-10-30）
 
+后续数值根因、修复和最终交付见 [PRODUCTION_STABILITY.md](PRODUCTION_STABILITY.md)。下列补充轮故障按历史保留；MoE的CPU构建瓶颈已在稳定性轮修复，不再通过增大超时解决。
+
 - FLUTE独立验收的完整NativeCandidate描述含固定属性，不能原样作为仅含可调域的KernelConfig。构造前拒绝的原失败保留，只投影同一template4的可调键；不改变研究空间、packing模板或已有有效4090开发数据。
 - MoE完整3200点空间的CPU构造超过15秒，B和KT原试验各0观测；不能误报为空空间、GPU数值错误或真实模型失败。仅放宽这两项内层CPU构造至120秒，外层240秒不变，使用原冻结源码、同卡上下文和原数据库只读副本补足；已完成验收/原生默认cache miss拒绝准备。原失败与补跑都保留，不重跑其他四个方法。
 - 新BF16定向验收的FLUTE默认/显式均数值失败；新FP16搜索也存在GemLite Split-K16和FLUTE个别数值失败。未改容差、未按测试结果删配置、未推断全架构不支持。具体配置/原始证据与适用边界见[补充报告](PRODUCTION_AI_FOLLOWUP.md)。本轮常驻模型采用合作串行门禁，不能套用上一轮逐候选卸载的成本解释。
+
+## 生产稳定性轮（2026-10-30）
+
+- GemLite INT Split-K的非活动K分片仍进行未mask的scale加载；对照确认NaN尾部会污染输出。适配层仅补足有限零scale元数据，四个旧失败和原生默认验收通过。Tensor不能直接替换原生Parameter，首份准备失败保留。
+- FLUTE Mixed跨CTA归约为输入低精度；BF16清空workspace仍失败。单独构建原High FP32归约分支，原binary/manifest不覆盖，容差不变。构建误用私有venv导致Python.h include失配，使用原有效私有base解释器成功；不修全局Python。
+- FLUTE模板31原始Config请求119072bytes shared memory，大于4090实际driver上限101376；H800上限232448。CPU sizeof与headerSHA绑定，按模板/设备明确拒绝，不把compile成功当作可发射，也不禁用整个后端。
+- 部署脚本路径正确不能证明实际包来源正确。一次旧PYTHONPATH使新driver导入旧包，按fingerprint保留实际来源；现normalize路径并在GPU前核验package root。该批数值证据不冒充新资源门禁验收。
+- 原MoE约48秒由3201次重复任务级支持/组件身份检查造成；任务检查一次、逐配置约束仍保留，完整3200点最终约0.501秒。同时间戳小配置改写绕过stat缓存的问题用直接内容SHA修复，不能只测mtime变化。
+- 本轮GPU工作已结束；新原始166文件/7SQLite本地恢复并核验，25条记录逐条一致，10个compiler产物SHA完整。归档嵌套目录的本地校验断言修复不需要重跑GPU。

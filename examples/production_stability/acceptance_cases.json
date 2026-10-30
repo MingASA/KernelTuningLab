@@ -1,0 +1,240 @@
+{
+  "cases": [
+    {
+      "machine": "H800",
+      "case": "High-original-failure4",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 193,
+        "N": 2048
+      },
+      "dtype": "float16",
+      "seed": 41,
+      "configuration": {
+        "SMs_Multiple": 4,
+        "Stages": 5,
+        "Threads": 256,
+        "TileM": 32
+      }
+    },
+    {
+      "machine": "H800",
+      "case": "High-original-failure5",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "bfloat16",
+      "seed": 17,
+      "configuration": {
+        "SMs_Multiple": 1,
+        "Stages": 2,
+        "Threads": 128,
+        "TileM": 16
+      }
+    },
+    {
+      "machine": "H800",
+      "case": "High-original-failure6",
+      "implementation": "production/flute_w3_default@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "bfloat16",
+      "seed": 17,
+      "configuration": {}
+    },
+    {
+      "machine": "H800",
+      "case": "High-BF16-original-native-geometry6",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "bfloat16",
+      "seed": 17,
+      "configuration": {
+        "SMs_Multiple": 1,
+        "Stages": 4,
+        "Threads": 256,
+        "TileM": 32
+      }
+    },
+    {
+      "machine": "H800",
+      "case": "High-BF16-original-native-geometry7",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "bfloat16",
+      "seed": 17,
+      "configuration": {
+        "SMs_Multiple": 1,
+        "Stages": 5,
+        "Threads": 256,
+        "TileM": 32
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "gemlite-w2-split-repair0",
+      "implementation": "production/gemlite_gemm_splitk@1.0.0",
+      "shape": {
+        "K": 768,
+        "M": 97,
+        "N": 768
+      },
+      "dtype": "float16",
+      "seed": 41,
+      "configuration": {
+        "A_load_order": 0,
+        "BLOCK_SIZE_K": 64,
+        "BLOCK_SIZE_M": 64,
+        "BLOCK_SIZE_N": 128,
+        "GROUP_SIZE_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 4,
+        "num_warps": 4
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "gemlite-w2-split-repair1",
+      "implementation": "production/gemlite_gemm_splitk@1.0.0",
+      "shape": {
+        "K": 768,
+        "M": 97,
+        "N": 768
+      },
+      "dtype": "float16",
+      "seed": 41,
+      "configuration": {
+        "A_load_order": 2,
+        "BLOCK_SIZE_K": 32,
+        "BLOCK_SIZE_M": 32,
+        "BLOCK_SIZE_N": 64,
+        "GROUP_SIZE_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 4
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "gemlite-w2-split-repair2",
+      "implementation": "production/gemlite_gemm_splitk@1.0.0",
+      "shape": {
+        "K": 768,
+        "M": 97,
+        "N": 768
+      },
+      "dtype": "float16",
+      "seed": 41,
+      "configuration": {
+        "A_load_order": 0,
+        "BLOCK_SIZE_K": 128,
+        "BLOCK_SIZE_M": 64,
+        "BLOCK_SIZE_N": 32,
+        "GROUP_SIZE_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 4
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "gemlite-w2-split-repair3",
+      "implementation": "production/gemlite_gemm_splitk@1.0.0",
+      "shape": {
+        "K": 768,
+        "M": 97,
+        "N": 768
+      },
+      "dtype": "float16",
+      "seed": 41,
+      "configuration": {
+        "A_load_order": 2,
+        "BLOCK_SIZE_K": 64,
+        "BLOCK_SIZE_M": 32,
+        "BLOCK_SIZE_N": 32,
+        "GROUP_SIZE_M": 8,
+        "SPLIT_K": 16,
+        "num_stages": 2,
+        "num_warps": 8
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "GemLite-native-W2-Split-tail",
+      "implementation": "production/gemlite_default@1.0.0",
+      "shape": {
+        "K": 768,
+        "M": 17,
+        "N": 768
+      },
+      "dtype": "float16",
+      "seed": 43,
+      "configuration": {}
+    },
+    {
+      "machine": "4090",
+      "case": "High-original-failure5",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "bfloat16",
+      "seed": 17,
+      "configuration": {
+        "SMs_Multiple": 1,
+        "Stages": 2,
+        "Threads": 128,
+        "TileM": 16
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "High-SM89-FP16-template8",
+      "implementation": "production/flute_w3_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "float16",
+      "seed": 17,
+      "configuration": {
+        "SMs_Multiple": 1,
+        "Stages": 2,
+        "Threads": 128,
+        "TileM": 16
+      }
+    },
+    {
+      "machine": "4090",
+      "case": "High-SM89-native-FP16",
+      "implementation": "production/flute_w3_default@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 128,
+        "N": 2048
+      },
+      "dtype": "float16",
+      "seed": 17,
+      "configuration": {}
+    }
+  ],
+  "notice": "Previously verified engineering cases, not a new experiment queue. Use a private plan with an admitted physical UUID, exact source and High resource manifest; retain finite limits and strict original tolerances."
+}

@@ -75,7 +75,7 @@ def prepare(source,cutlass,work,ids,accumulation='mixed'):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--cutlass',required=True);parser.add_argument('--work',required=True)
     parser.add_argument('--templates',default='0,1,2,8,9,10');parser.add_argument('--architectures',default='8.9;9.0');parser.add_argument('--cuda-home');parser.add_argument('--build',action='store_true');parser.add_argument('--timeout',type=int,default=2400)
-    parser.add_argument('--accumulation',choices=('mixed','high'),default='mixed',help='separate numerical build profile; never relabel an existing binary')
+    parser.add_argument('--accumulation',choices=('mixed','high'),default='high',help='default: original FP32 reduction branch; mixed is an explicit reproduction profile, never relabel an existing binary')
     parser.add_argument('--resource-facts',help='CPU sizeof facts from probe_flute_resources.py using these exact headers')
     args=parser.parse_args();ids=[int(x) for x in args.templates.split(',')]
     if not ids or len(ids)!=len(set(ids)) or any(i not in range(36) for i in ids):raise ValueError('original int3 IDs must be distinct0..35')

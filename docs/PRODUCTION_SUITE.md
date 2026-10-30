@@ -1,5 +1,7 @@
 # 生产算子与统一AI接入验收
 
+**最新生产稳定性与交付状态见 [PRODUCTION_STABILITY.md](PRODUCTION_STABILITY.md)。** 本页保留此前验收过程；原Mixed数值限制、Split-K修复、CPU构建性能及当前运行profile以新报告为准。
+
 开发分支`platform/production-suite-readiness`，基于旧研究分支检查点`dc6fda0`。旧研究原始数据、程序和失败保留；旧自动调度仍禁止恢复。本轮不做模型大小/算法排名矩阵，不训练模型，不因发现key而调用API。已读取的旧留出导出一律作为暴露的历史证据，不能给修改后的方法重新命名为盲测。
 
 ## 已核实的工程基线
@@ -89,7 +91,7 @@ vLLM0.30官方wheel在私有overlay安装，Torch2.13+cu132下两个stable-libto
 
 ## 身份、成本与优化器
 
-SDK新增可选无参`KernelDefinition.execution_identity`：在**缓存查询之前**绑定实际安装源码、选定扩展SHA、软件版本、配置表及相关运行选项。文件hash按size/mtime/ctime缓存，开销进入preflight/cache墙钟。新增回归验证“插件声明不变，原生文件变化→不命中旧测量”。不要在worker执行期间修改其依赖。
+SDK新增可选无参`KernelDefinition.execution_identity`：在**缓存查询之前**绑定实际安装源码、选定扩展SHA、软件版本、配置表及相关运行选项。当前≤1MiB文件直接取内容hash，大型不可变二进制按device/inode/size/mtime/ctime缓存，开销进入preflight/cache墙钟。回归验证“插件声明不变，原生文件变化→不命中旧测量”，包含同时间戳的表改写。不要在worker执行期间修改其依赖。
 
 逻辑输入和config相关packing均做完整hash。FLUTE按TileP准备并单列准备成本；Split-K/StreamK初始化与归约均在完整GPU计划。MoE由原wrapper根据BM重建对齐元数据，两个GEMM共享配置；路由网络不计入。小用例增加“全零输出不能通过”的输入强度负对照，容差未放宽。
 

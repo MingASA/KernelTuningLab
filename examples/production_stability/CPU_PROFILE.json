@@ -1,0 +1,1052 @@
+{
+  "task": {
+    "M": 129,
+    "H": 128,
+    "I": 256,
+    "E": 4,
+    "TOP_K": 2
+  },
+  "operator": "vLLM0.8.5 unquantized skewed MoE",
+  "before_source": "f9b5b38",
+  "after_source": "f310d21",
+  "measurement": "same H800 host CPU; one unprofiled construction per version, profiler timings listed separately",
+  "before": {
+    "scope": "CPU-only exact production context; no CUDA initialization; same complete config IDs",
+    "results": [
+      {
+        "profiled": false,
+        "wall_s": 47.92578533058986,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "wall_s": 47.92385301506147,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      {
+        "profiled": true,
+        "wall_s": 123.8467877227813,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "wall_s": 123.83406019583344,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      }
+    ],
+    "profile_top_cumulative": [
+      {
+        "file": "space.py",
+        "line": 179,
+        "function": "build_feasible",
+        "calls": 1,
+        "self_s": 3.5738e-05,
+        "cumulative_s": 123.83931494800001
+      },
+      {
+        "file": "space_tools.py",
+        "line": 197,
+        "function": "construct",
+        "calls": 1,
+        "self_s": 7.7811e-05,
+        "cumulative_s": 123.83408794500001
+      },
+      {
+        "file": "space_tools.py",
+        "line": 265,
+        "function": "walk",
+        "calls": 4506,
+        "self_s": 0.032627343,
+        "cumulative_s": 123.79506138200001
+      },
+      {
+        "file": "space_tools.py",
+        "line": 233,
+        "function": "accept",
+        "calls": 3200,
+        "self_s": 0.023567887000000003,
+        "cumulative_s": 123.677411879
+      },
+      {
+        "file": "space.py",
+        "line": 134,
+        "function": "validate",
+        "calls": 3200,
+        "self_s": 0.050827027000000004,
+        "cumulative_s": 123.48290797400001
+      },
+      {
+        "file": "asset_space.py",
+        "line": 120,
+        "function": "capability_constraint",
+        "calls": 3201,
+        "self_s": 0.007237567,
+        "cumulative_s": 123.35373438100001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 115,
+        "function": "support",
+        "calls": 3201,
+        "self_s": 0.07452109200000001,
+        "cumulative_s": 123.34297620100001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 89,
+        "function": "execution_identity",
+        "calls": 3201,
+        "self_s": 0.130462775,
+        "cumulative_s": 117.92005800400001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 104,
+        "function": "<dictcomp>",
+        "calls": 3201,
+        "self_s": 0.8591145,
+        "cumulative_s": 87.03048959200001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 44,
+        "function": "_sha",
+        "calls": 518562,
+        "self_s": 0.445951951,
+        "cumulative_s": 79.03704656000001
+      },
+      {
+        "file": "environment.py",
+        "line": 22,
+        "function": "file_identity",
+        "calls": 518562,
+        "self_s": 1.5659045340000002,
+        "cumulative_s": 78.59109460900001
+      },
+      {
+        "file": "pathlib.py",
+        "line": 981,
+        "function": "resolve",
+        "calls": 518581,
+        "self_s": 0.9779868740000001,
+        "cumulative_s": 59.430669888000004
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 412,
+        "function": "realpath",
+        "calls": 518581,
+        "self_s": 0.80054833,
+        "cumulative_s": 46.332054633000006
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 421,
+        "function": "_joinrealpath",
+        "calls": 518581,
+        "self_s": 11.029592237000001,
+        "cumulative_s": 42.694731385000004
+      },
+      {
+        "file": "__init__.py",
+        "line": 1002,
+        "function": "version",
+        "calls": 12804,
+        "self_s": 0.016747652000000002,
+        "cumulative_s": 28.330682930000002
+      },
+      {
+        "file": "pathlib.py",
+        "line": 484,
+        "function": "_parse_args",
+        "calls": 1584537,
+        "self_s": 2.056934794,
+        "cumulative_s": 27.79737713
+      },
+      {
+        "file": "__init__.py",
+        "line": 629,
+        "function": "version",
+        "calls": 12804,
+        "self_s": 0.038126159,
+        "cumulative_s": 25.651644085
+      },
+      {
+        "file": "__init__.py",
+        "line": 602,
+        "function": "metadata",
+        "calls": 12804,
+        "self_s": 0.04951714,
+        "cumulative_s": 25.544998419000002
+      },
+      {
+        "file": "pathlib.py",
+        "line": 56,
+        "function": "parse_parts",
+        "calls": 1587738,
+        "self_s": 16.262041807,
+        "cumulative_s": 25.321500102
+      },
+      {
+        "file": "pathlib.py",
+        "line": 504,
+        "function": "_from_parts",
+        "calls": 1043568,
+        "self_s": 1.120083537,
+        "cumulative_s": 21.221399258
+      },
+      {
+        "file": "__init__.py",
+        "line": 31,
+        "function": "message_from_string",
+        "calls": 12804,
+        "self_s": 0.053865561000000006,
+        "cumulative_s": 18.862851436
+      },
+      {
+        "file": "parser.py",
+        "line": 59,
+        "function": "parsestr",
+        "calls": 12804,
+        "self_s": 0.17445137900000002,
+        "cumulative_s": 18.804849329
+      },
+      {
+        "file": "parser.py",
+        "line": 41,
+        "function": "parse",
+        "calls": 12804,
+        "self_s": 0.080977174,
+        "cumulative_s": 18.630397950000003
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 71,
+        "function": "join",
+        "calls": 7183274,
+        "self_s": 10.684720588000001,
+        "cumulative_s": 17.263739104000003
+      },
+      {
+        "file": "feedparser.py",
+        "line": 171,
+        "function": "feed",
+        "calls": 54417,
+        "self_s": 0.062539498,
+        "cumulative_s": 16.967587484000003
+      },
+      {
+        "file": "feedparser.py",
+        "line": 176,
+        "function": "_call_parse",
+        "calls": 67221,
+        "self_s": 0.12703185,
+        "cumulative_s": 16.529378089
+      },
+      {
+        "file": "feedparser.py",
+        "line": 216,
+        "function": "_parsegen",
+        "calls": 67221,
+        "self_s": 3.870348759,
+        "cumulative_s": 16.402346239
+      },
+      {
+        "file": "pathlib.py",
+        "line": 868,
+        "function": "__new__",
+        "calls": 524987,
+        "self_s": 0.442975614,
+        "cumulative_s": 12.444135551
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<built-in method posix.lstat>",
+        "calls": 7183274,
+        "self_s": 11.255804275000001,
+        "cumulative_s": 11.255804275000001
+      },
+      {
+        "file": "pathlib.py",
+        "line": 703,
+        "function": "relative_to",
+        "calls": 492954,
+        "self_s": 1.618988874,
+        "cumulative_s": 9.754829273
+      },
+      {
+        "file": "pathlib.py",
+        "line": 1008,
+        "function": "stat",
+        "calls": 1558942,
+        "self_s": 0.6632872940000001,
+        "cumulative_s": 7.538158738000001
+      },
+      {
+        "file": "~",
+        "line": 0,
+        "function": "<built-in method posix.stat>",
+        "calls": 1686987,
+        "self_s": 3.9376612800000004,
+        "cumulative_s": 7.174142826000001
+      },
+      {
+        "file": "feedparser.py",
+        "line": 127,
+        "function": "__next__",
+        "calls": 7205451,
+        "self_s": 2.2350307380000003,
+        "cumulative_s": 5.961512203000001
+      },
+      {
+        "file": "_adapters.py",
+        "line": 35,
+        "function": "__init__",
+        "calls": 12804,
+        "self_s": 0.013200447,
+        "cumulative_s": 5.786343635000001
+      },
+      {
+        "file": "_adapters.py",
+        "line": 42,
+        "function": "_repair_headers",
+        "calls": 12804,
+        "self_s": 0.034957046000000006,
+        "cumulative_s": 5.773143188000001
+      }
+    ],
+    "torch_imported": false
+  },
+  "after": {
+    "scope": "CPU-only exact production context; no CUDA initialization; same complete config IDs",
+    "results": [
+      {
+        "profiled": false,
+        "wall_s": 0.5005036648362875,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "runtime_context_sha": "577d45532c3dd069a436b74f",
+          "complete_cache_exhaustion": false,
+          "wall_s": 0.498541088309139,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      {
+        "profiled": true,
+        "wall_s": 0.39180618012323976,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "runtime_context_sha": "577d45532c3dd069a436b74f",
+          "complete_cache_exhaustion": false,
+          "wall_s": 0.3848628969863057,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      }
+    ],
+    "profile_top_cumulative": [
+      {
+        "file": "space.py",
+        "line": 179,
+        "function": "build_feasible",
+        "calls": 1,
+        "self_s": 4.5343e-05,
+        "cumulative_s": 0.390258943
+      },
+      {
+        "file": "space_tools.py",
+        "line": 198,
+        "function": "construct",
+        "calls": 1,
+        "self_s": 0.000168137,
+        "cumulative_s": 0.384894063
+      },
+      {
+        "file": "space_tools.py",
+        "line": 283,
+        "function": "walk",
+        "calls": 4506,
+        "self_s": 0.015806121,
+        "cumulative_s": 0.30469790900000004
+      },
+      {
+        "file": "space_tools.py",
+        "line": 251,
+        "function": "accept",
+        "calls": 3200,
+        "self_s": 0.011711156,
+        "cumulative_s": 0.22847681400000003
+      },
+      {
+        "file": "models.py",
+        "line": 14,
+        "function": "canonical_json",
+        "calls": 36645,
+        "self_s": 0.019875007,
+        "cumulative_s": 0.21031385500000002
+      },
+      {
+        "file": "__init__.py",
+        "line": 183,
+        "function": "dumps",
+        "calls": 36645,
+        "self_s": 0.045547483,
+        "cumulative_s": 0.19043884800000002
+      },
+      {
+        "file": "space.py",
+        "line": 134,
+        "function": "validate",
+        "calls": 3200,
+        "self_s": 0.026887513000000002,
+        "cumulative_s": 0.128437391
+      },
+      {
+        "file": "encoder.py",
+        "line": 183,
+        "function": "encode",
+        "calls": 36645,
+        "self_s": 0.043435498,
+        "cumulative_s": 0.126029002
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 89,
+        "function": "execution_identity",
+        "calls": 3,
+        "self_s": 0.000169851,
+        "cumulative_s": 0.077346884
+      },
+      {
+        "file": "encoder.py",
+        "line": 205,
+        "function": "iterencode",
+        "calls": 36568,
+        "self_s": 0.07153208100000001,
+        "cumulative_s": 0.071537206
+      },
+      {
+        "file": "models.py",
+        "line": 101,
+        "function": "id",
+        "calls": 6400,
+        "self_s": 0.0029953370000000003,
+        "cumulative_s": 0.06392500300000001
+      },
+      {
+        "file": "models.py",
+        "line": 18,
+        "function": "stable_id",
+        "calls": 6407,
+        "self_s": 0.008836221,
+        "cumulative_s": 0.061625098
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 104,
+        "function": "<dictcomp>",
+        "calls": 3,
+        "self_s": 0.000758596,
+        "cumulative_s": 0.046962921000000005
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 44,
+        "function": "_sha",
+        "calls": 486,
+        "self_s": 0.000449409,
+        "cumulative_s": 0.039851574
+      },
+      {
+        "file": "environment.py",
+        "line": 26,
+        "function": "file_identity",
+        "calls": 486,
+        "self_s": 0.001108309,
+        "cumulative_s": 0.039402165
+      },
+      {
+        "file": "pathlib.py",
+        "line": 484,
+        "function": "_parse_args",
+        "calls": 1525,
+        "self_s": 0.001554524,
+        "cumulative_s": 0.028335676
+      },
+      {
+        "file": "asset_space.py",
+        "line": 174,
+        "function": "<lambda>",
+        "calls": 1,
+        "self_s": 7.861e-06,
+        "cumulative_s": 0.027564986000000003
+      },
+      {
+        "file": "asset_space.py",
+        "line": 120,
+        "function": "capability_constraint",
+        "calls": 1,
+        "self_s": 1.2109e-05,
+        "cumulative_s": 0.027542041000000003
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 115,
+        "function": "support",
+        "calls": 1,
+        "self_s": 3.3879000000000005e-05,
+        "cumulative_s": 0.027527643
+      },
+      {
+        "file": "pathlib.py",
+        "line": 56,
+        "function": "parse_parts",
+        "calls": 1528,
+        "self_s": 0.017571628000000002,
+        "cumulative_s": 0.026541926
+      },
+      {
+        "file": "__init__.py",
+        "line": 1002,
+        "function": "version",
+        "calls": 10,
+        "self_s": 1.8508e-05,
+        "cumulative_s": 0.024680279000000003
+      },
+      {
+        "file": "models.py",
+        "line": 98,
+        "function": "__post_init__",
+        "calls": 3202,
+        "self_s": 0.0015178420000000001,
+        "cumulative_s": 0.024419682
+      },
+      {
+        "file": "pathlib.py",
+        "line": 868,
+        "function": "__new__",
+        "calls": 995,
+        "self_s": 0.000732297,
+        "cumulative_s": 0.022746468000000002
+      },
+      {
+        "file": "pathlib.py",
+        "line": 504,
+        "function": "_from_parts",
+        "calls": 1020,
+        "self_s": 0.0010061710000000001,
+        "cumulative_s": 0.022439896
+      },
+      {
+        "file": "__init__.py",
+        "line": 629,
+        "function": "version",
+        "calls": 10,
+        "self_s": 3.7106e-05,
+        "cumulative_s": 0.022245609000000003
+      },
+      {
+        "file": "__init__.py",
+        "line": 602,
+        "function": "metadata",
+        "calls": 10,
+        "self_s": 5.6798e-05,
+        "cumulative_s": 0.022146862
+      },
+      {
+        "file": "environment.py",
+        "line": 14,
+        "function": "_hash_file",
+        "calls": 480,
+        "self_s": 0.001850024,
+        "cumulative_s": 0.021474051
+      },
+      {
+        "file": "encoder.py",
+        "line": 105,
+        "function": "__init__",
+        "calls": 36645,
+        "self_s": 0.018862363,
+        "cumulative_s": 0.018862363
+      },
+      {
+        "file": "__init__.py",
+        "line": 31,
+        "function": "message_from_string",
+        "calls": 10,
+        "self_s": 4.8028e-05,
+        "cumulative_s": 0.015834676000000002
+      },
+      {
+        "file": "parser.py",
+        "line": 59,
+        "function": "parsestr",
+        "calls": 10,
+        "self_s": 0.000185372,
+        "cumulative_s": 0.015779954000000002
+      },
+      {
+        "file": "parser.py",
+        "line": 41,
+        "function": "parse",
+        "calls": 10,
+        "self_s": 8.021200000000001e-05,
+        "cumulative_s": 0.015594582000000001
+      },
+      {
+        "file": "feedparser.py",
+        "line": 171,
+        "function": "feed",
+        "calls": 43,
+        "self_s": 5.6269000000000006e-05,
+        "cumulative_s": 0.014117831
+      },
+      {
+        "file": "feedparser.py",
+        "line": 176,
+        "function": "_call_parse",
+        "calls": 53,
+        "self_s": 0.000127265,
+        "cumulative_s": 0.013750081
+      },
+      {
+        "file": "feedparser.py",
+        "line": 216,
+        "function": "_parsegen",
+        "calls": 53,
+        "self_s": 0.0032648620000000003,
+        "cumulative_s": 0.013622816000000001
+      },
+      {
+        "file": "pathlib.py",
+        "line": 703,
+        "function": "relative_to",
+        "calls": 462,
+        "self_s": 0.0013522780000000002,
+        "cumulative_s": 0.00858629
+      }
+    ],
+    "torch_imported": false
+  },
+  "unprofiled_speedup": 95.75511369385511,
+  "same_configuration_ID_set_digest": true,
+  "access_audit": {
+    "status": "passed",
+    "complete_configs": 3200,
+    "requested_regions": [
+      {
+        "partial": {
+          "BLOCK_SIZE_M": 16,
+          "num_stages": 5
+        },
+        "configs": 4,
+        "nodes": 20
+      },
+      {
+        "partial": {
+          "BLOCK_SIZE_M": 32,
+          "num_stages": 5
+        },
+        "configs": 4,
+        "nodes": 20
+      },
+      {
+        "partial": {
+          "BLOCK_SIZE_M": 64,
+          "num_stages": 5
+        },
+        "configs": 4,
+        "nodes": 20
+      },
+      {
+        "partial": {
+          "BLOCK_SIZE_M": 128,
+          "num_stages": 5
+        },
+        "configs": 4,
+        "nodes": 20
+      },
+      {
+        "partial": {
+          "BLOCK_SIZE_M": 256,
+          "num_stages": 5
+        },
+        "configs": 4,
+        "nodes": 20
+      }
+    ],
+    "uniform_cached_samples": 64,
+    "last_cartesian_candidate_accessible": true,
+    "excluded_full_set_status": "exhausted",
+    "audit_wall_s": 0.35946935368701816,
+    "CUDA_initialized": false,
+    "new_GPU_work": false
+  },
+  "initial_optimized": {
+    "scope": "CPU-only exact production context; no CUDA initialization; same complete config IDs",
+    "results": [
+      {
+        "profiled": false,
+        "wall_s": 0.5205482919700444,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "runtime_context_sha": "577d45532c3dd069a436b74f",
+          "wall_s": 0.5186258037574589,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      },
+      {
+        "profiled": true,
+        "wall_s": 0.4219993860460818,
+        "configs": 3200,
+        "config_ids_sha": "c7df7841d66abac427658c1b",
+        "diagnostics": {
+          "nodes": 4506,
+          "final_checks": 3200,
+          "runtime_context_sha": "577d45532c3dd069a436b74f",
+          "wall_s": 0.4152725422754884,
+          "estimated_result_bytes": 1148800,
+          "constraint_errors": 0,
+          "rejection_reasons": {},
+          "distribution": "dependency-aware deterministic DFS",
+          "constructive_restarts": 0,
+          "unproductive_draw_cutoffs": 0,
+          "declared_cardinality": 3200,
+          "notice": "Result storage bytes are estimated, not an OS RSS limit; unknown callbacks run only on complete assignments."
+        }
+      }
+    ],
+    "profile_top_cumulative": [
+      {
+        "file": "space.py",
+        "line": 179,
+        "function": "build_feasible",
+        "calls": 1,
+        "self_s": 3.7621000000000005e-05,
+        "cumulative_s": 0.42052862700000004
+      },
+      {
+        "file": "space_tools.py",
+        "line": 198,
+        "function": "construct",
+        "calls": 1,
+        "self_s": 0.000129078,
+        "cumulative_s": 0.415297087
+      },
+      {
+        "file": "space_tools.py",
+        "line": 278,
+        "function": "walk",
+        "calls": 4506,
+        "self_s": 0.015543631,
+        "cumulative_s": 0.30137125400000003
+      },
+      {
+        "file": "space_tools.py",
+        "line": 246,
+        "function": "accept",
+        "calls": 3200,
+        "self_s": 0.011353951000000001,
+        "cumulative_s": 0.226301733
+      },
+      {
+        "file": "models.py",
+        "line": 14,
+        "function": "canonical_json",
+        "calls": 36645,
+        "self_s": 0.01905835,
+        "cumulative_s": 0.207731196
+      },
+      {
+        "file": "__init__.py",
+        "line": 183,
+        "function": "dumps",
+        "calls": 36645,
+        "self_s": 0.044593456000000004,
+        "cumulative_s": 0.188672846
+      },
+      {
+        "file": "space.py",
+        "line": 134,
+        "function": "validate",
+        "calls": 3200,
+        "self_s": 0.026647234000000002,
+        "cumulative_s": 0.12743666
+      },
+      {
+        "file": "encoder.py",
+        "line": 183,
+        "function": "encode",
+        "calls": 36645,
+        "self_s": 0.043832396,
+        "cumulative_s": 0.125383731
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 89,
+        "function": "execution_identity",
+        "calls": 3,
+        "self_s": 0.000145897,
+        "cumulative_s": 0.11142386300000001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 104,
+        "function": "<dictcomp>",
+        "calls": 3,
+        "self_s": 0.000771162,
+        "cumulative_s": 0.08175463100000001
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 44,
+        "function": "_sha",
+        "calls": 486,
+        "self_s": 0.00042162000000000005,
+        "cumulative_s": 0.074699254
+      },
+      {
+        "file": "environment.py",
+        "line": 22,
+        "function": "file_identity",
+        "calls": 486,
+        "self_s": 0.001445899,
+        "cumulative_s": 0.07427763400000001
+      },
+      {
+        "file": "encoder.py",
+        "line": 205,
+        "function": "iterencode",
+        "calls": 36568,
+        "self_s": 0.070550477,
+        "cumulative_s": 0.070555059
+      },
+      {
+        "file": "models.py",
+        "line": 101,
+        "function": "id",
+        "calls": 6400,
+        "self_s": 0.003081704,
+        "cumulative_s": 0.063197428
+      },
+      {
+        "file": "models.py",
+        "line": 18,
+        "function": "stable_id",
+        "calls": 6407,
+        "self_s": 0.008982296,
+        "cumulative_s": 0.06077559800000001
+      },
+      {
+        "file": "pathlib.py",
+        "line": 981,
+        "function": "resolve",
+        "calls": 505,
+        "self_s": 0.0009473760000000001,
+        "cumulative_s": 0.05832856
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 412,
+        "function": "realpath",
+        "calls": 505,
+        "self_s": 0.000789024,
+        "cumulative_s": 0.045527879
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 421,
+        "function": "_joinrealpath",
+        "calls": 505,
+        "self_s": 0.011086402,
+        "cumulative_s": 0.041994069
+      },
+      {
+        "file": "asset_space.py",
+        "line": 174,
+        "function": "<lambda>",
+        "calls": 1,
+        "self_s": 4.869e-06,
+        "cumulative_s": 0.038534287
+      },
+      {
+        "file": "asset_space.py",
+        "line": 120,
+        "function": "capability_constraint",
+        "calls": 1,
+        "self_s": 7.956e-06,
+        "cumulative_s": 0.038517559
+      },
+      {
+        "file": "vllm_moe_compat.py",
+        "line": 115,
+        "function": "support",
+        "calls": 1,
+        "self_s": 2.1201000000000003e-05,
+        "cumulative_s": 0.038508189000000005
+      },
+      {
+        "file": "pathlib.py",
+        "line": 484,
+        "function": "_parse_args",
+        "calls": 1525,
+        "self_s": 0.002002378,
+        "cumulative_s": 0.026400328
+      },
+      {
+        "file": "models.py",
+        "line": 98,
+        "function": "__post_init__",
+        "calls": 3202,
+        "self_s": 0.0015255160000000002,
+        "cumulative_s": 0.024229594
+      },
+      {
+        "file": "pathlib.py",
+        "line": 56,
+        "function": "parse_parts",
+        "calls": 1528,
+        "self_s": 0.015262975000000002,
+        "cumulative_s": 0.023981187
+      },
+      {
+        "file": "__init__.py",
+        "line": 1002,
+        "function": "version",
+        "calls": 10,
+        "self_s": 1.3811e-05,
+        "cumulative_s": 0.023713019000000002
+      },
+      {
+        "file": "__init__.py",
+        "line": 629,
+        "function": "version",
+        "calls": 10,
+        "self_s": 3.2845e-05,
+        "cumulative_s": 0.021550373
+      },
+      {
+        "file": "__init__.py",
+        "line": 602,
+        "function": "metadata",
+        "calls": 10,
+        "self_s": 4.2205e-05,
+        "cumulative_s": 0.021457316
+      },
+      {
+        "file": "pathlib.py",
+        "line": 504,
+        "function": "_from_parts",
+        "calls": 1020,
+        "self_s": 0.0011930900000000002,
+        "cumulative_s": 0.020684730000000002
+      },
+      {
+        "file": "encoder.py",
+        "line": 105,
+        "function": "__init__",
+        "calls": 36645,
+        "self_s": 0.018695659,
+        "cumulative_s": 0.018695659
+      },
+      {
+        "file": "<frozen posixpath>",
+        "line": 71,
+        "function": "join",
+        "calls": 6962,
+        "self_s": 0.010461946000000001,
+        "cumulative_s": 0.016878432000000002
+      },
+      {
+        "file": "__init__.py",
+        "line": 31,
+        "function": "message_from_string",
+        "calls": 10,
+        "self_s": 3.9960000000000004e-05,
+        "cumulative_s": 0.015491658
+      },
+      {
+        "file": "parser.py",
+        "line": 59,
+        "function": "parsestr",
+        "calls": 10,
+        "self_s": 0.000197449,
+        "cumulative_s": 0.015448214000000002
+      },
+      {
+        "file": "parser.py",
+        "line": 41,
+        "function": "parse",
+        "calls": 10,
+        "self_s": 6.893800000000001e-05,
+        "cumulative_s": 0.015250765000000001
+      },
+      {
+        "file": "feedparser.py",
+        "line": 171,
+        "function": "feed",
+        "calls": 43,
+        "self_s": 5.5618e-05,
+        "cumulative_s": 0.013828856
+      },
+      {
+        "file": "feedparser.py",
+        "line": 176,
+        "function": "_call_parse",
+        "calls": 53,
+        "self_s": 0.00012027000000000001,
+        "cumulative_s": 0.013528268000000001
+      }
+    ],
+    "torch_imported": false
+  },
+  "initial_optimized_source": "ed1a488"
+}
