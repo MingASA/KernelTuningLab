@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from copy import copy
 from dataclasses import dataclass, field
 import math
 import operator
@@ -9,7 +10,7 @@ import random
 import time
 from typing import Mapping
 
-from .models import KernelConfig, canonical_json
+from .models import KernelConfig, canonical_json, stable_id
 
 
 @dataclass(frozen=True)
@@ -200,14 +201,26 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
     values = dict(normalize(space, partial or {}).params)
     specs = _specs(space); order = _order(space)
     support = getattr(space, '_construction_support', None)
+    runtime_identity = getattr(space, '_runtime_context_identity', None)
+    runtime_sha = None
+    validator = space.validate
     if support is not None and time.perf_counter()-started < budget.max_wall_time_s:
         try:
+            if runtime_identity is not None:runtime_sha = stable_id(runtime_identity())
             reason = support(hardware, operator, shape)
         except Exception as exc:
             reason = 'support check error: ' + type(exc).__name__ + ': ' + str(exc)
         if reason:
             return SpaceBuildResult((), 'unsupported', {'reason': reason, 'nodes': 0,
                 'wall_s': time.perf_counter()-started, 'scope': 'Input/hardware/runtime context; not a proof that the declaration has no feasible configurations elsewhere'})
+        task_constraint = getattr(space, '_construction_support_constraint', None)
+        if task_constraint is not None:
+            # Only this already-checked knob-independent predicate is omitted.
+            # A local shallow view leaves the authoritative space and every
+            # configuration-specific/opaque constraint untouched.
+            validation_space = copy(space)
+            validation_space.constraints = tuple(c for c in space.constraints if c is not task_constraint)
+            validator = validation_space.validate
     partial_check = validate_partial(space, values, hardware, operator, shape)
     if partial_check.status == 'invalid':
         return SpaceBuildResult((), 'proven_empty', {'partial_reasons': list(partial_check.reasons), 'nodes': 0,
@@ -234,7 +247,7 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
         nonlocal checks, used_bytes, errors, stop
         if config.id in seen:
             return
-        checks += 1; result = space.validate(config, hardware, operator, shape)
+        checks += 1; result = validator(config, hardware, operator, shape)
         if not result.valid:
             reasons.update(result.reasons)
             errors += int(any(r.startswith('constraint error:') for r in result.reasons)); return
@@ -309,7 +322,14 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
     except Stop:
         pass
     status = stop or ('unsupported' if errors else 'complete' if output else 'exhausted' if exclude_ids else 'proven_empty')
+    if runtime_identity is not None and runtime_sha is not None:
+        try:
+            if stable_id(runtime_identity()) != runtime_sha:raise RuntimeError('runtime context changed during construction')
+        except Exception as exc:
+            return SpaceBuildResult((), 'unsupported', {'reason': str(exc), 'nodes': nodes,
+                'wall_s': time.perf_counter()-started, 'runtime_context_changed': True})
     return SpaceBuildResult(tuple(output), status, {'nodes': nodes, 'final_checks': checks,
+        'runtime_context_sha': runtime_sha,
         'wall_s': time.perf_counter()-started, 'estimated_result_bytes': used_bytes,
         'constraint_errors': errors, 'rejection_reasons': dict(reasons),
         'distribution': 'uniform shuffled native list' if space.native_configs is not None and rng else 'bounded randomized DFS restarts after each leaf; nonuniform over feasible leaves' if restart_sampling else 'dependency-aware deterministic DFS',

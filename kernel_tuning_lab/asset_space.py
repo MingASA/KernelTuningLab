@@ -172,6 +172,10 @@ def build_effective_space(kernel: KernelDefinition, hardware: HardwareSpec, oper
     # This predicate depends only on input/hardware/runtime, never on knobs.
     # Keep unsupported contexts distinct from a proven-empty config region.
     space._construction_support = lambda h, o, s: capability_constraint(KernelConfig({}), h, o, s)
+    space._construction_support_constraint = capability_constraint
+    # Rechecked at construction/cache boundaries, never frozen for the lifetime
+    # of this space. Component files, tables and runtime options can change.
+    space._runtime_context_identity = kernel.execution_identity
     space.conditional = any(specification.active_when for specification in kernel.space.parameters.values())
     # Capability checks do not turn an otherwise unconstrained Cartesian space
     # into an algorithmically constrained space.

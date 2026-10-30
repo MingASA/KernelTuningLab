@@ -96,6 +96,28 @@ def hard_config(config,ctx,*,family):
     return None
 
 
+def split_metadata_shape(n,k,group,configuration):
+    """Bounds of the upstream INT kernel's unmasked group metadata loads.
+
+    A/B tails are masked, but every split executes ceil(K/(BK*split))
+    iterations and loads its scale, including wholly inactive K partitions.
+    """
+    bk=configuration['BLOCK_SIZE_K'];bn=configuration['BLOCK_SIZE_N'];split=configuration['SPLIT_K']
+    padded_k=((k+bk*split-1)//(bk*split))*bk*split
+    return ((padded_k+group-1)//group,((n+bn-1)//bn)*bn)
+
+
+def pad_split_metadata(torch,scales,*,n,k,group,configuration):
+    if tuple(scales.shape)!=(k//group,n):raise ValueError('unexpected native group-scale layout; refuse reinterpretation')
+    shape=split_metadata_shape(n,k,group,configuration)
+    if shape==tuple(scales.shape):return scales,{'padded':False,'shape':list(shape)}
+    padded=torch.zeros(shape,dtype=scales.dtype,device=scales.device)
+    padded[:k//group,:n].copy_(scales)
+    return padded,{'padded':True,'logical_shape':list(scales.shape),'shape':list(shape),
+        'padding_value':0,'scope':'metadata only; logical K/N, packed weights, launch knobs and masked A/B loads unchanged',
+        'reason':'upstream INT Split-K scale loads are unmasked in K and N'}
+
+
 class _OutputAllocator:
     def __init__(self,torch,ctx):self.torch=torch;self.ctx=ctx
     def __getattr__(self,name):return getattr(self.torch,name)
@@ -147,6 +169,10 @@ def build(ctx,*,family,mode,**params):
     dtype=native.DType.FP16 if ctx.operator.dtype=='float16' else native.DType.BF16
     layer=native.GemLiteLinearTriton(bits,group,k,n,input_dtype=dtype,output_dtype=dtype,acc_dtype=native.DType.FP32)
     layer.pack(ctx.inputs['codes'],ctx.inputs['scales'],1<<(bits-1),packing_bitwidth=32,fma_mode=True)
+    metadata_padding=None
+    if mode=='explicit' and family=='GEMM_SPLITK':
+        if layer.W_group_mode!=3 or layer.zeros.numel()!=1:raise ValueError('audited Split-K padding requires group scales and scalar zero')
+        layer.scales,metadata_padding=pad_split_metadata(torch,layer.scales,n=n,k=k,group=group,configuration=params)
     for name,value in [('weights',layer.W_q),('scales',layer.scales),('zeros',layer.zeros)]:
         ctx.register_prepared_input('gemlite_'+name,value)
     actual_family=native.get_matmul_type(m,bits,False) if mode=='native' else family
@@ -168,6 +194,7 @@ def build(ctx,*,family,mode,**params):
             'packed_shape':list(layer.W_q.shape),'packed_dtype':str(layer.W_q.dtype),'elements_per_sample':layer.elements_per_sample},
         numeric_contract='FP16/BF16 A; uniform signed int'+str(bits)+' group scales; FP32 accumulator',
         scope='native complete forward including atomic initialization and required cast/output stabilization; no routing/service')
+    if metadata_padding is not None:annotations['split_metadata_padding']=metadata_padding
     def invoke():
         result=forward(ctx.inputs['a'],*tensor_args[:3],None,*meta[1:-1],bool(layer.data_contiguous),type_id,meta_scale=tensor_args[3])
         if result.data_ptr()!=ctx.outputs['out'].data_ptr():ctx.outputs['out'].copy_(result)

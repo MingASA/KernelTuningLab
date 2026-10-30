@@ -83,3 +83,28 @@ def test_raw_a16_profile_changes_only_optional_interop_decorators_not_function_b
         assert functions(before)==functions(after)
         assert not any(ast.unparse(d.func if isinstance(d,ast.Call) else d) in ('torch.compile','torch.library.custom_op','torch.library.register_fake')
             for n in ast.walk(after) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef)) for d in n.decorator_list)
+
+
+def test_split_metadata_covers_inactive_partitions_without_changing_logical_scales():
+    import pytest
+    torch=pytest.importorskip('torch')
+    n,k,group=768,768,128
+    scales=torch.arange((k//group)*n,dtype=torch.float32).reshape(k//group,n)
+    for bk,bn in [(32,64),(64,128),(128,32)]:
+        config={'BLOCK_SIZE_K':bk,'BLOCK_SIZE_N':bn,'SPLIT_K':16}
+        padded,trace=gemlite.pad_split_metadata(torch,scales,n=n,k=k,group=group,configuration=config)
+        assert torch.equal(padded[:k//group,:n],scales)
+        steps=(k+bk*16-1)//(bk*16)
+        for step in range(steps):
+            for split in range(16):
+                offset=(step*16+split)*bk
+                group_index=offset//group
+                assert group_index<padded.shape[0]
+                if offset>=k:assert torch.count_nonzero(padded[group_index])==0
+        assert trace['padded'] and padded.is_contiguous()
+    # A real, fully covered tile remains zero-copy; N tails get independent
+    # metadata padding as required by the same unmasked upstream load.
+    config={'BLOCK_SIZE_K':32,'BLOCK_SIZE_N':64,'SPLIT_K':8}
+    same,trace=gemlite.pad_split_metadata(torch,scales,n=n,k=k,group=group,configuration=config)
+    assert same is scales and not trace['padded']
+    assert gemlite.split_metadata_shape(97,768,128,config)==(6,128)

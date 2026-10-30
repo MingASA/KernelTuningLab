@@ -180,7 +180,8 @@ class ConfigSpace:
         from .space_tools import construct
         result = construct(self, hardware, operator, shape, budget=budget)
         if result.complete:
-            self._feasible_cache[(hardware.id, operator.id, shape.id, self.fingerprint)] = result
+            self._feasible_cache[(hardware.id, operator.id, shape.id, self.fingerprint,
+                                  result.diagnostics.get('runtime_context_sha'))] = result
         return result
 
     def complete(self, values, hardware, operator, shape, *, count=1, rng=None, budget=None, exclude_ids=()):
@@ -192,7 +193,11 @@ class ConfigSpace:
 
     def sample_feasible(self, rng, count, hardware, operator, shape, *, budget=None, exclude_ids=()):
         from .space_tools import SpaceBuildResult
-        cached = self._feasible_cache.get((hardware.id, operator.id, shape.id, self.fingerprint))
+        runtime_identity = getattr(self, '_runtime_context_identity', None)
+        try:runtime_sha = stable_id(runtime_identity()) if runtime_identity is not None else None
+        except Exception as exc:
+            return SpaceBuildResult((), 'unsupported', {'reason': str(exc), 'runtime_context_changed': True})
+        cached = self._feasible_cache.get((hardware.id, operator.id, shape.id, self.fingerprint, runtime_sha))
         if cached is not None:
             excluded = set(exclude_ids)
             candidates = [c for c in cached.configs if c.id not in excluded]
