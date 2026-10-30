@@ -27,6 +27,8 @@ python3 -m venv .venv
 
 生产套件开发继续在 `platform/production-suite-readiness`：GemLite W4/W2、FLUTE W3、FlexAttention、SGLang paged decode、vLLM MoE的默认/显式入口，以及统一API/本地AI、合作驻留门禁和有限配置表。见 **[PRODUCTION_SUITE.md](docs/PRODUCTION_SUITE.md)**。源码、构建、加载和GPU验收分别标记；旧的大规模模型/算法比较保持暂停。
 
+补充轮已完成[平台审查](docs/PRODUCTION_SUITE_AUDIT.md)及[真实AI与原生优化器的有限实测](docs/PRODUCTION_AI_FOLLOWUP.md)：7个新任务、640次揭示，保留全部失败和运行时修正。分支 `research/production-ai-followup`；单seed结果不作总体算法排名。
+
 当前 `main` 尚未包含这套验证交付；上述命令固定到已验证源码。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
 
 ## 添加实现或算法

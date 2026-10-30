@@ -11,3 +11,15 @@ B 是显式完整静态 grammar 变体：真实模型 logits 选择，每个可�
 `work.py` 只组合现有 `asset_search.search_case`、Runner、SpaceView、ExperimentStore 和本地模型客户端。运行需要固定源代码、私有模型 manifest、原生组件路径和获准空闲GPU；私有 launch plan 和恢复状态在 `artifacts/PRODUCTION_FOLLOWUP_CURRENT.json` 所指目录。每个新阶段均经原空卡包装器和共同串行锁，不能直接绕过准入调用脚本。
 
 本轮是一组有限、单seed的实测，不估计总体胜率、不声称全局最优。原生默认内置调优成本单列，不能伪装成等16点预算。模型加载/生成、空间构造、提议、编译、验收、稳定执行、缓存及总墙钟分开报告；共享编译缓存的成本不是独立冷启动成本。官方 API 调用仍为0。
+
+本轮已完成，结果和边界见 [补充实测报告](../../docs/PRODUCTION_AI_FOLLOWUP.md)，逐方法成本、最佳配置与完整揭示轨迹在 `results/`。MoE 两项零观测 CPU 构造失败仅放宽内层构造时限后补跑，原失败和608点初始结果保留；没有改变冻结策略或重测其他方法，详见 `runtime-amendments.json`。`recover_construction.py` 是该次明确范围的控制脚本，依赖私有原始 plan 和数据库，不是通用重试入口。
+
+对私有原始证据重新生成只读分析：
+
+```bash
+python examples/production_ai_study/analyze.py \
+  --evidence /path/to/target-evidence-recovered.json \
+  --output /path/to/new-analysis
+```
+
+分析器校验协议 SHA、冻结源码、原始记录 ID、物理 GPU、任务/seed、计时和驻留上下文，不启动 CUDA 或模型。原始证据包含私有设备信息，应留在本地忽略目录。

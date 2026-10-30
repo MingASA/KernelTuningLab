@@ -29,3 +29,5 @@ BF16 是本轮审查的实机覆盖缺口，尤其 Flex 的明确 FP16/BF16 契�
 BF16 新定向验收：4090 GemLite W4/W2 原生/显式共6条研究观测、6条独立验收通过；H800 Flex dense/causal、SGLang equal/ragged、MoE balanced/skewed 对应12个 job 通过。FLUTE 默认及显式各1条独立数值验收失败，最大绝对误差均为0.125，输入及packed hash保持不变，既有 atol/rtol=0.02 未修改。两个模板均为原生 kMixed 路径，但该数值误差的具体根因尚未证实；不将其写成全架构 BF16 不支持，也不把失败改为通过。H800 整批18条研究观测、28条独立验收保留为原 command_failed 状态，外部进程冲突计数0；已通过的 job 不重跑。
 
 据此，核心平台可在明确支持边界下开展补充 FP16 研究；不能宣称 FLUTE BF16 或任意版本/设备全覆盖通过。新研究分支 `research/production-ai-followup`，冻结协议与执行组合入口见 `examples/production_ai_study/`。
+
+补充轮现已完成，见[实测报告](PRODUCTION_AI_FOLLOWUP.md)：新任务640次揭示、80次真实B调用、两次27B程序生成，全部原始失败和有界运行时修正保留。另有4个FP16 GemLite W2 Split-K16配置及1个FLUTE配置数值复核失败，Runner严格拒绝，未修改容差或借测试结果修剪冻结空间。空间静态可行、编译通过、参考验证通过仍是三个不同层级。

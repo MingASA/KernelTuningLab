@@ -1,0 +1,85 @@
+{
+  "C_generation": [
+    {
+      "version": "C0",
+      "actual_model_calls": 1,
+      "model_id": "Qwen/Qwen3.8-27B",
+      "model_load_wall_s": 16.255691392812878,
+      "input_tokens": 1668,
+      "output_tokens": 743,
+      "generation_wall_s": 49.06420810893178,
+      "upload_wall_s": 0.007863173261284828,
+      "offload_and_release_wall_s": 0.19000433711335063,
+      "client_total_wall_s": 68.3707197769545,
+      "total_inference_proposal_wall_s": 49.31697922106832,
+      "estimated_usd": null,
+      "price_basis": "local inference costs/time only; no cloud price fabricated",
+      "finish_reason": "eos",
+      "guard_wall_s": 78.81223472533748,
+      "program_sha256": "9553bf6057fafd737c76a925359644572f47ad0db4bcc470d0aa411e243072ee"
+    },
+    {
+      "version": "C1",
+      "actual_model_calls": 1,
+      "model_id": "Qwen/Qwen3.8-27B",
+      "model_load_wall_s": 17.565277800895274,
+      "input_tokens": 5040,
+      "output_tokens": 936,
+      "generation_wall_s": 64.58976952405646,
+      "upload_wall_s": 0.0075796800665557384,
+      "offload_and_release_wall_s": 0.1867706635966897,
+      "client_total_wall_s": 85.39281148137525,
+      "total_inference_proposal_wall_s": 64.84564784076065,
+      "estimated_usd": null,
+      "price_basis": "local inference costs/time only; no cloud price fabricated",
+      "finish_reason": "eos",
+      "guard_wall_s": 97.19929378014058,
+      "program_sha256": "9553bf6057fafd737c76a925359644572f47ad0db4bcc470d0aa411e243072ee"
+    }
+  ],
+  "C0_development": [
+    {
+      "case": "flute-w3",
+      "observations": 8,
+      "success": 8,
+      "failed": 0
+    },
+    {
+      "case": "flex-dense",
+      "observations": 8,
+      "success": 8,
+      "failed": 0
+    },
+    {
+      "case": "flex-causal",
+      "observations": 8,
+      "success": 8,
+      "failed": 0
+    },
+    {
+      "case": "paged-ragged",
+      "observations": 8,
+      "success": 8,
+      "failed": 0
+    },
+    {
+      "case": "moe-skewed",
+      "observations": 8,
+      "success": 7,
+      "failed": 1
+    },
+    {
+      "case": "gemlite-w4",
+      "observations": 8,
+      "success": 5,
+      "failed": 3
+    },
+    {
+      "case": "gemlite-w2-split",
+      "observations": 8,
+      "success": 7,
+      "failed": 1
+    }
+  ],
+  "notice": "Resident load is once per case batch, not once per B response. B offload_wall_s is retained cleanup accounting with weights resident, not a full model transfer. Costs share compiler/cache state and are not independent cold-start comparisons."
+}

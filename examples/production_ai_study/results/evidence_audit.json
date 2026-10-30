@@ -1,0 +1,99 @@
+{
+  "status": "passed",
+  "original_SQLite_JSON_matches": [
+    {
+      "case": "gemlite-w4",
+      "original_DB_records": 62,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "gemlite-w2-split",
+      "original_DB_records": 66,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "flute-w3",
+      "original_DB_records": 26,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "flex-dense",
+      "original_DB_records": 35,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "flex-causal",
+      "original_DB_records": 36,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "paged-ragged",
+      "original_DB_records": 65,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "moe-skewed",
+      "original_DB_records": 50,
+      "status": "exact JSON match"
+    },
+    {
+      "case": "moe-skewed retry",
+      "original_DB_records": 80,
+      "status": "exact JSON match"
+    }
+  ],
+  "model_programs": [
+    {
+      "version": "C0",
+      "actual_calls": 1,
+      "model_response_program_exact_match": true,
+      "executed_program_sha256": "9553bf6057fafd737c76a925359644572f47ad0db4bcc470d0aa411e243072ee"
+    },
+    {
+      "version": "C1",
+      "actual_calls": 1,
+      "model_response_program_exact_match": true,
+      "executed_program_sha256": "9553bf6057fafd737c76a925359644572f47ad0db4bcc470d0aa411e243072ee"
+    }
+  ],
+  "B_real_calls": [
+    {
+      "case": "flute-w3",
+      "actual_calls": 16,
+      "accepted_configs_match_reveals": true,
+      "platform_completed_fields": 0,
+      "output_tokens": 448
+    },
+    {
+      "case": "flex-dense",
+      "actual_calls": 16,
+      "accepted_configs_match_reveals": true,
+      "platform_completed_fields": 0,
+      "output_tokens": 460
+    },
+    {
+      "case": "flex-causal",
+      "actual_calls": 16,
+      "accepted_configs_match_reveals": true,
+      "platform_completed_fields": 0,
+      "output_tokens": 460
+    },
+    {
+      "case": "paged-ragged",
+      "actual_calls": 16,
+      "accepted_configs_match_reveals": true,
+      "platform_completed_fields": 0,
+      "output_tokens": 503
+    },
+    {
+      "case": "moe-skewed",
+      "actual_calls": 16,
+      "accepted_configs_match_reveals": true,
+      "platform_completed_fields": 0,
+      "output_tokens": 696
+    }
+  ],
+  "old_pause_unchanged": true,
+  "new_GPU_work": false,
+  "serialization_note": "to_dict tuples serialized as JSON arrays exactly as original RPC"
+}

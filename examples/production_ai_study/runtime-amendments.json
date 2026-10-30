@@ -10,5 +10,20 @@
     "target_performance_opened": false,
     "existing_4090_C0_train_observations": 16,
     "existing_4090_retested": false
+  },
+  {
+    "amendment": "retry two zero-observation MoE static-construction failures",
+    "failed_attempt": "original moe-skewed B and Kernel Tuner trials; each stopped at the 15s full-space CPU construction allowance before model/kernel attempts",
+    "fix": "process-local construction allowance 15s to120s within the unchanged240s trial budget; original frozen work.py and production source remain unchanged",
+    "recovery_entrypoint": "recover_construction.py",
+    "space": "same complete3200-config authoritative space; no random subset or policy substitution",
+    "target_performance_opened": true,
+    "prompts_programs_decoder_seed_and_tolerances_unchanged": true,
+    "initial_failed_trials_retained": true,
+    "initial_failed_trial_wall_s": 30.11525366967544,
+    "successful_trials_retested": false,
+    "independent_acceptance_and_native": "read-only original SQLite backup; cache miss refuses preparation",
+    "retry": "B16 and KT16 completed with passed eligible resource guard; same physical GPU and bound measurement context",
+    "comparison_limit": "MoE B/KT completed in a later batch; retain original608-observation results and report recovery separately"
   }
 ]
