@@ -62,6 +62,28 @@ def test_component_identity_rejects_changed_binary_before_any_runtime_load(tmp_p
     with pytest.raises(RuntimeError,match='binary differs'):compat.execution_identity()
 
 
+def test_runtime_identity_tracks_table_contents_additions_and_environment(tmp_path,monkeypatch):
+    # Small CPU stand-ins for binary files; original Python sources stay pinned.
+    # This tests identity invalidation, not extension loading or GPU execution.
+    import hashlib
+    binaries={name:hashlib.sha256(name.encode()).hexdigest() for name in compat.BINARY_SHA256}
+    monkeypatch.setattr(compat,'BINARY_SHA256',binaries)
+    for name in binaries:
+        file=tmp_path/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(name.encode())
+    for name in sources.manifest()['vllm085']['files']:
+        if name.startswith('vllm/') and name.endswith('.py'):
+            file=tmp_path/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(sources.source('vllm085',name).read_bytes())
+    profile={'kind':'official_wheel_moe_subset','version':compat.VERSION,'source_revision':compat.REVISION,'wheel_sha256':compat.WHEEL_SHA256,'binaries':binaries}
+    (tmp_path/'component-manifest.json').write_text(json.dumps(profile))
+    monkeypatch.setenv('KT_VLLM085_MOE_COMPONENTS',str(tmp_path))
+    folder=tmp_path/Path(compat.MAIN).parent/'configs';folder.mkdir()
+    table=folder/'one.json';table.write_text('{"a":1}')
+    before=compat.execution_identity();table.write_text('{"a":2}')
+    edited=compat.execution_identity();assert edited!=before
+    (folder/'two.json').write_text('{}');added=compat.execution_identity();assert added!=edited
+    monkeypatch.setenv('VLLM_FUSED_MOE_CHUNK_SIZE','16');assert compat.execution_identity()!=added
+
+
 def test_native_workspace_estimate_is_source_derived_and_not_claimed_as_total_peak():
     shape=ShapeSpec({'M':17,'H':128,'I':256,'E':4,'TOP_K':2})
     config=compat.native_rule(17,4,256,128,2)

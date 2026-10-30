@@ -8,7 +8,8 @@ from pathlib import Path
 from types import SimpleNamespace,FunctionType
 import time
 
-from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep
+from ..sdk import OperatorDefinition,KernelDefinition,ParameterSpec,SpaceDefinition,ShapeSpec,ExecutionPlan,ExecutionStep,UnsupportedPreparationError
+from ..inference_resources import ResourceContextLimit
 from ..models import stable_id
 from . import native_sources as sources,suite_inputs,environment,gemlite_compat
 from .contracts import ConfigurationMapping
@@ -118,6 +119,22 @@ def pad_split_metadata(torch,scales,*,n,k,group,configuration):
         'reason':'upstream INT Split-K scale loads are unmasked in K and N'}
 
 
+def native_split_metadata_bounds(native,*,m,n,k,bits,group):
+    # The native autotuner may select any declared launch. Include its exact
+    # shape-cache override too, without changing the selector or its order.
+    declared=declared_configs('GEMM_SPLITK')
+    bounds={key:max(c[key] for c in declared) for key in ('BLOCK_SIZE_K','BLOCK_SIZE_N','SPLIT_K')}
+    signature=str((native.utils.get_closest_m(m),n,k,group,32//bits,native.DType.FP16.value*100+bits))
+    cached=native.GEMLITE_TRITON_CONFIG_CACHE.get('GEMM_SPLITK',{}).get(signature,{})
+    if cached and cached.get('BLOCK_SIZE_K',group)>group:
+        raise UnsupportedPreparationError('native cached INT tile spans multiple quantization groups',details={'configuration':cached,'group_size':group})
+    for key in bounds:
+        value=cached.get(key,bounds[key])
+        if type(value) is not int or value<1:raise UnsupportedPreparationError('invalid native cached launch extent')
+        bounds[key]=max(bounds[key],value)
+    return bounds
+
+
 class _OutputAllocator:
     def __init__(self,torch,ctx):self.torch=torch;self.ctx=ctx
     def __getattr__(self,name):return getattr(self.torch,name)
@@ -169,13 +186,18 @@ def build(ctx,*,family,mode,**params):
     dtype=native.DType.FP16 if ctx.operator.dtype=='float16' else native.DType.BF16
     layer=native.GemLiteLinearTriton(bits,group,k,n,input_dtype=dtype,output_dtype=dtype,acc_dtype=native.DType.FP32)
     layer.pack(ctx.inputs['codes'],ctx.inputs['scales'],1<<(bits-1),packing_bitwidth=32,fma_mode=True)
+    actual_family=native.get_matmul_type(m,bits,False) if mode=='native' else family
     metadata_padding=None;prepared_scales=layer.scales
-    if mode=='explicit' and family=='GEMM_SPLITK':
-        if layer.W_group_mode!=3 or layer.zeros.numel()!=1:raise ValueError('audited Split-K padding requires group scales and scalar zero')
-        prepared_scales,metadata_padding=pad_split_metadata(torch,layer.scales,n=n,k=k,group=group,configuration=params)
+    if actual_family=='GEMM_SPLITK':
+        if layer.W_group_mode!=3 or layer.zeros.numel()!=1:raise UnsupportedPreparationError('audited Split-K padding requires group scales and scalar zero')
+        bounds=params if mode=='explicit' else native_split_metadata_bounds(native,m=m,n=n,k=k,bits=bits,group=group)
+        required_shape=split_metadata_shape(n,k,group,bounds)
+        if math.prod(required_shape)*layer.scales.element_size()>ctx.workspace_memory_limit_bytes:
+            raise ResourceContextLimit('Split-K prepared metadata exceeds this preparation memory context')
+        prepared_scales,metadata_padding=pad_split_metadata(torch,layer.scales,n=n,k=k,group=group,configuration=bounds)
+        metadata_padding['bound_source']='explicit launch' if mode=='explicit' else 'complete native proposal extents plus exact shape-cache override'
     for name,value in [('weights',layer.W_q),('scales',prepared_scales),('zeros',layer.zeros)]:
         ctx.register_prepared_input('gemlite_'+name,value)
-    actual_family=native.get_matmul_type(m,bits,False) if mode=='native' else family
     if actual_family not in FAMILIES:raise RuntimeError('this adapter has no audited launch for native family '+actual_family)
     backend=importlib.import_module('gemlite.triton_kernels.'+FAMILIES[actual_family])
     original=native.GEMLITE_TRITON_MAPPING[actual_family].forward

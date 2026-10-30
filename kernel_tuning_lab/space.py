@@ -199,6 +199,10 @@ class ConfigSpace:
             return SpaceBuildResult((), 'unsupported', {'reason': str(exc), 'runtime_context_changed': True})
         cached = self._feasible_cache.get((hardware.id, operator.id, shape.id, self.fingerprint, runtime_sha))
         if cached is not None:
+            support = getattr(self, '_construction_support', None)
+            try:reason = support(hardware, operator, shape) if support is not None else None
+            except Exception as exc:reason = str(exc)
+            if reason:return SpaceBuildResult((), 'unsupported', {'reason': reason})
             excluded = set(exclude_ids)
             candidates = [c for c in cached.configs if c.id not in excluded]
             sample = tuple(rng.sample(candidates, min(count, len(candidates))))

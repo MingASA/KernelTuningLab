@@ -108,3 +108,19 @@ def test_split_metadata_covers_inactive_partitions_without_changing_logical_scal
     same,trace=gemlite.pad_split_metadata(torch,scales,n=n,k=k,group=group,configuration=config)
     assert same is scales and not trace['padded']
     assert gemlite.split_metadata_shape(97,768,128,config)==(6,128)
+
+
+def test_native_split_bounds_include_original_domain_and_exact_shape_cache():
+    from types import SimpleNamespace
+    native=SimpleNamespace(utils=SimpleNamespace(get_closest_m=lambda m:32),DType=SimpleNamespace(FP16=SimpleNamespace(value=1)),GEMLITE_TRITON_CONFIG_CACHE={})
+    args=dict(m=17,n=768,k=768,bits=2,group=128)
+    bounds=gemlite.native_split_metadata_bounds(native,**args)
+    assert bounds=={'BLOCK_SIZE_K':512,'BLOCK_SIZE_N':512,'SPLIT_K':16}
+    signature=str((32,768,768,128,16,102))
+    native.GEMLITE_TRITON_CONFIG_CACHE={'GEMM_SPLITK':{signature:{'BLOCK_SIZE_K':64,'BLOCK_SIZE_N':1024,'SPLIT_K':32}}}
+    assert gemlite.native_split_metadata_bounds(native,**args)['BLOCK_SIZE_N']==1024
+    assert gemlite.native_split_metadata_bounds(native,**args)['SPLIT_K']==32
+    import pytest
+    from kernel_tuning_lab.sdk import UnsupportedPreparationError
+    native.GEMLITE_TRITON_CONFIG_CACHE['GEMM_SPLITK'][signature]['BLOCK_SIZE_K']=256
+    with pytest.raises(UnsupportedPreparationError,match='quantization groups'):gemlite.native_split_metadata_bounds(native,**args)

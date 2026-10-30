@@ -38,3 +38,13 @@ def test_complete_set_cache_invalidates_when_runtime_identity_changes_or_disappe
     state['available']=False
     result=space.sample_feasible(random.Random(7),4,H,O,S)
     assert result.status=='unsupported' and not result.configs
+
+
+def test_cached_sampling_rechecks_support_even_without_an_identity_hook():
+    state={'available':True}
+    kernel=KernelDefinition('fixture/support_changes','1.0.0','fixture@1.0.0',lambda *a:None,
+        SpaceDefinition({'x':ParameterSpec((0,1))}),supports=lambda *a:None if state['available'] else 'unavailable')
+    space=build_effective_space(kernel,H,O,S);assert space.build_feasible(H,O,S).complete
+    state['available']=False
+    result=space.sample_feasible(random.Random(7),1,H,O,S)
+    assert result.status=='unsupported' and not result.configs
