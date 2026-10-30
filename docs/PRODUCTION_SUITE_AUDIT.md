@@ -21,3 +21,11 @@ BF16 是本轮审查的实机覆盖缺口，尤其 Flex 的明确 FP16/BF16 契�
 补充比较从新生产任务开始，先冻结输入/配置空间、模型/生成策略、预算和反馈边界，再打开测试性能。B 采用真实已有小模型；C 用已有 Qwen3.8-27B 生成并依开发反馈迭代。Random、SMAC、KT 的配置权威空间与 AI 一致；失败、耗尽、费用和不同资源模式分别分析。核心工程中的两点 grammar 和相同 C 程序证据复用不作为补充研究结果。
 
 私有恢复入口为 `artifacts/PRODUCTION_FOLLOWUP_CURRENT.json`。旧研究的 PAUSE_REQUESTED 不删除、不自动恢复；任何后续研究不能把已见测试重新标成盲测。
+
+## 本轮实际审查结果
+
+两项修复的源码为 `d306b93`，完整 CPU 回归 518 passed / 12 skipped。父 spec SHA 缺口已用实际失败复现，旧 C1 的原始 check/development spec 和 summary 均与原 manifest SHA 相符，因此未重测旧证据。独立设备显式 loader 仅作 CPU 身份验证，本轮没有使用额外卡。
+
+BF16 新定向验收：4090 GemLite W4/W2 原生/显式共6条研究观测、6条独立验收通过；H800 Flex dense/causal、SGLang equal/ragged、MoE balanced/skewed 对应12个 job 通过。FLUTE 默认及显式各1条独立数值验收失败，最大绝对误差均为0.125，输入及packed hash保持不变，既有 atol/rtol=0.02 未修改。两个模板均为原生 kMixed 路径，但该数值误差的具体根因尚未证实；不将其写成全架构 BF16 不支持，也不把失败改为通过。H800 整批18条研究观测、28条独立验收保留为原 command_failed 状态，外部进程冲突计数0；已通过的 job 不重跑。
+
+据此，核心平台可在明确支持边界下开展补充 FP16 研究；不能宣称 FLUTE BF16 或任意版本/设备全覆盖通过。新研究分支 `research/production-ai-followup`，冻结协议与执行组合入口见 `examples/production_ai_study/`。

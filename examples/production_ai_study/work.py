@@ -128,7 +128,8 @@ def run_trials(plan,protocol,output,split):
                 accept=row.get('accept')
                 if accept is None:
                     from kernel_tuning_lab.production.flute import candidates
-                    accept=next(dict(c.parameters) for c in candidates() if str(c.native_id)==str(row['accept_native_template_id']))
+                    selected=next(dict(c.parameters) for c in candidates() if str(c.native_id)==str(row['accept_native_template_id']))
+                    accept={key:value for key,value in selected.items() if key in case.space.domains}
                 runner=BenchmarkRunner(case.adapter,store=store,warmup=5,repetitions=15,seed=seed,experiment_id='production-study-'+split+'-acceptance')
                 verified=runner.measure(case.hardware,case.operator,case.shape,KernelConfig(accept),case.space,split=split)
                 if not verified.correctness_verified:raise RuntimeError('strict independent acceptance failed: '+str(verified.failure_reason))

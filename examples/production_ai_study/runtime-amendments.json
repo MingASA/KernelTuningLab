@@ -1,0 +1,14 @@
+[
+  {
+    "amendment": "acceptance fixture binding only",
+    "failed_attempt": "H800 followup-train",
+    "cause": "full FLUTE NativeCandidate descriptor passed constants not present in Kernel-owned tunable domains; rejected before preparation/compile/timing",
+    "fix": "project the same template4 descriptor to declared tunable keys; template identity and full research space unchanged",
+    "old_protocol_unchanged": true,
+    "prompts_and_C0_source_unchanged": true,
+    "tolerances_unchanged": true,
+    "target_performance_opened": false,
+    "existing_4090_C0_train_observations": 16,
+    "existing_4090_retested": false
+  }
+]
