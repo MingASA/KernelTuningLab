@@ -36,10 +36,17 @@ def main():
                 shape=ShapeSpec(row['shape']);space=build_effective_space(kernel,hardware,operator,shape,context=SpaceContext(hardware,operator,shape,adapter.environment(),512*1024**2))
                 if row.get('diagnostic_unpadded'):
                     gemlite.pad_split_metadata=lambda torch,scales,**kwargs:(scales,{'diagnostic_unpadded':True})
+                elif row.get('diagnostic_nan_tail'):
+                    def poison_tail(torch,scales,**kwargs):
+                        padded,trace=original_padding(torch,scales,**kwargs)
+                        if padded is scales:raise ValueError('negative control requires inactive K metadata')
+                        padded[scales.shape[0]:].fill_(float('nan'));trace['diagnostic_nan_tail']=True
+                        return padded,trace
+                    gemlite.pad_split_metadata=poison_tail
                 else:gemlite.pad_split_metadata=original_padding
                 runner=BenchmarkRunner(adapter,store=store,warmup=2,repetitions=3,seed=row['seed'],experiment_id='production-stability-'+row['id'],failure_log_path=out/'failures.jsonl')
                 record=runner.measure(hardware,operator,shape,KernelConfig(row['config']),space,split='validation',resume=False)
-                result={'id':row['id'],'record_id':record.id,'status':record.status.value,'verified':record.correctness_verified,'diagnostic_unpadded':row.get('diagnostic_unpadded',False),'invocations':[]}
+                result={'id':row['id'],'record_id':record.id,'status':record.status.value,'verified':record.correctness_verified,'diagnostic_unpadded':row.get('diagnostic_unpadded',False),'diagnostic_nan_tail':row.get('diagnostic_nan_tail',False),'invocations':[]}
                 compiled=getattr(adapter,'compiled',None)
                 if compiled is not None:
                     ctx=compiled.context;torch=ctx.torch;atol,rtol=op.tolerance(operator.dtype);reference=compiled.prepared.reference['out']

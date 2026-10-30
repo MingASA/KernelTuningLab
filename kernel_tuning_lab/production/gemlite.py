@@ -169,11 +169,11 @@ def build(ctx,*,family,mode,**params):
     dtype=native.DType.FP16 if ctx.operator.dtype=='float16' else native.DType.BF16
     layer=native.GemLiteLinearTriton(bits,group,k,n,input_dtype=dtype,output_dtype=dtype,acc_dtype=native.DType.FP32)
     layer.pack(ctx.inputs['codes'],ctx.inputs['scales'],1<<(bits-1),packing_bitwidth=32,fma_mode=True)
-    metadata_padding=None
+    metadata_padding=None;prepared_scales=layer.scales
     if mode=='explicit' and family=='GEMM_SPLITK':
         if layer.W_group_mode!=3 or layer.zeros.numel()!=1:raise ValueError('audited Split-K padding requires group scales and scalar zero')
-        layer.scales,metadata_padding=pad_split_metadata(torch,layer.scales,n=n,k=k,group=group,configuration=params)
-    for name,value in [('weights',layer.W_q),('scales',layer.scales),('zeros',layer.zeros)]:
+        prepared_scales,metadata_padding=pad_split_metadata(torch,layer.scales,n=n,k=k,group=group,configuration=params)
+    for name,value in [('weights',layer.W_q),('scales',prepared_scales),('zeros',layer.zeros)]:
         ctx.register_prepared_input('gemlite_'+name,value)
     actual_family=native.get_matmul_type(m,bits,False) if mode=='native' else family
     if actual_family not in FAMILIES:raise RuntimeError('this adapter has no audited launch for native family '+actual_family)
@@ -186,7 +186,7 @@ def build(ctx,*,family,mode,**params):
             scope[name]=_Launch(value,ctx,params,mode=='explicit');used.append(name)
     forward=FunctionType(original.__code__,scope,original.__name__,original.__defaults__,original.__closure__)
     meta=layer.get_meta_args();type_id=native.DType.FP16.value*100+bits
-    tensor_args=layer.get_tensor_args();torch.cuda.synchronize()
+    tensor_args=layer.get_tensor_args();tensor_args[1]=prepared_scales;torch.cuda.synchronize()
     annotations=ctx.metadata.setdefault('experiment_annotations',{});annotations.update(
         backend='GemLite',version=VERSION,source_identity=identity,family=actual_family,
         mode=mode,hidden_autotune_allowed=mode=='native',packing_wall_ms=(time.perf_counter()-start)*1000,
