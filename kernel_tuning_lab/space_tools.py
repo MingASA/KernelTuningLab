@@ -236,6 +236,11 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
     draw_start=0;restarts=0;draw_cutoffs=0
     draw_allowance=max(64,min(4096,budget.max_nodes//max(1,count or 1)))
     base_values=dict(values)
+    # A previously COMPLETE set can prove exclusion exhaustion without
+    # repeatedly restarting random DFS. Never apply this to a sampled prefix.
+    cached = space._feasible_cache.get((hardware.id, operator.id, shape.id, space.fingerprint, runtime_sha)) if seen else None
+    cached_exhausted = (cached is not None and bool(cached.configs) and len(seen)>=len(cached.configs)
+        and time.perf_counter()-started<budget.max_wall_time_s and all(c.id in seen for c in cached.configs))
     def tick():
         nonlocal nodes, stop
         if nodes >= budget.max_nodes or time.perf_counter()-started >= budget.max_wall_time_s:
@@ -293,7 +298,9 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
                 reasons.update(bad.reasons)
         values.pop(name, None)
     try:
-        if space.native_configs is not None:
+        if cached_exhausted:
+            stop = 'exhausted'
+        elif space.native_configs is not None:
             configs = list(space.native_configs)
             if rng is not None:
                 rng.shuffle(configs)
@@ -330,6 +337,7 @@ def construct(space, hardware, operator, shape, *, partial=None, budget=None, co
                 'wall_s': time.perf_counter()-started, 'runtime_context_changed': True})
     return SpaceBuildResult(tuple(output), status, {'nodes': nodes, 'final_checks': checks,
         'runtime_context_sha': runtime_sha,
+        'complete_cache_exhaustion': cached_exhausted,
         'wall_s': time.perf_counter()-started, 'estimated_result_bytes': used_bytes,
         'constraint_errors': errors, 'rejection_reasons': dict(reasons),
         'distribution': 'uniform shuffled native list' if space.native_configs is not None and rng else 'bounded randomized DFS restarts after each leaf; nonuniform over feasible leaves' if restart_sampling else 'dependency-aware deterministic DFS',

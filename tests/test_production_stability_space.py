@@ -48,3 +48,13 @@ def test_cached_sampling_rechecks_support_even_without_an_identity_hook():
     state['available']=False
     result=space.sample_feasible(random.Random(7),1,H,O,S)
     assert result.status=='unsupported' and not result.configs
+
+
+def test_excluded_complete_cache_proves_exhaustion_without_random_restart_budget():
+    from kernel_tuning_lab.space_tools import SpaceBuildBudget
+    kernel=KernelDefinition('fixture/complete_exhaustion','1.0.0','fixture@1.0.0',lambda *a:None,
+        SpaceDefinition({'x':ParameterSpec(tuple(range(16)))}))
+    space=build_effective_space(kernel,H,O,S);full=space.build_feasible(H,O,S)
+    result=space.complete({},H,O,S,count=1,rng=random.Random(7),exclude_ids={c.id for c in full.configs},budget=SpaceBuildBudget(max_nodes=1,max_wall_time_s=3))
+    assert result.status=='exhausted' and not result.configs
+    assert result.diagnostics['complete_cache_exhaustion'] and result.diagnostics['nodes']==0
