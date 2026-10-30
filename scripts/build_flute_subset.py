@@ -86,6 +86,7 @@ def main():
         if (facts['config_header_sha256']!=digest(work/'flute/csrc/config.hpp')
                 or facts['cutlass_tensor_header_sha256']!=plan['cutlass_tensor_header_sha256']):raise ValueError('resource facts came from different build headers')
         plan.update(template_resources=facts['template_resources'],resource_facts={k:v for k,v in facts.items() if k!='template_resources'})
+        (work/'build-plan.json').write_text(json.dumps(plan,indent=2)+'\n')
     if args.build:
         if not args.cuda_home:raise ValueError('explicit existing CUDA toolkit required; no system install')
         env={**os.environ,'CUDA_VISIBLE_DEVICES':'','TORCH_CUDA_ARCH_LIST':args.architectures,'CUDA_HOME':args.cuda_home,

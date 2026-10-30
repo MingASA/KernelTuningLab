@@ -8,10 +8,16 @@ from pathlib import Path
 
 def write(path,value):path.write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
 
+def assert_runtime_checkout(code):
+    import kernel_tuning_lab
+    if Path(kernel_tuning_lab.__file__).resolve().parent!=(Path(code).resolve()/'kernel_tuning_lab'):
+        raise RuntimeError('imported KernelTuningLab package differs from the declared checkout; refuse GPU work')
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--plan',required=True);p.add_argument('--output',required=True);a=p.parse_args()
     plan=json.loads(Path(a.plan).read_text());out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     assert subprocess.check_output(['git','-C',plan['code'],'rev-parse','HEAD'],text=True).strip()==plan['source_commit']
+    assert_runtime_checkout(plan['code'])
     from kernel_tuning_lab.catalog import AssetCatalog
     from kernel_tuning_lab.plugins import load_plugin
     from kernel_tuning_lab.sdk import AssetKernelAdapter,ExperimentStore,KernelConfig,OperatorSpec,ShapeSpec,SpaceContext
@@ -22,7 +28,7 @@ def main():
     class InspectAdapter(AssetKernelAdapter):
         def compile(self,*args):
             self.compiled=super().compile(*args);return self.compiled
-    state={'status':'running','source_commit':plan['source_commit'],'cases':[]};write(out/'state.json',state)
+    state={'status':'running','source_commit':plan['source_commit'],'imported_checkout_verified':True,'cases':[]};write(out/'state.json',state)
     original_padding=gemlite.pad_split_metadata
     try:
         with ExperimentStore(out/'measurements.sqlite') as store:
