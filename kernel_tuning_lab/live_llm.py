@@ -59,28 +59,45 @@ def parse_decision(text,parameter_keys=None):
     return value
 
 
+def inference_device(torch,mode,requested_uuid=None):
+    """Resolve only explicitly visible, separately admitted devices; never expose one."""
+    if mode not in ('separate_device','single_card_resident','stage_offload'):raise ValueError('unknown inference resource mode')
+    visible=os.environ.get('CUDA_VISIBLE_DEVICES','').split(',')
+    if not visible or any(not value.startswith('GPU-') for value in visible) or len(set(visible))!=len(visible):
+        raise ValueError('inference requires explicit admitted physical GPU UUIDs')
+    if mode=='separate_device':
+        if not requested_uuid or requested_uuid not in visible or len(visible)<2:
+            raise ValueError('separate_device requires explicit inference UUID and independently admitted visible devices')
+        index=visible.index(requested_uuid)
+    else:
+        if requested_uuid is not None or len(visible)!=1:raise ValueError('same-card inference requires one admitted physical GPU')
+        index=0
+    if torch.cuda.device_count()!=len(visible):raise ValueError('visible GPU admission/device count mismatch')
+    actual=str(getattr(torch.cuda.get_device_properties(index),'uuid',''))
+    if actual.lower().removeprefix('gpu-')!=visible[index].lower().removeprefix('gpu-'):
+        raise ValueError('inference GPU UUID mismatch')
+    return index,actual
+
+
 class _Session:
-    def __init__(self,manifest,resource_mode='single_card_resident',manifest_sha=None):
+    def __init__(self,manifest,resource_mode='single_card_resident',manifest_sha=None,inference_device_uuid=None):
         import torch,transformers
         verify_manifest(manifest);self.torch=torch;self.manifest=manifest
-        visible=os.environ.get('CUDA_VISIBLE_DEVICES','')
-        if not visible.startswith('GPU-') or ',' in visible or torch.cuda.device_count()!=1:
-            raise ValueError('live inference requires one resource-admitted physical GPU')
-        actual=str(getattr(torch.cuda.get_device_properties(0),'uuid',''))
-        if actual.lower().removeprefix('gpu-')!=visible.lower().removeprefix('gpu-'):
-            raise ValueError('LLM/Kernel GPU UUID mismatch')
+        index,actual=inference_device(torch,resource_mode,inference_device_uuid)
+        self.device='cuda:'+str(index);self.device_index=index
+        self.synchronize=(lambda:torch.cuda.synchronize(index)) if resource_mode=='separate_device' else torch.cuda.synchronize
         self.mode=resource_mode;before=time.monotonic()
         self.lease_token=COORDINATOR.register(manifest['model_id'],mode=resource_mode,device_uuid=actual,
             identity={'model_id':manifest['model_id'],'manifest_sha256':manifest_sha,
                 'loader_source_sha256':digest_file(__file__),'attention_backend':'sdpa','dtype':'bfloat16',
                 'torch':torch.__version__,'transformers':transformers.__version__},
-            synchronize=lambda:torch.cuda.synchronize(),resident_bytes=manifest['weights_bytes'] if resource_mode=='single_card_resident' else 0)
+            synchronize=self.synchronize,resident_bytes=manifest['weights_bytes'] if resource_mode in ('single_card_resident','separate_device') else 0)
         try:
             self.tokenizer=transformers.AutoTokenizer.from_pretrained(manifest['local_path'],local_files_only=True,trust_remote_code=False)
             cls=transformers.AutoModelForImageTextToText if manifest['model_type']=='qwen3_5' else transformers.AutoModelForCausalLM
-            with COORDINATOR.inference_window(self.lease_token):
+            with COORDINATOR.inference_window(self.lease_token),torch.cuda.device(index):
                 self.model,info=cls.from_pretrained(manifest['local_path'],local_files_only=True,trust_remote_code=False,
-                    dtype=torch.bfloat16,device_map={'':0},attn_implementation='sdpa',output_loading_info=True)
+                    dtype=torch.bfloat16,device_map={'':index},attn_implementation='sdpa',output_loading_info=True)
                 if any('mtp' not in k.lower() for k in info.get('missing_keys',[])) or any('mtp' not in k.lower() for k in info.get('unexpected_keys',[])) or info.get('mismatched_keys'):
                     raise ValueError('local checkpoint loading mismatch')
                 self.model.eval();self.parameter_count=sum(p.numel() for p in self.model.parameters())
@@ -91,14 +108,16 @@ class _Session:
         self.load_s=time.monotonic()-before;self.loading_info=loading_metadata(info)
     def close(self):
         with COORDINATOR.inference_window(self.lease_token):
-            del self.model;gc.collect();self.torch.cuda.synchronize()
+            del self.model;gc.collect();getattr(self,'synchronize',self.torch.cuda.synchronize)()
             # Phase-end resource release, AFTER producer completion under the
             # lease. This is not the quiescence proof and never runs between
             # resident decisions. A child worker cannot reuse this allocator.
-            self.torch.cuda.empty_cache()
+            if self.mode=='separate_device':
+                with self.torch.cuda.device(self.device_index):self.torch.cuda.empty_cache()
+            else:self.torch.cuda.empty_cache()
         COORDINATOR.unregister(self.lease_token)
     def infer(self,messages,seed,max_tokens,decoding='greedy',constraint=None):
-        with COORDINATOR.inference_window(self.lease_token):
+        with COORDINATOR.inference_window(self.lease_token),self.torch.cuda.device(self.device_index):
             return self._infer_serial(messages,seed,max_tokens,decoding,constraint)
 
     def _infer_serial(self,messages,seed,max_tokens,decoding='greedy',constraint=None):
@@ -107,7 +126,11 @@ class _Session:
             enable_thinking=False,preserve_thinking=False,reasoning_effort='low')
         cpu_inputs=self.tokenizer(prompt,return_tensors='pt',add_special_tokens=False)
         if cpu_inputs['input_ids'].shape[-1]>8192:raise ValueError('live decision prompt exceeds context budget')
-        torch.manual_seed(seed);torch.cuda.manual_seed_all(seed);inputs=result=None
+        if self.mode=='separate_device':
+            torch.random.default_generator.manual_seed(seed)
+            torch.cuda.default_generators[self.device_index].manual_seed(seed)
+        else:torch.manual_seed(seed);torch.cuda.manual_seed_all(seed)
+        inputs=result=None
         row={'messages':messages,'prompt':prompt,'prompt_sha256':hashlib.sha256(prompt.encode()).hexdigest(),
             'seed':seed,'model_id':self.manifest['model_id'],'input_token_ids':cpu_inputs['input_ids'][0].tolist(),
             'model_load_wall_s':self.load_s,'initial_load_device':'admitted CUDA device',
@@ -120,12 +143,12 @@ class _Session:
             offset=cpu_inputs['input_ids'].shape[-1]
             prefix_fn=lambda batch,ids:constraint.allowed(ids[offset:].tolist(),eos)
         try:
-            torch.cuda.synchronize();start=time.monotonic();self.model.to('cuda:0');torch.cuda.synchronize()
-            row['upload_wall_s']=time.monotonic()-start;inputs=cpu_inputs.to('cuda:0')
+            self.synchronize();start=time.monotonic();self.model.to(self.device);self.synchronize()
+            row['upload_wall_s']=time.monotonic()-start;inputs=cpu_inputs.to(self.device)
             start=time.monotonic()
             with torch.inference_mode():result=self.model.generate(**inputs,**params,
                 **({'prefix_allowed_tokens_fn':prefix_fn} if prefix_fn is not None else {}))
-            torch.cuda.synchronize();row['generation_wall_s']=time.monotonic()-start
+            self.synchronize();row['generation_wall_s']=time.monotonic()-start
             ids=result[0,inputs['input_ids'].shape[-1]:].tolist()
             eos=self.model.generation_config.eos_token_id
             eos=set(eos if isinstance(eos,list) else [eos])
@@ -139,7 +162,7 @@ class _Session:
             if self.mode=='stage_offload':self.model.to('cpu')
             if hasattr(self.model,'_cache'):self.model._cache=None
             if hasattr(self.model,'rope_deltas'):self.model.rope_deltas=None
-            del cpu_inputs;gc.collect();torch.cuda.synchronize()
+            del cpu_inputs;gc.collect();self.synchronize()
             if self.mode=='stage_offload':torch.cuda.empty_cache()
             row['offload_and_release_wall_s']=time.monotonic()-start
             row['CUDA_allocated_before_bytes']=before_bytes;row['CUDA_allocated_after_bytes']=torch.cuda.memory_allocated()

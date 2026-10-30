@@ -23,7 +23,7 @@ def versions(tmp_path):
         programs.write(run/'run_summary.json',{'status':'passed','fixture':True})
         programs.write(run/'trials.json',[])
         manifest[key].append({'status':'passed','stage':stage,'output':str(run),'task_ids':programs.task_ids(spec),
-            'summary_sha256':programs.sha(run/'run_summary.json')})
+            'summary_sha256':programs.sha(run/'run_summary.json'),'spec_sha256':programs.sha(attempt/'spec.json')})
     programs.write(parent/'artifact.json',manifest);programs.freeze(parent)
     child=tmp_path/'child'
     programs.submit(child,response=response,program=program,algorithm_ref='generated/constructive_v1@1.0.0',provenance=provenance,parent=parent)
@@ -61,3 +61,12 @@ def test_reuse_cannot_hide_test_exposure_or_changed_program(versions):
         programs.reuse_evaluation(child,parent,file,stage='development')
     (child/'program.py').write_text('# changed')
     with pytest.raises(ValueError,match='changed'):programs.reuse_evaluation(child,parent,file,stage='check')
+
+
+def test_reuse_rejects_parent_spec_changed_to_match_a_new_request(versions):
+    parent,child,file=versions
+    entry=programs.verify(parent)['development'][0];saved=Path(entry['output']).parent/'spec.json'
+    original=json.loads(saved.read_text());original['seed']=99;saved.write_text(json.dumps(original))
+    requested=json.loads(file.read_text());requested['seed']=99;file.write_text(json.dumps(requested))
+    with pytest.raises(ValueError,match='specification identity'):
+        programs.reuse_evaluation(child,parent,file,stage='development')

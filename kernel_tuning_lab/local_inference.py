@@ -14,16 +14,20 @@ from .models import canonical_json
 
 
 class LocalModelClient:
-    def __init__(self,*,model_manifest,manifest_sha256,resource_mode='single_card_resident',seed=0,log_path=None):
+    def __init__(self,*,model_manifest,manifest_sha256,resource_mode='single_card_resident',seed=0,log_path=None,inference_device_uuid=None):
         blob=Path(model_manifest).read_bytes()
         if hashlib.sha256(blob).hexdigest()!=manifest_sha256:raise ValueError('local model manifest identity mismatch')
         self.manifest=json.loads(blob)
         if not self.manifest.get('full_weight_hashes'):raise ValueError('existing model needs full weight identities')
-        if resource_mode not in ('single_card_resident','stage_offload'):raise ValueError('cooperative local mode is resident or explicit phase offload')
+        if resource_mode not in ('single_card_resident','stage_offload','separate_device'):raise ValueError('unknown cooperative local resource mode')
+        if (resource_mode=='separate_device')!=(inference_device_uuid is not None):
+            raise ValueError('separate_device requires explicit inference_device_uuid; same-card modes do not accept it')
+        self.inference_device_uuid=inference_device_uuid
         self.sha=manifest_sha256;self.mode=resource_mode;self.seed=seed;self.session=None;self.calls=0
         self.log_path=Path(log_path) if log_path else None
     @property
     def runtime_identity(self):return {'model_id':self.manifest['model_id'],'manifest_sha256':self.sha,'resource_mode':self.mode,
+        'inference_device_uuid':self.inference_device_uuid,
         'source_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'downloads':False,'training':False}
     def invoke(self,task,*,system,route='B',schema=None,max_output_tokens=1024,sampling=None):
         if route not in ('B','C'):raise ValueError('a dedicated trained A model uses its own external process; no implicit training')
@@ -36,7 +40,7 @@ class LocalModelClient:
         try:
             if self.session is None:
                 from .live_llm import _Session
-                self.session=_Session(self.manifest,self.mode,self.sha)
+                self.session=_Session(self.manifest,self.mode,self.sha,**({'inference_device_uuid':self.inference_device_uuid} if self.inference_device_uuid else {}))
             row.update(self.session.infer(messages,self.seed+self.calls-1,max_output_tokens))
             row.update(evidence_level='real_local_model_inference',
                 schema_enforcement='JSON schema supplied as a contract only; final action/code checks remain mandatory',response_id=None,

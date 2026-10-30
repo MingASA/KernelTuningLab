@@ -79,10 +79,32 @@ def test_phase_close_releases_allocator_after_completion_without_using_it_as_pro
     from types import SimpleNamespace
     from kernel_tuning_lab.inference_resources import ProcessCoordinator
     gate=ProcessCoordinator();calls=[];monkeypatch.setattr(live_llm,'COORDINATOR',gate)
-    session=live_llm._Session.__new__(live_llm._Session);session.model=object()
+    session=live_llm._Session.__new__(live_llm._Session);session.model=object();session.mode='single_card_resident'
     session.torch=SimpleNamespace(cuda=SimpleNamespace(synchronize=lambda:calls.append('producer-sync'),empty_cache=lambda:calls.append('release-unused-allocator')))
     session.lease_token=gate.register('CPU-fixture-not-model',mode='single_card_resident',device_uuid='fixture-device',identity={},
         synchronize=lambda:calls.append('lease-completion-sync'))
     session.close()
     assert calls==['producer-sync','release-unused-allocator','lease-completion-sync']
     assert not gate.participants and gate.phase=='idle'
+
+
+def test_separate_device_requires_explicit_visible_admitted_UUIDs(monkeypatch):
+    from types import SimpleNamespace
+    fake=SimpleNamespace(cuda=SimpleNamespace(device_count=lambda:2,
+        get_device_properties=lambda index:SimpleNamespace(uuid=['measure','infer'][index])))
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES','GPU-measure,GPU-infer')
+    assert live_llm.inference_device(fake,'separate_device','GPU-infer')==(1,'infer')
+    for mode,requested in [('separate_device',None),('separate_device','GPU-other'),('single_card_resident',None)]:
+        with pytest.raises(ValueError):live_llm.inference_device(fake,mode,requested)
+    monkeypatch.setenv('CUDA_VISIBLE_DEVICES','GPU-infer')
+    with pytest.raises(ValueError):live_llm.inference_device(fake,'separate_device','GPU-infer')
+
+
+def test_separate_device_is_a_local_client_mode_without_implicit_admission(tmp_path):
+    from kernel_tuning_lab.local_inference import LocalModelClient
+    file=tmp_path/'manifest.json';file.write_text(json.dumps({'model_id':'fixture','full_weight_hashes':True}))
+    sha=hashlib.sha256(file.read_bytes()).hexdigest()
+    with pytest.raises(ValueError,match='explicit inference_device_uuid'):
+        LocalModelClient(model_manifest=file,manifest_sha256=sha,resource_mode='separate_device')
+    client=LocalModelClient(model_manifest=file,manifest_sha256=sha,resource_mode='separate_device',inference_device_uuid='GPU-infer')
+    assert client.session is None and client.runtime_identity['inference_device_uuid']=='GPU-infer'

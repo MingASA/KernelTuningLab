@@ -150,6 +150,8 @@ def reuse_evaluation(directory,source,spec_path,*,stage):
         for candidate in reversed(previous[key]):
             if candidate['status']!='passed':continue
             run=Path(candidate['output']);file=run.parent/'spec.json'
+            if not file.is_file() or sha(file)!=candidate.get('spec_sha256'):
+                raise ValueError('parent evaluation specification identity mismatch')
             if file.is_file() and normalized(json.loads(file.read_text()),source)==wanted:
                 entry=candidate;attempt_spec=file;break
         if entry is None:raise ValueError('no passed parent evaluation with identical full specification')
