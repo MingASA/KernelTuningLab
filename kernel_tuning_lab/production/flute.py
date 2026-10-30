@@ -90,6 +90,12 @@ def native_api():
         build=json.loads(Path(build_path).read_text())
         if build['binary_sha256']!=identity['binary_sha256']:raise ValueError('FLUTE compiled-set manifest does not match the loaded binary')
         identity['compiled_templates']=build['compiled_templates'];identity['compiled_architectures']=build['compiled_architectures']
+        if build.get('template_resources'):
+            facts=build['resource_facts']
+            header_sha=hashlib.sha256(sources.source('flute','flute/csrc/config.hpp').read_bytes()).hexdigest()
+            if (facts['config_header_sha256']!=header_sha or facts['cutlass_tensor_header_sha256']!=build['cutlass_tensor_header_sha256']):
+                raise ValueError('FLUTE resource facts do not match the original build headers')
+            identity['template_resources']=build['template_resources']
     else:identity['compiled_templates']=None
     identity['accumulation_mode']='kMixed' if build is None else build.get('accumulation_mode','kMixed')
     if identity['accumulation_mode'] not in ('kMixed','kHigh'):raise ValueError('unknown compiled FLUTE accumulation profile')
@@ -97,6 +103,12 @@ def native_api():
 
 
 def workspace_bytes(sm_count):return sm_count*4*256*(4*64*8)+4*(sm_count*4)
+
+
+def resource_support_reason(required_bytes,optin_limit_bytes):
+    if required_bytes and optin_limit_bytes and required_bytes>optin_limit_bytes:
+        return f'original FLUTE template requires {required_bytes} dynamic shared bytes, device opt-in limit is {optin_limit_bytes}'
+    return None
 
 
 def build(ctx,*,mode,**parameters):
@@ -125,6 +137,15 @@ def build(ctx,*,mode,**parameters):
     if identity.get('compiled_templates') is not None and tid not in identity['compiled_templates'].get(str(bits),[]):
         raise RuntimeError('template is source-expressible but not in this fixed compiled subset')
     if not utils.is_template_supported(m,n,k,bits,tid,sms):raise ValueError('actual upstream template support check failed')
+    required=identity.get('template_resources',{}).get(str(bits),{}).get(str(group),{}).get(str(tid),{}).get(ctx.operator.dtype)
+    if required is not None:
+        from triton.runtime import driver
+        limit=driver.active.utils.get_device_properties(ctx.device).get('max_shared_mem',0)
+        evidence={'required_bytes':required,'actual_optin_limit_bytes':limit,
+            'requirement_source':'CPU sizeof of original Config::kSmemSize','limit_source':'CUDA driver device properties via Triton'}
+        ctx.metadata['experiment_annotations']['shared_memory_requirement']=evidence
+        reason=resource_support_reason(required,limit)
+        if reason:raise UnsupportedPreparationError(reason,details={**preparation_trace,'shared_memory_requirement':evidence})
     codes=ctx.inputs['codes'].T.contiguous()
     pack_started=time.perf_counter();packed=utils.pack(codes,num_bits=bits,template_ids=[tid],num_sms=sms)
     scales=ctx.inputs['scales'].contiguous();qmap=torch.arange(1<<bits,dtype=getattr(torch,ctx.operator.dtype),device=ctx.inputs['a'].device)-(1<<(bits-1))

@@ -115,3 +115,11 @@ def test_flute_high_build_only_selects_original_high_dispatch_branch(tmp_path):
     assert len(selected)==3 and all('kHigh, kStreamK' in line for line in selected)
     assert plan['accumulation_mode']=='kHigh' and plan['native_kernel_headers_modified'] is False
     assert (tmp_path/'high/flute/csrc/config.hpp').read_bytes()==(source/'flute/csrc/config.hpp').read_bytes()
+
+
+def test_flute_resource_rejection_is_scoped_to_exact_template_requirement_and_device_limit():
+    # Exact sizeof from the original CPU probe, not an empirical SMEM estimate.
+    assert '119072' in flute.resource_support_reason(119072,101376)
+    assert flute.resource_support_reason(119072,232448) is None
+    assert flute.resource_support_reason(49440,101376) is None
+    assert flute.resource_support_reason(119072,0) is None # unknown is not zero capacity

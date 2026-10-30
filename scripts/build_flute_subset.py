@@ -76,10 +76,16 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--cutlass',required=True);parser.add_argument('--work',required=True)
     parser.add_argument('--templates',default='0,1,2,8,9,10');parser.add_argument('--architectures',default='8.9;9.0');parser.add_argument('--cuda-home');parser.add_argument('--build',action='store_true');parser.add_argument('--timeout',type=int,default=2400)
     parser.add_argument('--accumulation',choices=('mixed','high'),default='mixed',help='separate numerical build profile; never relabel an existing binary')
+    parser.add_argument('--resource-facts',help='CPU sizeof facts from probe_flute_resources.py using these exact headers')
     args=parser.parse_args();ids=[int(x) for x in args.templates.split(',')]
     if not ids or len(ids)!=len(set(ids)) or any(i not in range(36) for i in ids):raise ValueError('original int3 IDs must be distinct0..35')
     if not all(x in ('8.0','8.6','8.9','9.0') for x in args.architectures.split(';')):raise ValueError('explicit audited target architecture list required')
     plan=prepare(args.source,args.cutlass,args.work,ids,args.accumulation);work=Path(args.work).resolve()
+    if args.resource_facts:
+        facts=json.loads(Path(args.resource_facts).read_text())
+        if (facts['config_header_sha256']!=digest(work/'flute/csrc/config.hpp')
+                or facts['cutlass_tensor_header_sha256']!=plan['cutlass_tensor_header_sha256']):raise ValueError('resource facts came from different build headers')
+        plan.update(template_resources=facts['template_resources'],resource_facts={k:v for k,v in facts.items() if k!='template_resources'})
     if args.build:
         if not args.cuda_home:raise ValueError('explicit existing CUDA toolkit required; no system install')
         env={**os.environ,'CUDA_VISIBLE_DEVICES':'','TORCH_CUDA_ARCH_LIST':args.architectures,'CUDA_HOME':args.cuda_home,
