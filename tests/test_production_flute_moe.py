@@ -86,3 +86,32 @@ def test_moe_correctness_inputs_are_not_hidden_below_absolute_tolerance():
     old={k:(v/8 if k=='a' else v*(shape.get('H' if k=='w1' else 'I')**.5)/16 if k in ('w1','w2') else v) for k,v in inputs.items()}
     weak=vllm_moe.reference(types.SimpleNamespace(torch=torch,inputs=old,shape=shape,operator=op))['out']
     assert torch.allclose(torch.zeros_like(weak),weak,rtol=.01,atol=.01)
+
+
+def test_flute_high_profile_changes_reduction_identity_without_changing_geometry_or_packing():
+    original=flute.candidates();high=flute.candidates(accumulation_mode='kHigh')
+    assert len(original)==len(high)==36
+    for mixed,fp32 in zip(original,high):
+        assert mixed.native_id==fp32.native_id and mixed.packing_key==fp32.packing_key
+        assert mixed.id!=fp32.id
+        assert {k:v for k,v in mixed.parameters.items() if k!='AccumulationMode'}=={k:v for k,v in fp32.parameters.items() if k!='AccumulationMode'}
+        assert fp32.parameters['AccumulationMode']=='kHigh'
+        assert flute.template_id(fp32.parameters)==int(fp32.native_id)
+
+
+def test_flute_high_build_only_selects_original_high_dispatch_branch(tmp_path):
+    import importlib.util
+    from pathlib import Path
+    from kernel_tuning_lab.production import native_sources
+    script=Path(__file__).parents[1]/'scripts/build_flute_subset.py'
+    spec=importlib.util.spec_from_file_location('flute_builder',script);builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
+    source=tmp_path/'source';cutlass=tmp_path/'cutlass';(cutlass/'include/cute').mkdir(parents=True)
+    (cutlass/'include/cute/tensor.hpp').write_text('// CPU build-contract fixture')
+    for name in ['setup.py','flute/codegen_utils.py','flute/csrc/qgemm.cpp','flute/csrc/qgemm_kernel_raw_generated.cu','flute/utils.py','flute/csrc/config.hpp']:
+        file=source/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_bytes(native_sources.source('flute',name).read_bytes())
+    plan=builder.prepare(source,cutlass,tmp_path/'high',[6,8,31],accumulation='high')
+    generated=(tmp_path/'high/flute/csrc/qgemm_kernel_raw_generated.cu').read_text()
+    selected=[line for line in generated.splitlines() if line.lstrip().startswith('RUN_QGEMM(T,')]
+    assert len(selected)==3 and all('kHigh, kStreamK' in line for line in selected)
+    assert plan['accumulation_mode']=='kHigh' and plan['native_kernel_headers_modified'] is False
+    assert (tmp_path/'high/flute/csrc/config.hpp').read_bytes()==(source/'flute/csrc/config.hpp').read_bytes()

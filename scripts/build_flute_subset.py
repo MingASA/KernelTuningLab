@@ -22,7 +22,8 @@ from kernel_tuning_lab.production import flute,native_sources
 def digest(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def prepare(source,cutlass,work,ids):
+def prepare(source,cutlass,work,ids,accumulation='mixed'):
+    if accumulation not in ('mixed','high'):raise ValueError('explicit original accumulation mode required')
     source,cutlass,work=map(lambda p:Path(p).resolve(),(source,cutlass,work))
     if work==source or source in work.parents:raise ValueError('build in a separate private copy, never modify the source checkout')
     original=native_sources.native_component(source,'flute',['flute/codegen_utils.py','flute/csrc/qgemm.cpp','flute/csrc/qgemm_kernel_raw_generated.cu','flute/utils.py'])
@@ -40,6 +41,7 @@ def prepare(source,cutlass,work,ids):
     all_cases=ns['_cases']();selected={(3,i):all_cases[(3,i)] for i in ids}
     generate={};native_sources.host_functions('flute','flute/codegen_utils.py',{'generate_nested_switch'},generate)
     switch=generate['generate_nested_switch'](['NumBits','template_id'],selected,[True,False],'    ')
+    if accumulation=='high':switch=switch.replace('kMixed','kHigh')
     target=work/'flute/csrc/qgemm_kernel_raw_generated.cu';text=target.read_text();before=digest(target)
     marker=text.index('    // Generated Code Below');start=text.index('\n',marker)+1
     # The generated dispatch ends at the next function-closing brace. Strings
@@ -59,8 +61,10 @@ def prepare(source,cutlass,work,ids):
     setup.write_text(setup_text.replace(needle,'CUTLASS_PATH = os.environ["FLUTE_CUTLASS_PATH"]'))
     plan={'source_revision':'9eb83a12d56949bbe7fe9c836ba97a67bd1e3761','source_identity':original,
         'compiled_templates':{'3':ids},'source_expressible_templates':{'3':36,'2':36,'4':144},
+        'accumulation_mode':'kHigh' if accumulation=='high' else 'kMixed',
+        'numeric_profile':'original FP32 MMA and FP32 StreamK reduction branch' if accumulation=='high' else 'original mixed reduction',
         'patches':[{'file':'setup.py','kind':'private include-path configuration, no numeric source changes'},
-            {'file':'flute/csrc/qgemm_kernel_raw_generated.cu','kind':'original RUN_QGEMM dispatch cases restricted to explicit original int3 IDs',
+            {'file':'flute/csrc/qgemm_kernel_raw_generated.cu','kind':'original RUN_QGEMM geometry IDs with explicit '+accumulation+' accumulation argument; headers and numerical bodies unchanged',
              'original_sha256':before,'patched_sha256':digest(target)}],
         'native_kernel_headers_modified':False,'cutlass_tensor_header_sha256':digest(cutlass/'include/cute/tensor.hpp'),
         'unknown_metrics':['per-template cubin identities','per-template code bytes','GPU correctness/performance']}
@@ -71,10 +75,11 @@ def prepare(source,cutlass,work,ids):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--source',required=True);parser.add_argument('--cutlass',required=True);parser.add_argument('--work',required=True)
     parser.add_argument('--templates',default='0,1,2,8,9,10');parser.add_argument('--architectures',default='8.9;9.0');parser.add_argument('--cuda-home');parser.add_argument('--build',action='store_true');parser.add_argument('--timeout',type=int,default=2400)
+    parser.add_argument('--accumulation',choices=('mixed','high'),default='mixed',help='separate numerical build profile; never relabel an existing binary')
     args=parser.parse_args();ids=[int(x) for x in args.templates.split(',')]
     if not ids or len(ids)!=len(set(ids)) or any(i not in range(36) for i in ids):raise ValueError('original int3 IDs must be distinct0..35')
     if not all(x in ('8.0','8.6','8.9','9.0') for x in args.architectures.split(';')):raise ValueError('explicit audited target architecture list required')
-    plan=prepare(args.source,args.cutlass,args.work,ids);work=Path(args.work).resolve()
+    plan=prepare(args.source,args.cutlass,args.work,ids,args.accumulation);work=Path(args.work).resolve()
     if args.build:
         if not args.cuda_home:raise ValueError('explicit existing CUDA toolkit required; no system install')
         env={**os.environ,'CUDA_VISIBLE_DEVICES':'','TORCH_CUDA_ARCH_LIST':args.architectures,'CUDA_HOME':args.cuda_home,

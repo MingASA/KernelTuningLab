@@ -31,9 +31,10 @@ def template_configs():
     return ns['_enumerate']()
 
 
-def candidates(bits=3,compiled_ids=None):
+def candidates(bits=3,compiled_ids=None,*,accumulation_mode='kMixed'):
+    if accumulation_mode not in ('kMixed','kHigh'):raise ValueError('unknown FLUTE numerical build profile')
     compiled=None if compiled_ids is None else set(compiled_ids)
-    return tuple(NativeCandidate(str(tid),dict(c),'FLUTE StreamK',packing_key='flute-int'+str(bits)+'-tileP'+str(c['TileP']),
+    return tuple(NativeCandidate(str(tid),{**c,'AccumulationMode':accumulation_mode},'FLUTE StreamK',packing_key='flute-int'+str(bits)+'-tileP'+str(c['TileP']),
         preparation={'tile_P':c['TileP'],'native_template_id':tid,'bits':bits},
         compiled=None if compiled is None else tid in compiled)
         for (b,tid),c in template_configs().items() if b==bits)
@@ -47,7 +48,8 @@ def host_rules():
 
 
 def template_id(parameters,bits=3):
-    match=[int(c.native_id) for c in candidates(bits) if set(parameters)<=set(c.parameters)
+    mode=parameters.get('AccumulationMode','kMixed')
+    match=[int(c.native_id) for c in candidates(bits,accumulation_mode=mode) if set(parameters)<=set(c.parameters)
         and all(c.parameters[k]==v for k,v in parameters.items())]
     if len(match)!=1:raise ValueError('structural parameters do not name one original FLUTE template')
     return match[0]
@@ -89,6 +91,8 @@ def native_api():
         if build['binary_sha256']!=identity['binary_sha256']:raise ValueError('FLUTE compiled-set manifest does not match the loaded binary')
         identity['compiled_templates']=build['compiled_templates'];identity['compiled_architectures']=build['compiled_architectures']
     else:identity['compiled_templates']=None
+    identity['accumulation_mode']='kMixed' if build is None else build.get('accumulation_mode','kMixed')
+    if identity['accumulation_mode'] not in ('kMixed','kHigh'):raise ValueError('unknown compiled FLUTE accumulation profile')
     return module,utils,tune,identity
 
 
@@ -106,7 +110,10 @@ def build(ctx,*,mode,**parameters):
             dtype=getattr(torch,ctx.operator.dtype),device=ctx.inputs['a'].device,num_seeds=3,legacy=False)
         selection={'native_template_cache_hit':len(tune._TEMPLATES)==before,'native_internal_tuning_wall_ms':(time.perf_counter()-start)*1000}
     else:tid=template_id(parameters,bits);selection={'native_internal_tuning_wall_ms':0.,'hidden_tuning_allowed':False}
-    candidate=next(c for c in candidates(bits) if int(c.native_id)==tid)
+    numerical_mode=identity['accumulation_mode']
+    if mode=='explicit' and parameters.get('AccumulationMode','kMixed')!=numerical_mode:
+        raise ValueError('FLUTE numerical build profile changed after space resolution')
+    candidate=next(c for c in candidates(bits,accumulation_mode=numerical_mode) if int(c.native_id)==tid)
     preparation_trace={'backend':'FLUTE','version':VERSION,'native_template_id':tid,
         'requested_configuration':dict(parameters) if mode=='explicit' else {'selection':'native'},
         'effective_configuration':dict(candidate.parameters),'native_selection':selection,
@@ -130,7 +137,8 @@ def build(ctx,*,mode,**parameters):
         effective_configuration=dict(candidate.parameters),actual_template_id=tid,
         packing_key=preparation_identity('FLUTE0.4.2',annotations['logical_input_identity'],candidate,{'bits':bits,'tile_P':candidate.parameters['TileP']}),
         packing_wall_ms=(time.perf_counter()-pack_started)*1000,packing_reuse_scope='only equal logical input and equal TileP; never arbitrary templates',
-        accumulation='original kMixed StreamK, independent FP32 reference; non-deterministic reduction order possible',
+        accumulation=('original kHigh: FP32 MMA and FP32 StreamK reduction, final output cast' if numerical_mode=='kHigh'
+            else 'original kMixed: FP32 MMA with FP16/BF16 StreamK reduction; reduction rounding/order can violate the platform contract'),
         selection=selection,scope='native qgemm including required StreamK workspace/reduction and output copy; packing and initial workspace allocation outside timing')
     def invoke():
         result=module.qgemm(ctx.inputs['a'],packed,scales,qmap,qmap2,scratch,bits,group,tid,sms)
@@ -145,7 +153,8 @@ def register_assets(catalog):
     if os.environ.get('KT_FLUTE_BUILD_MANIFEST'):
         compiled_profile=json.loads(Path(os.environ['KT_FLUTE_BUILD_MANIFEST']).read_text())
         if compiled_profile.get('source_revision')!='9eb83a12d56949bbe7fe9c836ba97a67bd1e3761':raise ValueError('compiled FLUTE profile source mismatch')
-    available=candidates(3,None if compiled_profile is None else compiled_profile['compiled_templates'].get('3',[]))
+    numerical_mode='kMixed' if compiled_profile is None else compiled_profile.get('accumulation_mode','kMixed')
+    available=candidates(3,None if compiled_profile is None else compiled_profile['compiled_templates'].get('3',[]),accumulation_mode=numerical_mode)
     rows=tuple(dict(c.parameters) for c in available if c.compiled is not False)
     if not rows:raise ValueError('this compiled profile has no W3 templates; not a proof the upstream W3 space is empty')
     all_domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
@@ -154,7 +163,7 @@ def register_assets(catalog):
     rows=tuple({k:c[k] for k in domains} for c in rows)
     space=SpaceDefinition({k:ParameterSpec(v,kind='categorical' if isinstance(v[0],str) else 'integer') for k,v in domains.items()},
         constraints=(partial(hard_support,fixed_parameters=fixed),),candidates=rows,name='FLUTE actual structured int3 template set')
-    metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),
+    metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),'accumulation_mode':numerical_mode,
         'logical_packing_support':{'bits':3,'TileP':[32],'source':'unchanged original _pack_3bit guard; does not remove raw/prepacked CUDA templates'},
         'compiled_profile':compiled_profile,'fixed_template_attributes':fixed,
         'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
