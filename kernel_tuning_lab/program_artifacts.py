@@ -61,6 +61,10 @@ def verify(directory):
     if any(sha(directory/name)!=digest for name,digest in value['hashes'].items()):raise ValueError('submitted program/response changed; submit a new version')
     if value.get('frozen') and value['frozen']['source_sha256']!=value['hashes']['program.py']:
         raise ValueError('frozen source identity changed')
+    for entry in (*value['checks'],*value['development']):
+        reuse=entry.get('reused_evidence')
+        if reuse and any(not Path(path).is_file() or sha(path)!=digest for path,digest in reuse['files'].items()):
+            raise ValueError('reused evaluation evidence changed or is unavailable')
     return value
 
 
@@ -111,6 +115,57 @@ def evaluate(directory,spec_path,*,stage):
         entry.update(status=result['status'],exit_code=result.get('exit_code'),summary_sha256=sha(attempt/'run/run_summary.json'))
         write(directory/'artifact.json',value)
         return result
+
+
+def reuse_evaluation(directory,source,spec_path,*,stage):
+    """Attach the frozen parent's identical historical evaluation without execution.
+
+    This attests prior evidence, never the current machine or environment. Both
+    exact executed source and complete experiment specification must match.
+    """
+    if stage not in ('check','development'):raise ValueError('only check/development evidence can be reused')
+    directory=Path(directory).resolve();source=Path(source).resolve();spec_path=Path(spec_path).resolve()
+    if directory==source:raise ValueError('reuse requires a separate child artifact')
+    with OutputLease(directory/'workflow-lock'):
+        value=verify(directory);previous=verify(source)
+        if not value['review'] or value['frozen'] or value['test_exposed']:
+            raise ValueError('reuse requires a reviewed, unexposed, unfrozen child')
+        if not previous['frozen'] or not value.get('parent') or value['parent']['artifact_id']!=previous['artifact_id']:
+            raise ValueError('reuse requires the explicitly frozen parent artifact')
+        if value['hashes']['program.py']!=previous['hashes']['program.py'] or value['algorithm_ref']!=previous['algorithm_ref']:
+            raise ValueError('reuse requires identical executed program and algorithm ref')
+        spec=json.loads(spec_path.read_text());tasks=task_ids(spec)
+        if spec.get('split','train') not in ('train','validation') or set(tasks)&set(value.get('inherited_exposed_tasks',[])):
+            raise ValueError('test or previously exposed tasks cannot be reused as development')
+        def normalized(spec,artifact,*,submitted=False):
+            spec=dict(spec)
+            plugins=[_plugin_reference(p,spec_path.parent if submitted else artifact) for p in spec.get('plugins',[])]
+            own=str(artifact/'program.py')
+            if submitted:plugins.append(own)
+            spec['plugins']=['<reviewed-identical-program>' if p==own else p for p in plugins]
+            return spec
+        key='checks' if stage=='check' else 'development'
+        if value[key]:raise ValueError('reuse must not replace or duplicate an existing evaluation')
+        wanted=normalized(spec,directory,submitted=True);entry=None;attempt_spec=None
+        for candidate in reversed(previous[key]):
+            if candidate['status']!='passed':continue
+            run=Path(candidate['output']);file=run.parent/'spec.json'
+            if file.is_file() and normalized(json.loads(file.read_text()),source)==wanted:
+                entry=candidate;attempt_spec=file;break
+        if entry is None:raise ValueError('no passed parent evaluation with identical full specification')
+        run=Path(entry['output']);summary=run/'run_summary.json'
+        if sha(summary)!=entry['summary_sha256'] or json.loads(summary.read_text())['status']!='passed':
+            raise ValueError('parent evaluation summary identity/status mismatch')
+        files=[source/'artifact.json',attempt_spec,summary]
+        files.extend(file for file in (run/'measurements.sqlite',run/'trials.json') if file.is_file())
+        reused={'source_artifact_id':previous['artifact_id'],'source_program_sha256':previous['hashes']['program.py'],
+            'files':{str(file):sha(file) for file in files},'new_physical_measurements':0,
+            'scope':'historical parent evaluation only; no current hardware/environment verification',
+            'unix_s':time.time()}
+        value[key].append({**entry,'reused_evidence':reused})
+        write(directory/'artifact.json',value)
+        return {'status':'passed','stage':stage,'evidence_kind':'historical_evaluation_reuse',
+            'new_physical_measurements':0,'source_artifact_id':previous['artifact_id']}
 
 
 def feedback(directory):

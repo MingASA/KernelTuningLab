@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "scope": "targeted engineering acceptance; FP16 only, no model/algorithm ranking; raw data remains private",
+  "baseline_source_commit": "cf8160e",
+  "stages": {
+    "H800/sglang-fp16-attempt2": {
+      "source_commit": "f6b13c9cc19517aa530e20e4b1517c112ba56028",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 8,
+      "validation_evaluations": 8,
+      "record_statuses": {
+        "success": 16
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "dfdce4d2eb45ca5b496a996b675f4fc27d3bea5a85df234987a6dc372bff9ccf",
+      "guard_sha256": "454c46e4e4cb252a93f4b22d4849a7014b064858c1c1642c3fac836fbe310627"
+    },
+    "H800/flex26-fp16": {
+      "source_commit": "d9eef4ca0a7252b2da4fab37824a891eb699d970",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 8,
+      "validation_evaluations": 8,
+      "record_statuses": {
+        "success": 16
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "93af257d2160927cf27b350e8bc5ba7de8235e4b98d64af0786eeb73c74f4d9e",
+      "guard_sha256": "6090807945365057235edb0829282296f0addb325f68e1f232a6dca8b8b83193"
+    },
+    "H800/moe085-fp16-clean2": {
+      "source_commit": "4ff5e2c9208d3e07af4013dc4a6317f5a376e209",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 9,
+      "validation_evaluations": 9,
+      "record_statuses": {
+        "success": 18
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "60eddb9398507fc494ada115ea043d362f22a94bfe9e21f9562960d158355e72",
+      "guard_sha256": "ebecb7af641fe0d566c1a48b677a258b3c27b4f5abc0903f27836e977236fc39"
+    },
+    "H800/flute24-structural-fp16": {
+      "source_commit": "d7654535f55c310463578bf9f22d5fb416c5117d",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 6,
+      "validation_evaluations": 6,
+      "record_statuses": {
+        "success": 12
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "ca5f14e6e10702348c1f8bc13b2e76ad0ad4e1f075fc611e2ac29b123360544b",
+      "guard_sha256": "8ecc64c0170d3589e0b450cbdf7f9f25e9e0f9f1de146a131fd35bfdad311410"
+    },
+    "4090/gemlite-w4-w2-fp16-raw3": {
+      "source_commit": "d7654535f55c310463578bf9f22d5fb416c5117d",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 8,
+      "validation_evaluations": 8,
+      "record_statuses": {
+        "success": 16
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "d788dd62c163861d0e2faca03d907509cf996b49eb7699b1a65c42cc18b81747",
+      "guard_sha256": "0be302bcc811ec75ff305d9a0bd4a92c9b6c93cd6064cb03c8151d636f17ae27"
+    },
+    "4090/native-optimizers-W4-B16-safe-acceptance2": {
+      "source_commit": "cf8160e12100888ca0bea403228a20c8d55600e4",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 32,
+      "validation_evaluations": 2,
+      "record_statuses": {
+        "success": 23,
+        "compile_error": 11
+      },
+      "physical_gpu_validated": false,
+      "summary_sha256": "f60ce2a8b4d5af8b9fcbb728225f03abf71adc337b920c59fb4a535415788107",
+      "guard_sha256": "2e38a0581a3b8576899df82b3989badbea8ded3adf93d60dced433dac873343c"
+    },
+    "4090/gemlite-default-first-4090": {
+      "source_commit": "cf8160e12100888ca0bea403228a20c8d55600e4",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 2,
+      "validation_evaluations": 2,
+      "record_statuses": {
+        "success": 4
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "2840f2b10b15ad4402ec8346fd3a398e364a697b044be664eb18678474fc3c4f",
+      "guard_sha256": "495e635a27b35a0fa9e4c99bc754f08091cced3155959a9e6bdb317aa50b4a2a"
+    },
+    "4090/flute24-first-4090": {
+      "source_commit": "cf8160e12100888ca0bea403228a20c8d55600e4",
+      "guard_status": "passed",
+      "guard_eligible": true,
+      "observations": 3,
+      "validation_evaluations": 3,
+      "record_statuses": {
+        "success": 6
+      },
+      "physical_gpu_validated": true,
+      "summary_sha256": "de3930746fd77855d8ee0f3375070b4adbfa3cb6429e4e6a6a425c128bdccbcf",
+      "guard_sha256": "e4e9f7e894dd008d3643795afbfd74e7a8cec1403a2f95111fa91ac4404e981f"
+    }
+  },
+  "CPU": {
+    "baseline": "512 passed,12 skipped",
+    "after_reuse_change": "515 passed,12 skipped",
+    "native_optional": "17 passed,6 upstream warnings"
+  },
+  "B": {
+    "model": "Qwen/Qwen3-1.7B",
+    "variant": "explicit complete two-config grammar",
+    "decisions": 2,
+    "reused_first_real_response": true,
+    "additional_model_calls_after_reused_response": 1,
+    "historical_cache_observations": 2,
+    "new_kernel_measurements": 0,
+    "guard": "passed/eligible"
+  },
+  "C": {
+    "model": "Qwen/Qwen3.8-27B",
+    "C1": "original retained; one disclosed SDK status compatibility edit; four development observations passed and frozen",
+    "C2": "model generated the same executed program without human edit; historical parent checks/development reused; frozen",
+    "new_C2_kernel_measurements": 0,
+    "algorithm_improvement_claim": false
+  },
+  "L3": {
+    "backend": "vLLM0.8.5 MoE",
+    "K": [
+      1,
+      2
+    ],
+    "input_seed": 29,
+    "new_dispatch_observations": 4,
+    "guard": "passed/eligible",
+    "source_matrix_remeasured": false
+  },
+  "resident_diagnostics": {
+    "records": 6,
+    "matching_full_input_hashes": true,
+    "per_record_GPU_verified": true,
+    "original_partial_guard_status": "command_failed, zero foreign processes",
+    "batch_eligibility_rewritten": false
+  },
+  "API_actual_calls": 0,
+  "old_study": "paused, never resumed",
+  "archives": [
+    {
+      "machine": "H800",
+      "status": "passed",
+      "archive_sha256": "ea4ecf0cc426e35a2bf179ae26b2ac5121aaf849623f8436b9d0976b90de2118",
+      "files": 886,
+      "SQLite_quick_checks": 29,
+      "new_GPU_work": false
+    },
+    {
+      "machine": "4090",
+      "status": "passed",
+      "archive_sha256": "1b9fef9cf0d7930e3a14ff66631d6bcb89018bc651a4dd1a14baedd8e5fcc319",
+      "files": 605,
+      "SQLite_quick_checks": 18,
+      "new_GPU_work": false
+    }
+  ]
+}

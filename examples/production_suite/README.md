@@ -37,6 +37,8 @@ ktlab ai-program test --artifact artifacts/strategy-v1 --spec <明确split=test�
 
 来源JSON至少含route=C/provider/model/evidence_level；人工编辑需`--edited-program`与edit_description，原模型版本不改。迭代用新artifact，可通过`--parent`关联冻结父版本。测试曝光在执行前落盘；修改后不能重新宣称同一测试未见。生成程序可调用SpaceView、维护状态并用已揭示反馈，不只限于评分表达式。受审代码不继承任意凭据环境，但仍是可信Python，不是恶意代码沙箱；审查时拒绝凭据/目标表读取。
 
+同一执行代码的迭代无需重测。子 artifact 经 submit/review 后，可分别使用 `ktlab ai-program reuse --artifact <child> --source <frozen-parent> --spec <同一规格.json> --stage check` 和 `--stage development` 关联父版本历史证据，再 freeze。程序 SHA、算法和完整规格必须一致，来源文件校验失败即拒绝；输出明确为历史证据复用、新测量为 0，不证明当前环境已通过。
+
 ## 原生规则与有限表
 
 原生default与显式配置是独立Kernel资产。在同实现/语义/协议的实测PerformanceMatrix上使用已有L3，再由`production.dispatch.export_table`导出精确绑定表。用插件`kernel_tuning_lab.production.dispatch`及算法`production/config_table@1.0.0`，options为table_artifact及table_sha256，交回原Runner执行。未知shape拒绝；不能把配置K直接称作二进制/Graph/packing预算。vLLM原生配置JSON有独立读写接口，保留nearest-M tie-break；不得覆盖上游安装的共享配置。
