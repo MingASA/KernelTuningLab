@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "version": "1.1.0",
+  "branch": "feature/web-v2-workbench",
+  "PR": "https://github.com/MingASA/KernelTuningLab/pull/3",
+  "latest_functional_commit": "df56ffd1c580e9a87b26c78e17b8977847a982b9",
+  "CPU_web_full_suite": {
+    "passed": 545,
+    "skipped": 22,
+    "scope": "prior full round; subsequent affected paths and CI checked separately"
+  },
+  "console_integration_cases": 18,
+  "remote_browser": {
+    "status": "passed",
+    "checks": 15,
+    "transport": "authenticated SSH local forwarding",
+    "data": "real remote CPU",
+    "source_commit": "395a622e5ce36903a5f51ff684b03ec030dbacf5"
+  },
+  "production_GPU": {
+    "status": "passed",
+    "source_commit": "19470c9d6df804bb3b0e170b0aeac0d24caf60ee",
+    "hardware": "H800",
+    "backend": "vLLM0.8.5 compatible MoE",
+    "dtype": "float16",
+    "explicit_space_points": 8,
+    "shape": {
+      "M": 17,
+      "H": 128,
+      "I": 256,
+      "E": 4,
+      "TOP_K": 2
+    },
+    "protocol": {
+      "mode": "cuda_graph",
+      "warmup": 2,
+      "repetitions": 3,
+      "batch": 16
+    },
+    "search_physical_observations": 4,
+    "algorithms": [
+      "random",
+      "smac_rf"
+    ],
+    "independent_acceptance": 1
+  },
+  "GPU_cancel_resume": {
+    "status": "passed",
+    "source_commit": "b4fd5f382ab950a1597da34e4dae3fb56ad21883",
+    "checks": 6,
+    "cache_hits_on_resume": 1,
+    "same_frozen_plan": true,
+    "cumulative_native_records": 4,
+    "fixture": "existing Random with bounded real-proposal pacing; no new research algorithm"
+  },
+  "polling_payload": {
+    "jobs": 8,
+    "previous_poll_bytes": 339683,
+    "new_poll_bytes": 13203,
+    "reduction_percent": 96.11314078125783,
+    "measurements_executed": 0
+  },
+  "workspace_restore": {
+    "status": "passed",
+    "files": 4181,
+    "objects": 1158,
+    "logical_bytes": 89308544,
+    "archive_bytes": 10747629,
+    "archive_sha256": "59bc3e418a7919f30469199b6e4647275a7e457a7b1670ae4701f795e32e4d50",
+    "SQLite_checked": 6,
+    "token_rotated": true,
+    "verified_production_record_ids": 5,
+    "GPU_experiments_executed": 0,
+    "scope": "new directory on the same existing host"
+  },
+  "packaging": {
+    "package_files_matched": 193,
+    "wheel_sha256": "35bff4eb2e4c6d06813857b7bc453c6e4416bf1bb6ef6f49c0b8bf81fb289b0c"
+  },
+  "model_API_calls": 0,
+  "user_manual_acceptance": "pending",
+  "preserved_failures": [
+    "resource busy refusals",
+    "unsupported nvidia-smi minor query",
+    "missing system alternatives link directory",
+    "archive rejected before Worker lease release",
+    "local development environment subprocess timeouts",
+    "browser harness attempts"
+  ],
+  "private_receipt_digests": [
+    {
+      "name": "BROWSER_REMOTE_PROOF.json",
+      "sha256": "7688c5286492e776b16b0f3c9cc16403060507bfaefbd17ff2a042461f913c1f"
+    },
+    {
+      "name": "GPU_PRODUCTION_BROWSER_PROOF.json",
+      "sha256": "ba16ac8054ffe881e28ab9add2b89916a542355e19f002c00605ac374aa87401"
+    },
+    {
+      "name": "GPU_CANCEL_PROOF.json",
+      "sha256": "3c19cbe68c70ff695a37ed10da9932185552cb25177a0fb0342a508dc458a540"
+    },
+    {
+      "name": "WORKSPACE_RESTORE_PROOF.json",
+      "sha256": "fd1ef199d4430d8d6408ed25d6c45343a4f66af60c0fd9713422d84306ae62a1"
+    },
+    {
+      "name": "COMPILER_CANARY_PROOF.json",
+      "sha256": "e0f7f9fe19ff09efcbdd4866ea1c562ae7a75f3721b416e73df00f56bd2000e5"
+    },
+    {
+      "name": "WHEEL_STAGE8_PROOF.json",
+      "sha256": "727b192842c03cf6dfa4aaa61d996b2e629cbf43bf46349b3febda80e912723e"
+    },
+    {
+      "name": "QUEUE_PAYLOAD_PROOF.json",
+      "sha256": "101af6d904f255a698e47188de8ae337ec454c9a89d35321becb0d1f776e9ac8"
+    },
+    {
+      "name": "FINAL_BROWSER_READONLY_PROOF.json",
+      "sha256": "4448a970327e518dc3498770344614f686de191ba3daf1512555939643f8b931"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "docs/assets/web-v2-search.png",
+      "sha256": "0e9df5afa7ce5218767a2b5f3259472fbb42eb87f3ec23ba9d2d69c5035e1953",
+      "evidence": "real remote CPU browser session through SSH; no image editing"
+    },
+    {
+      "file": "docs/assets/web-v2-create.png",
+      "sha256": "76270aa8ba2e5003bc2067db059c28f3c69732672ffa8bcccc705f279d084c8e",
+      "evidence": "real remote CPU browser session through SSH; no image editing"
+    },
+    {
+      "file": "docs/assets/web-v2-mobile.png",
+      "sha256": "759d82f93fb0ac93dbc6e5ae7d1bb219432b2c3cc538ff29c162aa90acdd63a8",
+      "evidence": "real remote CPU browser session through SSH; no image editing"
+    }
+  ],
+  "CI_functional_head": {
+    "commit": "df56ffd1c580e9a87b26c78e17b8977847a982b9",
+    "checks": [
+      "cpu (3.10)",
+      "cpu (3.12)",
+      "frontend",
+      "native-optimizers",
+      "web-integration"
+    ],
+    "status": "passed",
+    "runs": [
+      "https://github.com/MingASA/KernelTuningLab/actions/runs/42212736345",
+      "https://github.com/MingASA/KernelTuningLab/actions/runs/42212743809"
+    ]
+  },
+  "final_readonly_browser": {
+    "status": "passed",
+    "checks": 5,
+    "experiments_executed": 0
+  }
+}

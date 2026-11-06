@@ -2,11 +2,15 @@
 
 Web v2（包版本 1.1.0）将创建、预检、提交、监控和选择性下载放到浏览器中。源码、插件、队列和完整测量记录默认在远端。浏览器通过 SSH 隧道连接远端 loopback 服务；本机不需要挂载远端文件系统或 E 盘。
 
+![实际远端 CPU 实验的工作台](assets/web-v2-search.png)
+
+[上传与创建页面](assets/web-v2-create.png) · [窄屏页面](assets/web-v2-mobile.png)。截图来自实际 CPU 验收，完整步骤和证据范围见 [Web v2 交付记录](WEB_V2_DELIVERY.md)。
+
 CLI / SDK 仍可独立使用。`ktlab web --root …` 保留为零额外依赖的只读查看器；新工作台入口为 `ktlab serve`。Web v2 的交付分支是 `feature/web-v2-workbench`，既有稳定标签 v1.0.1 保留。
 
 ## 1. 启动和连接
 
-在服务器的私有环境安装 Web extra，不需要 GPU、Node 或 CDN：
+在 Linux 服务器（或 WSL2）的私有环境安装 Web extra，不需要 GPU、Node 或 CDN：
 
 ```bash
 python3 -m venv "$HOME/.venvs/ktlab-web"
@@ -37,6 +41,8 @@ ssh -N -o ExitOnForwardFailure=yes \
 5. 预检成功后点击 **提交实验**。HTTP 请求立即返回，独立 Worker 执行原有 `run / check / research`。
 
 算法揭示次数包含失败和缓存命中；物理测量另计，独立验收另计。静态空间和 CPU 预检通过后，GPU 执行仍需资源准入、原生准备和数值验证。
+
+预算是一次原生执行尝试的上限。显式取消后恢复可能再做一轮独立验收；累计记录与成本保留在各次尝试中。
 
 草稿可以保存，历史配置可以复制后重新预检。重复提交相同计划使用幂等键，不产生第二次执行。修改源码、项目、环境或规格后必须建立新计划身份。
 
@@ -101,6 +107,8 @@ API 与 Worker 是不同进程。浏览器关闭或 API 重启不停止实验。
 
 恢复调用原 CLI / Runner 的缓存和恢复逻辑。已完成观测不会再做物理测量，但原生恢复可能重新向算法揭示缓存记录；页面保留缓存标签和各次尝试，不能把缓存当成新测量。
 
+观测与墙钟曲线使用当前原生尝试的真实时钟；不拼接不同尝试来伪造一条连续轨迹。以前尝试的轨迹、阶段和成本可在文件中查看或下载。
+
 事件通过 SSE 推送，持久单调序号支持 `Last-Event-ID` 和缺失事件补读。页面显示阶段、已揭示观测、真实/缓存/失败、最佳已验证延迟、日志和最近错误。搜索曲线使用真实 JSONL 轨迹；旧数据没有逐步墙钟时不补造时间。
 
 曲线按硬件、实现、Shape、dtype、seed、空间和协议分组。可以缩放、切换图例、悬停、切换观测/墙钟轴并下载 SVG。配置表支持筛选、分页和展开详情；成本保留原生阶段字段，缺失字段不填零。L3 使用已保存配置集合、分派与 K–Loss。
@@ -139,6 +147,8 @@ ktlab archive restore --vault "$KTL_NEW_VAULT" --source workspace \
   --output "$KTL_RESTORED_WORKSPACE"
 ktlab serve --workspace "$KTL_RESTORED_WORKSPACE"
 ```
+
+`worker --stop` 等到租约释放才返回 `stopped`；25 秒仍未释放时返回非零 `stop_pending`，保留工作区并检查该任务。
 
 归档要求无活动任务、API 与 Worker 租约均已释放。恢复沿用现有对象 SHA / SQLite 校验，工作区为仅属主权限；移动后轮换令牌和会话。旧结果可查看，旧绝对路径计划不能直接恢复执行；重新登记环境、复制规格并预检。venv 和编译缓存不能当作跨架构安装包。
 

@@ -4,7 +4,7 @@
 
 当前交付：Web v2 / 1.1.0，分支 `feature/web-v2-workbench`；既有稳定 main / v1.0.1 保留。历史实验固定自己的源码 commit，后续科研在独立分支进行。
 
-快速阅读：立即运行看第3章；GPU调参看第4–5章；加算法看第6章；结果、Web和L3看第7章；AI看第8章；新服务器与E盘恢复看第10章。最后的[个人练习](PERSONAL_HANDOFF.md)供第一次独立操作。
+快速阅读：浏览器操作先看7.3节；CLI立即运行看第3章；GPU调参看第4–5章；加算法看第6章；结果和L3看第7章；AI看第8章；新服务器与E盘恢复看第10章。最后的[个人练习](PERSONAL_HANDOFF.md)供第一次独立操作。
 
 动机是让实验者只需要写算子、搜索算法、配置空间和预算等关键内容，由平台完成编译、正确性、测量、对比、作图与保存；多人合作时共用实验契约和数据格式。
 
@@ -96,10 +96,10 @@ MoE示例的完整静态可行空间约3200点，构建由47.926秒降至0.501�
 
 ### 3.1 环境与版本
 
-核心Python≥3.10，无第三方运行依赖。正式使用从main获取；复现固定v1.0.1或实验commit。
+核心Python≥3.10，无第三方运行依赖。本页 Web v2 使用交付分支；已发布的 main/v1.0.1 可用于原 CLI 与只读兼容。复现实验固定具体 commit。
 
 ```bash
-git clone --branch main https://github.com/MingASA/KernelTuningLab.git
+git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
 python3 scripts/bootstrap.py --profile core --env .venv
 source .venv/activate-ktlab.sh

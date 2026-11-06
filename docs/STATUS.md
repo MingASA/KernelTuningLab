@@ -2,6 +2,8 @@
 
 既有稳定 main / v1.0.1 保留。本轮 Web v2 / 1.1.0 交付分支为 feature/web-v2-workbench，合并与 CI 以 GitHub PR 为准。历史研究的冻结源码、数据和标签保留。
 
+Web v2 已完成真实 SSH 浏览器 CPU 15 项、H800 MoE Random/SMAC 小预算及取消/缓存恢复、工作区 4181 文件/6 SQLite 的新目录恢复。范围、失败修复、截图与结构化证据见 [交付记录](WEB_V2_DELIVERY.md) 和 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3)。人工上手待用户执行。
+
 | 能力 | 当前状态 | 证据/入口 |
 |---|---|---|
 | 核心CLI/SDK/CPU/SQLite/报告 | 可独立安装运行，无GPU依赖 | QUICKSTART.md、CPU CI |

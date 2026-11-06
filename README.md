@@ -6,7 +6,7 @@
 
 面向真实硬件的算子配置寻优平台。用 **CLI / SDK、实验 JSON 和统一 Runner** 连接生产算子、搜索算法、AI 决策与可恢复的测量记录。
 
-本页对应 **Web v2 / 1.1.0**，交付分支为 `feature/web-v2-workbench`。既有稳定 `main` / **v1.0.1** 保留；合并状态见 PR 与 [STATUS](docs/STATUS.md)。研究与复现固定源码 commit。
+本页对应 **Web v2 / 1.1.0**，交付分支为 `feature/web-v2-workbench`。既有稳定 `main` / **v1.0.1** 保留；合并状态见 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3) 与 [STATUS](docs/STATUS.md)。研究与复现固定源码 commit。
 
 ## 主要功能
 
@@ -51,6 +51,8 @@ ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
 ```
 
 点击 **新建实验 → CPU 模板 → 预检并继续 → 提交实验**。生产 GPU 环境在服务器 `server.json` 中登记各自解释器、组件与准入锁。服务不需要现场安装 Node；前端资源随 wheel 发布。[完整工作台流程](docs/WEB.md) · [环境与部署](docs/DEPLOYMENT.md)。
+
+![通过 SSH 隧道运行的远端 CPU 实验：实际搜索轨迹与参数分布](docs/assets/web-v2-search.png)
 
 ## Quickstart：CPU 五分钟上手
 

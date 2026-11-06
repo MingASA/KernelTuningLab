@@ -21,6 +21,8 @@ Web v2 / 1.1.0 的当前交付分支为 `feature/web-v2-workbench`；既有稳�
 
 ## 1. CPU 五分钟上手
 
+这是独立 CLI 起点；已按第0节安装 Web 环境时，直接使用该环境运行下方实验，不重复 clone 或建环境。
+
 ```bash
 git clone https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
@@ -101,13 +103,12 @@ git bundle create ktlab-source.bundle --all
 scp ktlab-source.bundle ktl-gpu:~/ktlab-source.bundle
 ssh ktl-gpu
 # 远端：新私有目录
-mkdir -p ~/work/ktlab-v1
-git clone ~/ktlab-source.bundle ~/work/ktlab-v1/source
-cd ~/work/ktlab-v1/source
-git checkout v1.0.1
+mkdir -p ~/work/ktlab
+git clone --branch feature/web-v2-workbench ~/ktlab-source.bundle ~/work/ktlab/source
+cd ~/work/ktlab/source
 ```
 
-能正常访问GitHub时直接clone main即可。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；CLI 可按需执行；Web 模式由独立 API 与 Worker 管理远端任务。
+能正常访问GitHub时直接 clone 本文交付分支即可；main/v1.0.1 保留已发布 CLI 与只读兼容。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；CLI 可按需执行；Web 模式由独立 API 与 Worker 管理远端任务。
 
 选择MoE0.8.5兼容环境，`KTL_COMPONENTS`指向恢复的官方组件目录：
 
@@ -152,7 +153,7 @@ SMAC需要 `kernel_tuning_lab.optimizers` 插件与可选依赖。修改输入�
 # 本机WSL
 export KTL_VAULT=/mnt/e/GPT/KernelTuningLab
 mkdir -p "$KTL_VAULT/records/user/moe-v1"
-rsync -a --partial --append-verify ktl-gpu:work/ktlab-v1/source/artifacts/moe-v1/ \
+rsync -a --partial --append-verify ktl-gpu:work/ktlab/source/artifacts/moe-v1/ \
   "$KTL_VAULT/records/user/moe-v1/"
 ktlab web --root "$KTL_VAULT/records/user/moe-v1"
 ```
