@@ -1,12 +1,12 @@
 # 从安装到亲自运行实验
 
-Web v2 / 1.1.0 的当前交付分支为 `feature/web-v2-workbench`；既有稳定 `main` / `v1.0.1` 保留。默认将平台、源码和完整记录放在服务器，本机通过 SSH 隧道使用浏览器；CLI / SDK 仍可单独运行。
+稳定入口为 `main`，包版本为 Web v2 / 1.1.0；历史 `v1.0.1` 标签与开发分支保留。默认将平台、源码和完整记录放在服务器，本机通过 SSH 隧道使用浏览器；CLI / SDK 仍可单独运行。
 
 ## 0. 先从浏览器跑通远端 CPU
 
 ```bash
-# 服务器：获取本轮交付源码
- git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
+# 服务器：获取稳定 main
+ git clone --branch main https://github.com/MingASA/KernelTuningLab.git
  cd KernelTuningLab
  python3 -m venv "$HOME/.venvs/ktlab-web"
  "$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
@@ -104,11 +104,11 @@ scp ktlab-source.bundle ktl-gpu:~/ktlab-source.bundle
 ssh ktl-gpu
 # 远端：新私有目录
 mkdir -p ~/work/ktlab
-git clone --branch feature/web-v2-workbench ~/ktlab-source.bundle ~/work/ktlab/source
+git clone --branch main ~/ktlab-source.bundle ~/work/ktlab/source
 cd ~/work/ktlab/source
 ```
 
-能正常访问GitHub时直接 clone 本文交付分支即可；main/v1.0.1 保留已发布 CLI 与只读兼容。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；CLI 可按需执行；Web 模式由独立 API 与 Worker 管理远端任务。
+能正常访问GitHub时直接 clone main。离线 bundle 须包含最新 main；历史 v1.0.1 标签保留。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；CLI 可按需执行；Web 模式由独立 API 与 Worker 管理远端任务。
 
 选择MoE0.8.5兼容环境，`KTL_COMPONENTS`指向恢复的官方组件目录：
 

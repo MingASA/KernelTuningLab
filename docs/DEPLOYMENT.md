@@ -5,14 +5,14 @@
 ## 一、准备稳定源码和Python
 
 ```bash
-git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
+git clone --branch main https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
 python3 scripts/bootstrap.py --profile core --env .venv
 source .venv/activate-ktlab.sh
 ktlab doctor
 ```
 
-本页 Web v2 对应 1.1.0 交付分支；既有 main / v1.0.1 仍可用于原 CLI 与只读查看器。核心需要Python≥3.10。GPU兼容profile按记录的Python minor选择；缺少解释器时使用集群已有模块或自己的可信Python发行包，不升级系统Python。离线时使用校验过的source bundle和core wheel：
+本页对应稳定 main 的 Web v2 / 1.1.0；CLI 与只读查看器保留兼容，历史 v1.0.1 标签保留。核心需要Python≥3.10。GPU兼容profile按记录的Python minor选择；缺少解释器时使用集群已有模块或自己的可信Python发行包，不升级系统Python。离线时使用校验过的source bundle和core wheel：
 
 ```bash
 python3 scripts/bootstrap.py --profile core --env .venv \

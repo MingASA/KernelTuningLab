@@ -6,7 +6,7 @@
 
 面向真实硬件的算子配置寻优平台。用 **CLI / SDK、实验 JSON 和统一 Runner** 连接生产算子、搜索算法、AI 决策与可恢复的测量记录。
 
-本页对应 **Web v2 / 1.1.0**，交付分支为 `feature/web-v2-workbench`。既有稳定 `main` / **v1.0.1** 保留；合并状态见 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3) 与 [STATUS](docs/STATUS.md)。研究与复现固定源码 commit。
+稳定使用入口为 **main · Web v2 / 1.1.0**，交付记录见 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3) 与 [STATUS](docs/STATUS.md)。历史 **v1.0.1** 标签与开发分支保留；研究与复现固定源码 commit。
 
 ## 主要功能
 
@@ -36,9 +36,11 @@ flowchart LR
 
 ## Quickstart：远端 Web 工作台
 
-在服务器的当前交付 checkout 中：
+在服务器获取稳定 main：
 
 ```bash
+git clone --branch main https://github.com/MingASA/KernelTuningLab.git
+cd KernelTuningLab
 python3 -m venv "$HOME/.venvs/ktlab-web"
 "$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
 "$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"

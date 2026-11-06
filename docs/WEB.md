@@ -6,7 +6,7 @@ Web v2（包版本 1.1.0）将创建、预检、提交、监控和选择性下�
 
 [上传与创建页面](assets/web-v2-create.png) · [窄屏页面](assets/web-v2-mobile.png)。截图来自实际 CPU 验收，完整步骤和证据范围见 [Web v2 交付记录](WEB_V2_DELIVERY.md)。
 
-CLI / SDK 仍可独立使用。`ktlab web --root …` 保留为零额外依赖的只读查看器；新工作台入口为 `ktlab serve`。Web v2 的交付分支是 `feature/web-v2-workbench`，既有稳定标签 v1.0.1 保留。
+CLI / SDK 仍可独立使用。`ktlab web --root …` 保留为零额外依赖的只读查看器；新工作台入口为 `ktlab serve`。Web v2 使用稳定 `main`，历史标签 v1.0.1 与开发分支保留。
 
 ## 1. 启动和连接
 

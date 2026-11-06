@@ -2,10 +2,10 @@
 
 ## 当前入口
 
-当前用户任务为 Web v2 远端实验工作台，分支 feature/web-v2-workbench；先读 artifacts/WEB_V2_CURRENT.json 及其 root 的 state.json、private/WORKPLAN.md、SESSION_NOTES.md。不自动恢复旧研究队列。
+当前用户任务为 Web v2 远端实验工作台，用户已明确授权将 feature/web-v2-workbench 合并并推送至 main；先读 artifacts/WEB_V2_CURRENT.json 及其 root 的 state.json、private/WORKPLAN.md、SESSION_NOTES.md。不自动恢复旧研究队列。
 本轮明确允许经可信版本确认的上传 Python 在独立受限 Worker 中运行；下文 v1 只读 Web 限制只适用于保留兼容的 ktlab web。新入口 ktlab serve 始终 loopback，SSH 隧道、会话、来源与请求保护；队列元数据与原 Runner 测量库分开。不得提供任意 Shell 接口。
 
-main为稳定使用入口，v1.0.1基础设施交付后，科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
+main为稳定使用入口，当前包版本为Web v2 / 1.1.0，历史v1.0.1标签保留；科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
 
 本机有私有状态时，优先读取artifacts/FINAL_RELEASE_CURRENT.json及其root的state.json、private/SESSION_NOTES.md、private/WORKPLAN.md；不存在时再读取PRODUCTION_STABILITY_CURRENT.json和PRODUCTION_SUITE_CURRENT.json。状态、原始receipt和记录优先于聊天推测。
 

@@ -1,12 +1,12 @@
 # 个人上手：远端实验工作台
 
-这份练习由你亲自执行。自动浏览器验收另有证据，不能代替人工验收。Web v2 对应 `feature/web-v2-workbench` / 1.1.0；既有稳定 main / v1.0.1 保留，获取源码时核对实际 PR / commit。
+这份练习由你亲自执行。自动浏览器验收另有证据，不能代替人工验收。Web v2 使用稳定 `main` / 1.1.0；历史 v1.0.1 标签与开发分支保留，获取源码时核对实际 commit。
 
 ## 1. 服务器启动，本机连接
 
 ```bash
 # 服务器；已有专用 Web 环境时直接使用它
- git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
+ git clone --branch main https://github.com/MingASA/KernelTuningLab.git
  cd KernelTuningLab
  python3 -m venv "$HOME/.venvs/ktlab-web"
  "$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
