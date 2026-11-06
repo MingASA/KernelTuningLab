@@ -18,3 +18,7 @@ Production source extracts and their original licenses:
 Optional Torch, Triton, CUDA, CUTLASS, optimizer and model dependencies are
 separate distributions governed by their own licenses. Model weights are
 not part of the core package or its public release artifacts.
+Web workbench frontend: React / React DOM / scheduler (MIT), Apache ECharts
+(Apache-2.0), zrender (BSD-3-Clause), and tslib (0BSD). Exact bundled versions
+and complete third-party license texts are distributed in
+kernel_tuning_lab/console_assets/THIRD_PARTY_LICENSES.txt.

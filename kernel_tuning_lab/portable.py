@@ -114,7 +114,10 @@ def restore_vault(root, source, output, *, prefix='', check_sqlite=True):
     if not rows:
         raise ValueError('no archived files match this source/prefix')
     output = Path(output).resolve()
-    output.mkdir(parents=True, exist_ok=True)
+    private_workspace = index.get('private_workspace') is True
+    output.mkdir(mode=0o700 if private_workspace else 0o777, parents=True, exist_ok=True)
+    if private_workspace and os.name == 'posix' and output.stat().st_mode & 0o077:
+        raise ValueError('private workspace restore requires an owner-only output directory (mode0700)')
     wanted = defaultdict(list)
     for row in rows:
         _destination(output, row['path'])

@@ -1,5 +1,6 @@
 .venv/
 .venv-*/
+frontend/node_modules/
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -29,6 +30,7 @@ examples/results/*.json
 !examples/results/README.md
 *.png
 !docs/assets/web-search.png
+!docs/assets/web-v2-*.png
 *.whl
 *.pptx
 *.db
