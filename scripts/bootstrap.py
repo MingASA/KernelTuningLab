@@ -32,7 +32,13 @@ def plan(args):
         source_options = ['--extra-index-url', profile['extra_index_url']]
     constraints = ['-c', str(Path(args.constraints).resolve())] if args.constraints else []
     commands = [[args.python, '-m', 'venv', str(target)], pip+source_options+['--no-deps', core]]
-    if profile['packages']:commands.append(pip+source_options+constraints+profile['packages'])
+    packages = list(profile['packages'])
+    if args.with_optimizers:
+        extra = profiles()['optimizers']['packages']
+        numpy = [p for p in packages if p.startswith('numpy==')]
+        if numpy and numpy[0] not in extra:raise ValueError('selected frozen profile and optimizer NumPy pins differ; use separate compatible environments')
+        packages = list(dict.fromkeys(packages+extra))
+    if packages:commands.append(pip+source_options+constraints+packages)
     return target, python, commands
 
 
@@ -46,6 +52,7 @@ def main(argv=None):
     parser.add_argument('--wheelhouse', help='private matching wheel cache; disables network package resolution')
     parser.add_argument('--wheelhouse-manifest', help='JSON files[{file,sha256}] for the selected private wheelhouse')
     parser.add_argument('--constraints', help='matching full environment constraints, excluding the core package')
+    parser.add_argument('--with-optimizers', action='store_true', help='add pinned SMAC/KT to a compatible profile')
     parser.add_argument('--components', help='restored FLUTE package root or fixed vLLM0.8.5 component directory')
     parser.add_argument('--flute-manifest', help='binary-bound High build/resource manifest')
     parser.add_argument('--raw-gemlite', action='store_true', help='create the audited Torch2.6 A16 overlay in the new environment')

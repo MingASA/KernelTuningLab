@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "kernel-tuning-lab"
 version = "1.0.0"
 description = "Reproducible hardware-aware kernel tuning and variant selection research"
+authors = [{name = "MingASA", email = "mingasa7@gmail.com"}]
+license = {text = "Apache-2.0"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
@@ -23,7 +25,7 @@ optimizers = ["smac==2.4.1", "ConfigSpace==1.2.2", "kernel_tuner==1.5.0",
 ktlab = "kernel_tuning_lab.cli:main"
 
 [tool.setuptools]
-license-files = ["third_party/triton-tutorial-LICENSE", "kernel_tuning_lab/production/upstream/LICENSE"]
+license-files = ["LICENSE", "NOTICE", "third_party/triton-tutorial-LICENSE", "kernel_tuning_lab/production/upstream/LICENSE", "kernel_tuning_lab/production/upstream/suite/*/LICENSE"]
 
 [tool.setuptools.packages.find]
 include = ["kernel_tuning_lab*"]
