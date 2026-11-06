@@ -116,7 +116,7 @@ ktlab archive restore --vault "$KTL_VAULT" --source H800 \
   --prefix "$EXPERIMENT_PREFIX" --output restored-data
 ```
 
-前缀从源catalog选取。恢复保留源目录结构，核对成员SHA并检查SQLite；拒绝路径穿越和覆盖不同内容。它只恢复数据，不重新测量、编译或运行旧队列。数据已打开使用时，建议恢复到另一个新目录，保留两份状态。
+前缀从源catalog或资产库的`catalogs/EXPERIMENT_INDEX.csv`选取；后者列出原SQLite、SHA与恢复前缀。恢复保留源目录结构，核对成员SHA并检查SQLite；拒绝路径穿越和覆盖不同内容。它只恢复数据，不重新测量、编译或运行旧队列。数据已打开使用时，建议恢复到另一个新目录，保留两份状态。
 
 源码用Git bundle恢复；原生runtime按前述profile恢复。PTX/CUBIN和扩展保留为原实验的身份与证据，不跨架构自动复用Triton编译缓存。
 
