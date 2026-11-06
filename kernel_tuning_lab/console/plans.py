@@ -90,6 +90,9 @@ def freeze_plan(store, job):
             plugins.append(str(plugin))
     raw['plugins'] = list(dict.fromkeys(plugins))
     if env['device'] == 'cuda':
+        allocation = read_json(store.root / 'worker/resource-context.json', {})
+        if any(key in allocation for key in ('CUDA_VISIBLE_DEVICES', 'SLURM_JOB_ID', 'PBS_JOBID', 'LSB_JOBID')):
+            raise ValueError('server inherited a GPU allocation; the idle-GPU guard cannot override it')
         gpu = job.get('gpu')
         if not isinstance(gpu, str) or not gpu.startswith('GPU-'):
             raise ValueError('select a physical GPU UUID before prechecking a GPU experiment')
@@ -104,6 +107,7 @@ def freeze_plan(store, job):
     write_json(source / 'environment.json', env)
     plan = {'revision': job['revision'], 'action': job.get('action', 'run'), 'environment': env,
             'workspace_root': str(store.root),
+            'resource_context': read_json(store.root / 'worker/resource-context.json', {}),
             'device': env['device'], 'gpu': job.get('gpu'), 'planned': planned,
             'platform_sha256': platform_sha, 'request_sha256': digest(job['spec']),
             'spec_sha256': digest(raw), 'environment_sha256': digest(env),

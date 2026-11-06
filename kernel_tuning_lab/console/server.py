@@ -108,6 +108,12 @@ def export_files(store, key, selected):
 def create_app(workspace, *, auto_worker=True):
     protect_supervisor()
     store = Store(workspace)
+    # Preserve administrator/scheduler context before sanitizing child environments.
+    # A CPU-only probe's deliberate empty mask is never an excuse to override
+    # an allocation inherited by the service itself.
+    resource_context = {key: os.environ[key] for key in ('CUDA_VISIBLE_DEVICES', 'NVIDIA_VISIBLE_DEVICES',
+        'SLURM_JOB_ID', 'SLURM_STEP_GPUS', 'PBS_JOBID', 'LSB_JOBID') if key in os.environ}
+    write_json(store.root / 'worker/resource-context.json', resource_context)
     token_file = store.root / 'access-token'
     binding = digest([host_identity(), str(store.root)])
     if store.meta('authentication_binding') not in (None, binding):

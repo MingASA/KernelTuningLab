@@ -315,6 +315,8 @@ def launch(store, job, operation):
             raise ValueError('frozen plan differs from the approved task identity')
         if plan.get('workspace_root', str(store.root)) != str(store.root):
             raise ValueError('workspace moved; duplicate this configuration and precheck in the restored environment')
+        if plan['device'] == 'cuda' and plan.get('resource_context', {}) != read_json(store.root / 'worker/resource-context.json', {}):
+            raise ValueError('server resource allocation changed since precheck')
         if digest(store.environment(job['environment'])) != plan['environment_sha256']:
             raise ValueError('registered environment changed since precheck')
     attempt = store.directory(job['id']) / 'attempts' / uuid.uuid4().hex
