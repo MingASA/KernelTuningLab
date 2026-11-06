@@ -1,108 +1,86 @@
-# 自己操作一次：v1上手练习
+# 个人上手：远端实验工作台
 
-这份练习由使用者亲自执行。自动验收不能代替人工确认。Windows建议在WSL2终端操作；E盘实际挂载先检查：`df -h /mnt/e`。
+这份练习由你亲自执行。自动浏览器验收另有证据，不能代替人工验收。Web v2 对应 `feature/web-v2-workbench` / 1.1.0；既有稳定 main / v1.0.1 保留，获取源码时核对实际 PR / commit。
 
-## 1. 从main安装并跑CPU（约五分钟）
-
-```bash
-mkdir -p ~/ktlab-practice
-cd ~/ktlab-practice
-git clone --branch main https://github.com/MingASA/KernelTuningLab.git
-cd KernelTuningLab
-git log -1 --oneline
-python3 scripts/bootstrap.py --profile core --env .venv
-source .venv/activate-ktlab.sh
-ktlab doctor
-ktlab run --spec examples/quickstart/cpu.json --output artifacts/my-cpu
-ktlab web --root artifacts/my-cpu
-```
-
-预期：`doctor.version=1.0.1`；实验`status=passed`、独立验收`passed`、四次算法观测。真实执行与缓存数以输出为准。打开`http://127.0.0.1:8765`，选择搜索过程，切换观测/墙钟；进入配置分析点击一个配置ID。完成后`Ctrl+C`。
-
-## 2. 登录并选对生产环境
-
-在本机设置SSH别名`ktl-gpu`或把下面别名替换为已有授权连接。账户/地址/路径见私有交付操作页。
+## 1. 服务器启动，本机连接
 
 ```bash
-ssh ktl-gpu
-# 远端：进入自己的稳定源码目录和已恢复环境
-cd "$KTL_SOURCE"
-source "$KTL_ENV/activate-ktlab.sh"
-ktlab doctor --devices
-ktlab assets list --kind kernel
+# 服务器；已有专用 Web 环境时直接使用它
+ git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
+ cd KernelTuningLab
+ python3 -m venv "$HOME/.venvs/ktlab-web"
+ "$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
+ "$HOME/.venvs/ktlab-web/bin/ktlab" doctor
+ "$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"
 ```
 
-MoE短练习使用`moe-cu124 + optimizers`：Python3.11、Torch2.6/cu124、Triton3.2、官方vLLM0.8.5组件。环境不存在时按[部署与恢复](DEPLOYMENT.md)初始化；不能把5060Ti或vLLM0.30环境误当作同一profile。
-
-## 3. 一次生产短预算搜索：Random / SMAC
+预期终端显示 loopback URL 和 access-token 的**文件位置**。通过正常 SSH 读取此文件，保管令牌。服务无 GPU 也能启动。
 
 ```bash
-python scripts/with_idle_gpu.py --gpu auto --expected-model H800 \
-  --receipt artifacts/my-moe-resource-01.json --timeout 360 -- \
-  python -m kernel_tuning_lab run \
-  --spec examples/quickstart/moe-h800.json --output artifacts/my-moe
+# 本机新终端；ktl-gpu 替换为自己的 SSH 别名
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
 ```
 
-该JSON已包含Random与`smac_rf@1.0.0`，每方法最多四次揭示，独立正确性另有预算。观察`trials.json`的`algorithm_ref`、`budget`、`cache_hits`和停止原因。资源不空闲时门禁退出，不运行GPU；保留receipt，在之后获准空闲时用新的receipt重试，不能停止未知进程。
+浏览器打开 <http://127.0.0.1:8765> 并登录。新服务器的 GPU 环境先按 [DEPLOYMENT](DEPLOYMENT.md) 安装，再登记私有 `server.json`；已有远端部署的实际路径在私有操作页，不写进公共文档。
 
-如只想运行其中一种算法，先生成新规格：
+## 2. 浏览器提交一次 CPU 实验
 
-```bash
-python - <<'PY'
-import json
-from pathlib import Path
-spec = json.loads(Path('examples/quickstart/moe-h800.json').read_text())
-spec['algorithms'] = [item for item in spec['algorithms'] if (item if isinstance(item, str) else item['asset']) == 'random@1.0.0']
-Path('my-moe-random.json').write_text(json.dumps(spec, indent=2))
-PY
-```
+**新建实验 → CPU · GEMM 模板**，保持 `core` 环境，算法 Random / Grid，观测预算各 2、墙钟 15 秒。点击 **预检并继续**，核对 2 条搜索试验、最多 4 次算法揭示和 1 次独立验收，再提交。
 
-换成`smac_rf@1.0.0`可仅运行SMAC；新规格使用新输出目录。不要用本练习的几个点判断算法排名。
+预期状态依次为待预检、可提交、排队、运行、完成。CPU 很短，曲线可能直接呈现最终状态。搜索过程显示真实 Best-so-far；配置结果可展开正确性和执行记录。缓存使物理执行数可能少于揭示数。
 
-## 4. 找到实际配置、正确性和失败
+关闭页面再打开，任务仍在；刷新不创建第二项任务。服务器重启 API 后任务记录与结果仍可查看，独立 Worker 不因 API 退出而停止。
 
-```bash
-cat artifacts/my-moe/run_summary.json
-cat artifacts/my-moe/trials.json
-ktlab export --database artifacts/my-moe/measurements.sqlite --output artifacts/my-moe-export.jsonl
-```
+## 3. 一次小预算生产 GPU 搜索
 
-Web配置详情或JSONL中查看`config.params`、`metadata.correctness`、`execution.annotations`及环境身份；请求参数与实际原生模板分开。成本看trial中的`algorithm_costs_ms`、`algorithm_diagnostics.space`及实际compile/measurement字段。失败保存在原始记录，不能因为最终有一个成功就丢掉。
+仅在管理员允许、目标单卡空闲时执行：
 
-## 5. 同步到E盘，再本地查看
+1. **设备与环境** 核对实际解释器、依赖状态、获准 GPU 的物理 UUID；环境由服务器管理员登记，不在页面输入 Shell。
+2. **新建实验 → Production MoE**，选择已经安装的 `moe-cu124` 环境与目标 GPU。保持模板 Shape `M=17,H=128,I=256,E=4,TOP_K=2`、FP16、CUDA Graph 完整调用协议。
+3. 选择 Random 和 SMAC RF，每方法观测 2、墙钟 90 秒，独立验收 1。SMAC 缺依赖时明确修复环境，不换名冒充。
+4. 预检并核对预算、配置空间、冻结身份，再提交。资源忙时保留排队，获准空闲后明确重试。
+5. 打开实时搜索过程、配置结果、成本和日志。正确性以参考验证字段为准；编译/数值失败保留为反馈，不降低容差。
 
-先退出远端，在本机执行。将`KTL_REMOTE_RESULTS`设置为自己的远端结果路径。
+如需练习取消，点击取消并等待明确终态，再恢复同一任务。恢复可能重放缓存给算法，原始记录与各次尝试保留。不要重跑历史大矩阵或为了截图反复测量。
 
-```bash
-export KTL_REMOTE_RESULTS='~/work/ktlab-v1/source/artifacts/my-moe'
-mkdir -p /mnt/e/GPT/KernelTuningLab/records/user/my-moe
-rsync -a --partial --checksum "ktl-gpu:$KTL_REMOTE_RESULTS/" \
-  /mnt/e/GPT/KernelTuningLab/records/user/my-moe/
-ktlab web --root /mnt/e/GPT/KernelTuningLab/records/user/my-moe
-```
+## 4. 查配置和选择性下载
 
-服务器上保存已退出实验的目录；复制后检查`run_summary.json`和SQLite，传输完整性可用第二次`rsync -an --checksum`确认没有差异。对于正在写入的SQLite，先结束自己的实验并正常关闭，不能只拷贝一份仍有未同步WAL的数据库。
+- **搜索过程**：切换观测/墙钟轴，缩放或切换图例；多方法仅在相同测量上下文内对比。
+- **配置结果**：按参数、状态或 ID 筛选，展开真实 launch / 模板、正确性、来源与失败。
+- **成本**：查看候选提议、编译、测量、缓存及已有模型/API 字段；没有保存的成本保持缺失。
+- **文件与下载**：默认选报告、summary 和规格；需要原始数据时另选 SQLite、日志、JSONL。下载 ZIP 后核对 `EXPORT_MANIFEST.json` 的 SHA。
 
-## 6. 自己创建一个Searcher
+完整实验默认留在服务器。浏览器可选择保存到 E 盘；也可在实验结束后用已有 SSH / rsync 方案归档。无需服务器持续挂载 E 盘，不能只复制运行中的 SQLite 主文件。
+
+迁移整个工作台时，完成或取消任务，停止 API 与 Worker，再执行 `ktlab workspace archive`；新服务器 `archive restore --source workspace` 后重新登记环境。见 [WEB](WEB.md)。
+
+## 5. 上传一个自定义 Searcher
+
+在本地或服务器的核心环境：
 
 ```bash
 ktlab scaffold algorithm --output my_search
-ktlab check --spec my_search/experiment.json --output artifacts/my-search-check
-ktlab run --spec my_search/experiment.json --output artifacts/my-search
 ```
 
-打开`my_search/assets.py`，找到`suggest`，它接收空间、历史和预算并返回配置。模板使用CPU，可以先跑通，再修改策略。模板窗口只是教学策略，不代表平台的大空间访问能力；完整接口见[EXTENDING](EXTENDING.md)。
+将生成目录中的 `assets.py` 和 `experiment.json` 一起拖入 **新建实验**（也可 ZIP）。核对静态发现的资产、依赖和 SHA，填写代码来源并确认精确版本可信，再预检并提交。模板使用公开 SDK 的 `suggest`，不依赖 GPU 或 API。
 
-## 遇到问题从哪里看
+CLI 也能独立执行：
 
-| 现象 | 首先检查 |
+```bash
+ktlab check --spec my_search/experiment.json --output artifacts/my-search-check
+ktlab run --spec my_search/experiment.json --output artifacts/my-search
+ktlab web --root artifacts/my-search
+```
+
+## 6. 出错时从哪里查
+
+| 现象 | 入口 |
 |---|---|
-| 没有python/venv | 使用python3；选择已安装解释器，或`uv venv --seed` |
-| 缺少SMAC | 使用optimizers profile或兼容环境加`--with-optimizers` |
-| MoE拒绝环境 | Torch/CUDA/ABI、组件SHA、`KT_VLLM085_MOE_COMPONENTS` |
-| GPU资源拒绝 | 本次resource receipt；等待获准空卡，不关别人进程 |
-| 恢复身份不一致 | 保留旧结果，核源码/规格/依赖，另开输出目录 |
-| Web没有曲线 | 检查选择范围及旧数据是否保存observation_trace |
-| 原生构建错误 | DEPLOYMENT、生产支持说明、私有机器问题手册 |
+| 页面连接失败 | SSH 转发、本机/远端端口、服务日志 |
+| 预检失败 | 页面最近错误、Worker launcher 日志、原生 schema 与环境 |
+| 上传后没有资产 | 静态解析清单、插件相对路径、SDK 注册入口 |
+| 排队且资源忙 | 准入 receipt；不要抢占其它用户，明确重试 |
+| 无曲线 | 原始逐观测轨迹；旧数据可能只有最终记录 |
+| 恢复后环境变化 | 复制规格、重新登记并预检，保留旧计划 |
 
-完成后由你记录：main提交、CPU结果、GPU环境/receipt、E盘结果目录、Web检查和自定义Searcher结果。人工验收状态在你执行前始终为“待执行”。
+执行后记录：源码 commit、任务短名称/ID、CPU 与 GPU 环境、正确性结果、下载包 SHA 和遇到的问题。**人工验收在你执行前始终为待执行。**

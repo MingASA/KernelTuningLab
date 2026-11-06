@@ -1,0 +1,17 @@
+# Independent single-server serial Worker; uses the same workspace as the API.
+[Unit]
+Description=KernelTuningLab experiment Worker
+
+[Service]
+Type=simple
+WorkingDirectory=/absolute/path/to/workbench
+ExecStart=/absolute/path/to/web-env/bin/ktlab worker --workspace /absolute/path/to/workbench
+Restart=on-failure
+RestartSec=3
+UMask=0077
+# The Worker must perform the normal owned-process cancellation before exit.
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

@@ -1,6 +1,23 @@
 # 从安装到亲自运行实验
 
-稳定入口为 `main`；复现实验固定 `v1.0.1` 或准确 commit。平台由本地 CLI / SDK 驱动，远端只在需要 GPU 时执行命令。
+Web v2 / 1.1.0 的当前交付分支为 `feature/web-v2-workbench`；既有稳定 `main` / `v1.0.1` 保留。默认将平台、源码和完整记录放在服务器，本机通过 SSH 隧道使用浏览器；CLI / SDK 仍可单独运行。
+
+## 0. 先从浏览器跑通远端 CPU
+
+```bash
+# 服务器：获取本轮交付源码
+ git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
+ cd KernelTuningLab
+ python3 -m venv "$HOME/.venvs/ktlab-web"
+ "$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
+ "$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"
+# 本机另一个终端
+ ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
+```
+
+浏览器打开 <http://127.0.0.1:8765>，使用服务器工作区 `access-token` 登录。**新建实验 → CPU 模板 → 预检并继续 → 提交实验**，实时查看曲线。创建入口同时支持上传 SDK 插件和原生实验 JSON；上传 Python 要确认精确版本可信。下载仅在明确选择时发生，全部数据默认留在服务器。
+
+生产 GPU 环境须先在服务器 `server.json` 登记实际解释器、组件、合作锁及允许的 GPU UUID，再在页面中选择。完整流程见 [WEB](WEB.md) 和 [DEPLOYMENT](DEPLOYMENT.md)。
 
 ## 1. CPU 五分钟上手
 
@@ -90,7 +107,7 @@ cd ~/work/ktlab-v1/source
 git checkout v1.0.1
 ```
 
-能正常访问GitHub时直接clone main即可。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；不需要H800常驻平台服务。
+能正常访问GitHub时直接clone main即可。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；CLI 可按需执行；Web 模式由独立 API 与 Worker 管理远端任务。
 
 选择MoE0.8.5兼容环境，`KTL_COMPONENTS`指向恢复的官方组件目录：
 
@@ -127,9 +144,9 @@ Random与SMAC每方法最多四次揭示，独立验收另计。候选失败会�
 
 SMAC需要 `kernel_tuning_lab.optimizers` 插件与可选依赖。修改输入、算法或预算时用新输出目录。
 
-## 6. 同步E盘与Web
+## 6. 按需归档到E盘与只读兼容查看
 
-确认实验命令结束后同步整个目录；SQLite可能有WAL，不能仅复制运行中的主库。运行中数据库应使用标准SQLite backup。
+在线使用优先通过工作台选择报告、配置、SQLite 或轨迹下载，ZIP 自带 SHA 清单，SQLite 使用一致快照。完整原始记录留在远端；E 盘是离线资产库。也可在实验结束后按需 rsync 整个目录；SQLite可能有WAL，不能仅复制运行中的主库。
 
 ```bash
 # 本机WSL

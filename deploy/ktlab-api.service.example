@@ -1,0 +1,16 @@
+# Copy to ~/.config/systemd/user/ktlab-api.service after replacing all paths.
+[Unit]
+Description=KernelTuningLab loopback workbench API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/absolute/path/to/workbench
+ExecStart=/absolute/path/to/web-env/bin/ktlab serve --workspace /absolute/path/to/workbench --port 8765 --no-worker
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

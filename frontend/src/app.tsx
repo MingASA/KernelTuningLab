@@ -250,7 +250,13 @@ function App() {
   const navigate = (where: string) => {
     location.hash = where;
   };
-  const fail = (e: any) => setError(e.message || String(e));
+  const fail = (e: any) => {
+    if (e instanceof TypeError) {
+      setOnline(false);
+      return;
+    }
+    setError(e.message || String(e));
+  };
   useEffect(() => {
     const fn = () => {
       setRoute(location.hash.slice(1) || "workspace");
@@ -1567,8 +1573,15 @@ function traceData(events: Data[], native: Data): Trace[] {
     traces.set(t.trial_id || key, {
       key: t.trial_id || key,
       name: short(t.algorithm_ref),
-      context: t.case_id || key,
-      label: JSON.stringify(t.shape || {}),
+      context: JSON.stringify([
+        t.case_id || key,
+        t.kernel_fingerprint,
+        t.space_fingerprint,
+        t.seed,
+        t.warmup,
+        t.repetitions,
+      ]),
+      label: `${JSON.stringify(t.shape || {})} · seed ${t.seed ?? "—"}`,
       rows: value.rows,
     });
   }
@@ -1629,6 +1642,7 @@ function SearchChart({
       series: selected.map((t) => ({
         name: t.name,
         type: "line",
+        step: "end",
         showSymbol: t.rows.length <= 200,
         symbolSize: 6,
         connectNulls: false,
@@ -1708,6 +1722,17 @@ function SearchChart({
         <Chart option={option} label="搜索过程" height={370} />
       ) : (
         <Empty>{axis === "wall" ? "尚无逐步墙钟记录" : "尚无逐观测轨迹"}</Empty>
+      )}
+      {selected.some((t) => t.stop) && (
+        <div className="chart-stops subtle">
+          {selected
+            .filter((t) => t.stop)
+            .map((t) => (
+              <span key={t.key}>
+                {t.name} · {t.stop}
+              </span>
+            ))}
+        </div>
       )}
     </section>
   );

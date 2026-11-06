@@ -6,7 +6,7 @@
 
 面向真实硬件的算子配置寻优平台。用 **CLI / SDK、实验 JSON 和统一 Runner** 连接生产算子、搜索算法、AI 决策与可恢复的测量记录。
 
-`main` 是稳定使用入口，固定版本为 **v1.0.1**。研究请建立独立分支，论文与实验记录固定源码 commit。
+本页对应 **Web v2 / 1.1.0**，交付分支为 `feature/web-v2-workbench`。既有稳定 `main` / **v1.0.1** 保留；合并状态见 PR 与 [STATUS](docs/STATUS.md)。研究与复现固定源码 commit。
 
 ## 主要功能
 
@@ -15,14 +15,16 @@
 - **成熟搜索器**：Random、Grid、启发式及原生 SMAC RF、Kernel Tuner DE；预算、失败反馈、缓存和恢复共用接口。
 - **三种 AI 路线**：已有模型预测、模型逐步决策、生成并审查 SDK Searcher；API 与本地模型是独立部署方式。
 - **L3 与分析**：有限配置集合、Shape 分派、K–Loss、成本、覆盖和部署身份。
-- **本地 Web 查看器**：读取现有 SQLite、轨迹和报告，筛选实验、查看搜索过程、配置与成本；默认 localhost，只读。
+- **远端实验工作台**：浏览器上传项目、预检预算、提交与恢复实验，实时查看曲线、配置和成本，选择性下载结果；独立串行 Worker 复用原 Runner。
 - **迁移与恢复**：私有环境 bootstrap、CPU 安全 doctor、SHA 校验和归档恢复。
 
 ## 系统结构
 
 ```mermaid
 flowchart LR
-    A[实验 JSON · SDK 插件] --> B[预检与参考验收]
+    W[浏览器 · SSH 隧道] --> Q[远端 API · 持久队列]
+    Q --> A[独立 Worker · 实验 JSON · SDK 插件]
+    A --> B[预检与参考验收]
     B --> C[预算化搜索]
     C -->|候选| D[Runner · 编译 · 完整调用]
     D -->|已揭示反馈| C
@@ -30,7 +32,25 @@ flowchart LR
     E --> F[Web · 报告 · L3]
 ```
 
-平台不要求 H800 常驻一个服务。本地负责开发、数据保全与分析；GPU 服务器按需执行实验。SSH 负责登录和命令，Git / Bundle 负责源码版本，rsync / scp 负责结果和部署资产。
+默认工作流：平台与完整数据放在 GPU 服务器，本机浏览器通过 SSH 隧道创建、监控和分析实验；仅在明确下载时传输产物。CLI / SDK 可以独立运行。SSH 负责连接与端口转发，Git / Bundle 固定源码，rsync / scp 用于选择性归档。E 盘是离线资产库。
+
+## Quickstart：远端 Web 工作台
+
+在服务器的当前交付 checkout 中：
+
+```bash
+python3 -m venv "$HOME/.venvs/ktlab-web"
+"$HOME/.venvs/ktlab-web/bin/python" -m pip install '.[web]'
+"$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"
+```
+
+本机建立 SSH 隧道，再打开 `http://127.0.0.1:8765`，填写远端工作区 `access-token` 文件中的令牌：
+
+```bash
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
+```
+
+点击 **新建实验 → CPU 模板 → 预检并继续 → 提交实验**。生产 GPU 环境在服务器 `server.json` 中登记各自解释器、组件与准入锁。服务不需要现场安装 Node；前端资源随 wheel 发布。[完整工作台流程](docs/WEB.md) · [环境与部署](docs/DEPLOYMENT.md)。
 
 ## Quickstart：CPU 五分钟上手
 
@@ -89,7 +109,7 @@ ktlab l3 --database artifacts/first-run/measurements.sqlite --output artifacts/l
 ktlab export --database artifacts/first-run/measurements.sqlite --output records.jsonl
 ```
 
-Web 读取启动时指定的目录，不启动实验或修改数据。远端可通过 SSH 端口转发查看，也可将结果同步到本地打开。见 [Web 使用说明](docs/WEB.md)。
+`ktlab web` 保留只读兼容；`ktlab serve` 提供上传、持久队列、实时 SSE、配置分析和选择性导出。两者读取相同原生实验格式，测量库仍由 Runner 管理。见 [Web 使用说明](docs/WEB.md)。
 
 从私有归档库按源机器和目录前缀恢复：
 
@@ -108,7 +128,7 @@ ktlab archive restore --vault "$KTL_VAULT" --source H800 \
 | 从安装到第一个实验 | [Quickstart](docs/QUICKSTART.md) · [个人练习](docs/PERSONAL_HANDOFF.md) |
 | 新服务器、环境选择与 E 盘恢复 | [部署与恢复](docs/DEPLOYMENT.md) |
 | 团队学习与工作流 | [团队指南](docs/TEAM_GUIDE.md) |
-| 查看、筛选和对比实验 | [Web](docs/WEB.md) |
+| 创建、监控、筛选和下载实验 | [Web 工作台](docs/WEB.md) |
 | 开发 Kernel / Searcher 插件 | [SDK 扩展](docs/EXTENDING.md) · [接口](docs/INTERFACES.md) |
 | 正确性、计时与证据 | [验证](docs/VALIDATION.md) · [协议](docs/PROTOCOL.md) |
 | 有限配置集合和分派 | [L3](docs/L3.md) |

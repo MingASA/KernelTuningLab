@@ -5,6 +5,9 @@ permissions:
 jobs:
   cpu:
     runs-on: ubuntu-latest
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
     strategy:
       matrix:
         python: ['3.10', '3.12']
@@ -30,3 +33,32 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -e '.[dev,optimizers]'
       - run: python -m pytest -q tests/test_native_optimizers.py tests/test_space_construction.py
+  web-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CUDA_VISIBLE_DEVICES: ''
+      PYTHONHASHSEED: '0'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[dev,web]' httpx
+      - run: python -m pytest -q tests/test_console.py tests/test_web.py tests/test_portable.py tests/test_idle_gpu_guard.py
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: git diff --exit-code -- kernel_tuning_lab/console_assets

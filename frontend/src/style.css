@@ -320,6 +320,16 @@ b {
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 24px;
+  min-width: 0;
+}
+h1 {
+  overflow-wrap: anywhere;
+}
+.chart-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 0 22px 16px;
 }
 .page-heading p {
   color: #7a889c;

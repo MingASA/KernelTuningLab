@@ -1,19 +1,18 @@
 # 部署、环境选择与数据恢复
 
-最短流程：**初始化源码 → doctor → 选择profile → 安装/构建 → 恢复数据 → 最小验收 → 使用**。核心服务不要求常驻GPU服务器；Web是可选的本地只读查看器。
+最短流程：**初始化源码 → doctor → 选择profile → 安装/构建 → 恢复数据 → 最小验收 → 使用**。Web v2 默认部署在远端，浏览器通过 SSH 隧道连接；核心 CLI / SDK 仍可独立使用。服务环境和 GPU 执行环境分开。
 
 ## 一、准备稳定源码和Python
 
 ```bash
-git clone --branch main https://github.com/MingASA/KernelTuningLab.git
+git clone --branch feature/web-v2-workbench https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
-git checkout v1.0.1
 python3 scripts/bootstrap.py --profile core --env .venv
 source .venv/activate-ktlab.sh
 ktlab doctor
 ```
 
-核心需要Python≥3.10。GPU兼容profile按记录的Python minor选择；缺少解释器时使用集群已有模块或自己的可信Python发行包，不升级系统Python。离线时使用校验过的source bundle和core wheel：
+本页 Web v2 对应 1.1.0 交付分支；既有 main / v1.0.1 仍可用于原 CLI 与只读查看器。核心需要Python≥3.10。GPU兼容profile按记录的Python minor选择；缺少解释器时使用集群已有模块或自己的可信Python发行包，不升级系统Python。离线时使用校验过的source bundle和core wheel：
 
 ```bash
 python3 scripts/bootstrap.py --profile core --env .venv \
@@ -26,7 +25,8 @@ python3 scripts/bootstrap.py --profile core --env .venv \
 
 | Profile | Python | 核心依赖 | 用途 |
 |---|---|---|---|
-| core | ≥3.10 | 无运行依赖 | CLI、SDK、CPU、SQLite、报告、Web、L3 |
+| core | ≥3.10 | 无运行依赖 | CLI、SDK、CPU、SQLite、报告、只读web、L3 |
+| Web服务 extra | ≥3.10 | 固定FastAPI、Uvicorn、multipart | serve、会话、上传、队列、SSE；无需Torch或Node |
 | optimizers | ≥3.10 | SMAC2.4.1、KT1.5.0、NumPy2.2.2等 | 成熟原生优化器 |
 | cuda-cu124 | 3.11 | Torch2.6.0+cu124、Triton3.2.0 | H800/4090记录栈，Flex/SGLang兼容路径 |
 | gemlite-cu124 | 3.11 | Torch2.6、Triton3.6.0、GemLite0.6.0.post2 | raw-A16独立overlay |
@@ -91,7 +91,38 @@ python3.11 scripts/bootstrap.py --profile flute-cu124 --env "$KTL_ENV" \
 
 Flex/SGLang兼容路径使用 `cuda-cu124` 与仓库内固定源码。其他Torch版本为不同profile，不能把源码可表达当成实机通过。模型先恢复名称、来源、revision、配置/权重文件SHA和许可证要求；共享权重不随归档自动复制。API凭据通过用户自己的正常授权配置，不进入Git或归档清单。
 
-## 四、E盘资产库
+## 四、部署远端工作台
+
+核心 bootstrap 完成后，在专用服务环境安装 Web 依赖。在线或离线二选一：
+
+```bash
+"$KTL_WEB_ENV/bin/python" -m pip install '.[web]'
+# 已有核验的离线 core wheel 与相同 Python ABI 的 Web 依赖缓存：
+"$KTL_WEB_ENV/bin/python" -m pip install --no-index --find-links "$KTL_WEB_WHEELS" "$KTL_CORE_WHEEL[web]"
+```
+
+GPU 服务器无需安装 Node、访问 CDN 或重新构建前端。源代码维护者才需要在 `frontend/` 运行 `npm ci && npm run build`；静态资源进入 wheel。
+
+首次 `ktlab serve --workspace "$KTL_WORKSPACE"` 自动登记本环境的 CPU 解释器。增加生产环境时，将 [示例配置](../examples/web/server.example.json) 复制到私有路径，逐项改为真实 Python、组件、物理 UUID 和合作锁，再启动：
+
+```bash
+export KTL_WEB_ENV="$HOME/.venvs/ktlab-web"
+export KTL_WORKSPACE="$HOME/ktlab-workbench"
+export KTL_SERVER_CONFIG="$HOME/ktlab-server.json"
+bash scripts/serve_workbench.sh
+# 本机：
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
+```
+
+打开浏览器并使用远端 `access-token` 登录。`--config` 会替换该工作区环境登记，不能在有冻结任务时随意替换；通常直接编辑私有工作区 `server.json`，刷新环境、复制并重预检受影响的计划。不要将真实路径、UUID 或令牌提交 Git。
+
+服务默认独立启动并监督串行 Worker。可分别部署 `ktlab serve --no-worker` 与 `ktlab worker --workspace …`；[deploy](../deploy/) 提供 `systemd --user` 模板。它们必须指向相同工作区。停止 API 不停止独立 Worker；完整停机须显式停止 Worker。
+
+上传 Python 需要来源与精确版本确认。Worker 优先使用经过 canary 的 Bubblewrap；否则使用可用 Landlock，缺少文件隔离时拒绝上传代码执行。内核/权限差异需在目标机器实测。原生二进制、编译器和 GPU 设备需在受限环境中重新验收。不要把普通 subprocess 或复制 venv 称作跨服务器隔离与恢复。
+
+工作区迁移：先停任务、API、Worker，用 `ktlab workspace archive` 生成现有格式的对象资产库，再 `archive verify / restore --source workspace`。移动恢复轮换令牌，重新登记环境；旧冻结绝对路径计划复制并重预检，历史结果保留。具体命令见 [WEB](WEB.md)。
+
+## 五、E盘资产库
 
 Windows位置为 `E:\GPT\KernelTuningLab`，当前WSL路径为 `/mnt/e/GPT/KernelTuningLab`。换机器先核实实际挂载和空间，不能仅创建同名普通目录冒充E盘。
 
@@ -107,7 +138,7 @@ Windows位置为 `E:\GPT\KernelTuningLab`，当前WSL路径为 `/mnt/e/GPT/Kerne
 
 资产清单区分实际内容与metadata-only缓存。后者保存SHA、版本和来源，不能算作已复制的内容。模型权重需另有复制权限和容量；不把原始私有数据、账户、UUID或凭据上传GitHub。
 
-## 五、从归档恢复
+## 六、从归档恢复
 
 ```bash
 export KTL_VAULT=/mnt/e/GPT/KernelTuningLab
@@ -120,7 +151,7 @@ ktlab archive restore --vault "$KTL_VAULT" --source H800 \
 
 源码用Git bundle恢复；原生runtime按前述profile恢复。PTX/CUBIN和扩展保留为原实验的身份与证据，不跨架构自动复用Triton编译缓存。
 
-## 六、最小验收与使用
+## 七、最小验收与使用
 
 ```bash
 ktlab run --spec examples/quickstart/cpu.json --output artifacts/new-install-cpu

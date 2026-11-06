@@ -2,7 +2,7 @@
 
 定位：面向真实硬件的 GPU Kernel 配置寻优研究平台。
 
-当前版本：稳定入口 `main`，固定发布 `v1.0.1`。历史实验继续保留自己的源码 commit；后续科研在独立分支进行。
+当前交付：Web v2 / 1.1.0，分支 `feature/web-v2-workbench`；既有稳定 main / v1.0.1 保留。历史实验固定自己的源码 commit，后续科研在独立分支进行。
 
 快速阅读：立即运行看第3章；GPU调参看第4–5章；加算法看第6章；结果、Web和L3看第7章；AI看第8章；新服务器与E盘恢复看第10章。最后的[个人练习](PERSONAL_HANDOFF.md)供第一次独立操作。
 
@@ -92,7 +92,7 @@ MoE示例的完整静态可行空间约3200点，构建由47.926秒降至0.501�
 
 ## 3. 安装与第一次CPU实验
 
-平台是CLI/SDK加实验Runner，不是必须常驻H800的服务。本地可以独立安装、开发和分析，远端在需要GPU时按需执行。
+平台核心是 CLI / SDK 加实验 Runner。当前默认在服务器部署 Web API 与独立 Worker，本机浏览器通过 SSH 隧道创建、监控和分析实验；源码、插件与完整测量数据在远端。CLI / SDK 仍可独立安装、开发和运行。
 
 ### 3.1 环境与版本
 
@@ -320,15 +320,30 @@ ktlab replay --database measurements.sqlite --split test \
 
 数据库必须包含对应split和候选。未测配置没有真实延迟；Replay、Mock、真实CPU和真实GPU为不同证据层级。
 
-### 7.3 Web可视化
+### 7.3 远端 Web 实验工作台
+
+在专用服务环境安装 `.[web]`，GPU 环境独立登记：
 
 ```bash
-ktlab web --root artifacts/first-run --root artifacts/moe-first
+# 服务器
+ktlab serve --workspace "$HOME/ktlab-workbench" --port 8765
+# 本机另一个终端
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
 ```
 
-浏览器打开localhost:8765，勾选实验，查看总览、搜索过程、配置、成本或L3。搜索轴可切换观测次数与真实墙钟；来源、失败、缓存及缺失数据保留。点击配置ID可看请求参数、实际原生模板/launch、样本、正确性和来源身份；未记录的生效字段不由请求猜测。
+浏览器打开 localhost:8765，用服务器工作区 access-token 登录。导航包括实验工作区、新建实验、任务队列、算子与算法、结果分析、设备与环境。
 
-查看器只读现有数据，不另建实验库，也不调度GPU。旧数据缺轨迹时显示缺失。远端可SSH端口转发，也可先同步到E盘。详细操作见[WEB](WEB.md)。
+第一次使用选择 CPU 模板，核对 Shape、算法和预算，预检后提交。上传自定义算子或 Searcher 时，先查看静态清单、SHA、注册资产和依赖，再确认代码来源与精确版本可信；Worker 才会导入。平台不自动安装上传的 requirements，不提供任意 Shell。
+
+GPU 任务选择服务器已登记的解释器和获准物理 GPU。提交前展开原生 schema 的任务数、算法揭示和独立验收预算。一个工作区串行执行一张卡；资源忙保留排队状态，人工重试，不抢占其它用户。预检与编译成功不能代替数值通过。
+
+详情以实时 Best-so-far 曲线和阶段为先，可切换观测次数/实际墙钟、图例、缩放和筛选。配置表展开请求参数、实际模板/launch、正确性、样本与来源身份；成本沿用原字段，未记录项保持缺失。不同硬件、Shape、dtype、seed、空间与协议分组比较。
+
+API 重启或浏览器断线不停止独立 Worker。SSE 通过持久序号重放事件；取消仅停止本任务有身份的进程树。恢复使用原 Runner 缓存，缓存再揭示与新物理测量分别显示。旧数据缺轨迹时按已有最终记录展示。
+
+**文件与下载** 按选择打包报告、配置、SQLite、轨迹或编译产物，并附 SHA 清单；SQLite 使用一致备份。完整记录默认留在远端，E 盘只按需归档。`control.sqlite` 是控制索引，测量仍在原 Runner 库。
+
+保留 `ktlab web --root artifacts/first-run` 只读兼容，用于无需 Web extra 的历史分析。工作区迁移、隔离范围和异常排查见 [WEB](WEB.md)。
 
 ### 7.4 L3相关支持
 
@@ -431,7 +446,7 @@ ktlab web --root /mnt/e/GPT/KernelTuningLab/records/user/my-run
 
 ## 11. 个人上手与团队使用
 
-按[个人练习](PERSONAL_HANDOFF.md)依次完成：从main安装 → CPU → 登录正确环境 → 一次生产短预算Random/SMAC → 找实际配置与成本 → 同步E盘 → Web → scaffold Searcher。
+按[个人练习](PERSONAL_HANDOFF.md)依次完成：服务器安装 → SSH 隧道 → 浏览器 CPU → 正确环境下的一次生产短预算 Random/SMAC → 查配置与成本 → 选择性下载/归档 E 盘 → scaffold Searcher。
 
 自动模拟与用户亲自验收分开登记。使用者执行后记录main提交、环境/资源receipt、结果目录和问题，再确认人工验收完成。
 
@@ -447,7 +462,7 @@ ktlab web --root /mnt/e/GPT/KernelTuningLab/records/user/my-run
 | 恢复 | 原命令与原输出目录；身份重新检查 |
 | 报告 | `ktlab research --report-only --output ...` |
 | Replay/L3 | `ktlab replay --database ...` / `ktlab l3 --database ...` |
-| Web | `ktlab web --root ...` |
+| Web 工作台 / 只读兼容 | `ktlab serve --workspace ...` / `ktlab web --root ...` |
 | 迁移恢复 | `ktlab archive verify` / `ktlab archive restore` |
 
 ## 附录B：仓库开发文档

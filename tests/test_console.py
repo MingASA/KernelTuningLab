@@ -334,6 +334,46 @@ def test_changed_frozen_plan_is_rejected_before_execution(client):
         stop_worker(process)
 
 
+def test_inherited_allocation_cannot_be_overridden_by_a_web_gpu_selection(tmp_path):
+    from kernel_tuning_lab.console.plans import freeze_plan
+    store = Store(tmp_path / 'workspace')
+    config = store.config()
+    config['environments'].append({**config['environments'][0], 'id': 'allocated', 'device': 'cuda'})
+    write_json(store.root / 'server.json', config)
+    for resource_context in ({'CUDA_VISIBLE_DEVICES': ''}, {'CUDA_VISIBLE_DEVICES': '0'},
+                             {'SLURM_JOB_ID': 'fixture'}, {'PBS_JOBID': 'fixture'}):
+        write_json(store.root / 'worker/resource-context.json', resource_context)
+        job = store.create({'spec': cpu_spec(), 'environment': 'allocated', 'gpu': 'GPU-fixture'})
+        with pytest.raises(ValueError, match='inherited a GPU allocation'):
+            freeze_plan(store, job)
+        assert not (store.directory(job['id']) / 'attempts').exists()
+
+
+@pytest.mark.skipif(not landlock_abi(), reason='Linux Landlock')
+def test_trusted_plugin_failure_is_retained_and_next_queue_job_can_run(client):
+    source = b"raise RuntimeError('owned fixture plugin registration failure')\n"
+    project = client.post('/api/projects', files={'files': ('invalid.py', source)}).json()
+    assert project['trusted'] is None  # Static upload did not execute the Python.
+    identity = {'id': project['id'], 'version': project['version']}
+    client.post(f'/api/projects/{project["id"]}/{project["version"]}/trust',
+                json={'acknowledged': True, 'source': 'owned negative acceptance fixture'})
+    process = start_worker(client)
+    try:
+        rejected = client.post('/api/jobs', json={'environment': 'core', 'project': identity,
+            'spec': {**cpu_spec(), 'plugins': ['invalid.py']}}).json()
+        client.post(f'/api/jobs/{rejected["id"]}/precheck', json={})
+        result = wait_job(client, rejected['id'], {'invalid'})
+        assert 'owned fixture plugin registration failure' in result['error']
+        assert client.get(f'/api/jobs/{rejected["id"]}/logs').status_code == 200
+        job = create_prechecked(client)
+        assert submit(client, job).status_code == 200
+        assert wait_job(client, job['id'], {'completed', 'failed'})['state'] == 'completed'
+        assert client.store.get(rejected['id'])['state'] == 'invalid'
+        assert process.poll() is None
+    finally:
+        stop_worker(process)
+
+
 def test_workspace_snapshot_uses_existing_restore_and_rotates_access(tmp_path):
     from kernel_tuning_lab.console.archive import snapshot
     from kernel_tuning_lab.portable import restore_vault, verify_vault
