@@ -85,6 +85,21 @@ def restriction_capabilities():
     return result
 
 
+def nvidia_device_minor(gpu, information_root=Path('/proc/driver/nvidia/gpus')):
+    """Bind by the driver's physical UUID, never by a CUDA/NVML display ordinal."""
+    matches = set()
+    for file in Path(information_root).glob('*/information'):
+        values = dict(line.split(':', 1) for line in file.read_text().splitlines() if ':' in line)
+        values = {key.strip(): value.strip() for key, value in values.items()}
+        if values.get('GPU UUID', '').lower() == gpu.lower():
+            minor = values.get('Device Minor', '')
+            if minor.isdigit():
+                matches.add(int(minor))
+    if len(matches) != 1:
+        raise RuntimeError('cannot resolve one physical NVIDIA device minor from the selected UUID')
+    return matches.pop()
+
+
 def bubblewrap_command(python_command, directory, environment, *, source, output, runtime, gpu=None):
     capability = restriction_capabilities().get('bubblewrap')
     if not capability:
@@ -99,11 +114,9 @@ def bubblewrap_command(python_command, directory, environment, *, source, output
         args += ['--ro-bind', path, path]
     args += ['--proc', '/proc', '--dev', '/dev', '--tmpfs', '/dev/shm']
     if gpu:
-        probe = subprocess.run(['nvidia-smi', '-i', gpu, '--query-gpu=minor_number', '--format=csv,noheader,nounits'],
-                               capture_output=True, text=True, timeout=8, check=True)
-        minor = int(probe.stdout.strip())
+        minor = nvidia_device_minor(gpu)
         device = Path('/dev/nvidia' + str(minor))
-        if not device.exists():
+        if not device.is_char_device():
             raise RuntimeError('selected physical GPU device node is not accessible for namespace binding')
         paths = [device, *[p for p in (Path('/dev/nvidiactl'), Path('/dev/nvidia-uvm'),
                  Path('/dev/nvidia-uvm-tools'), Path('/dev/nvidia-caps')) if p.exists()]]

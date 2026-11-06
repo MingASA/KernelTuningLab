@@ -208,6 +208,12 @@ def make(seed=0):
         assert 1 <= len(observations) <= 4
         assert len(observations) == done['last_result']['observations']
         assert all(e['data']['observation']['correctness_verified'] for e in observations)
+        from kernel_tuning_lab.storage import ExperimentStore
+        with ExperimentStore(client.store.directory(job['id']) / 'output/measurements.sqlite', read_only=True) as native:
+            for event in observations:
+                row = event['data']['observation']
+                assert row['config'] == dict(native.get_record(row['record_id']).config.params)
+                assert row['dataset'] and row['samples_count'] > 0
         cursor = observations[1]['seq']
         replay = client.get(f'/api/jobs/{job["id"]}/event-history?after={cursor}').json()['events']
         assert replay and all(e['seq'] > cursor for e in replay)
@@ -347,6 +353,18 @@ def test_inherited_allocation_cannot_be_overridden_by_a_web_gpu_selection(tmp_pa
         with pytest.raises(ValueError, match='inherited a GPU allocation'):
             freeze_plan(store, job)
         assert not (store.directory(job['id']) / 'attempts').exists()
+
+
+def test_gpu_device_binding_uses_driver_uuid_and_minor_instead_of_display_order(tmp_path):
+    from kernel_tuning_lab.console.isolation import nvidia_device_minor
+    for pci, uuid, minor in [('0000:01:00.0', 'GPU-selected', 7), ('0000:02:00.0', 'GPU-other', 2)]:
+        directory = tmp_path / pci
+        directory.mkdir()
+        (directory / 'information').write_text(f'GPU UUID: {uuid}\nDevice Minor: {minor}\n')
+    assert nvidia_device_minor('GPU-selected', tmp_path) == 7
+    assert nvidia_device_minor('GPU-other', tmp_path) == 2
+    with pytest.raises(RuntimeError, match='selected UUID'):
+        nvidia_device_minor('GPU-missing', tmp_path)
 
 
 @pytest.mark.skipif(not landlock_abi(), reason='Linux Landlock')

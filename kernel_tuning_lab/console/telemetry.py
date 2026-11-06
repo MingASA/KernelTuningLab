@@ -4,8 +4,31 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import sqlite3
 
 from .store import read_json
+
+
+def observation_configuration(trace, output, observation):
+    """Resolve one native record by primary key, without scanning measurement history."""
+    from ..storage import ExperimentStore
+    for parent in trace.parents:
+        database = parent / 'measurements.sqlite'
+        if database.is_file() and not database.is_symlink() and database.resolve().is_relative_to(output.resolve()):
+            try:
+                with ExperimentStore(database, read_only=True) as native:
+                    record = native.get_record(observation.get('record_id', ''))
+                if record is not None and record.config.id == observation.get('config_id'):
+                    return {'config': dict(record.config.params), 'dtype': record.operator.dtype,
+                            'implementation': record.operator.implementation,
+                            'samples_count': len(record.runtime_samples_ms),
+                            'dataset': hashlib.sha256(str(parent.resolve()).encode()).hexdigest()[:24]}
+            except (OSError, ValueError, sqlite3.DatabaseError):
+                pass  # Trace remains usable if the optional record is not yet available.
+            return {}
+        if parent == output:
+            break
+    return {}
 
 
 def harvest(store, job):
@@ -39,7 +62,8 @@ def harvest(store, job):
                     break
                 token = f'{job["id"]}:{relative}:{generation}:{start}:{hashlib.sha256(raw).hexdigest()}'
                 store.event(job['id'], 'observation', {'source': relative, 'generation': generation,
-                    'attempt': job.get('execution', {}).get('attempt'), 'trial': trial, 'observation': value}, dedupe=token)
+                    'attempt': job.get('execution', {}).get('attempt'), 'trial': trial,
+                    'observation': {**value, **observation_configuration(file, output, value)}}, dedupe=token)
                 offset = stream.tell()
         cursors[relative] = {'inode': metadata.st_ino, 'offset': offset, 'prefix': prefix, 'generation': generation}
     phase = read_json(output / 'phase.json', {})

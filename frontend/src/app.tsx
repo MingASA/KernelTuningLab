@@ -2035,7 +2035,7 @@ function JobDetail({
             </section>
           )}
           <div className="two-columns">
-            <Exploration native={native} />
+            <Exploration native={native} traces={traces} />
             <section className="panel form-panel">
               <h2>最近观测</h2>
               {traces
@@ -2066,7 +2066,12 @@ function JobDetail({
           </div>
         </>
       ) : tab === "configs" ? (
-        <ConfigurationTable native={native} jobId={id} fail={fail} />
+        <ConfigurationTable
+          native={native}
+          traces={traces}
+          jobId={id}
+          fail={fail}
+        />
       ) : tab === "cost" ? (
         <Costs traces={traces} native={native} />
       ) : tab === "files" ? (
@@ -2112,8 +2117,44 @@ function allRecords(native: Data): Data[] {
     d.records.map((r: Data) => ({ ...r, dataset: d.id })),
   );
 }
-function Exploration({ native }: { native: Data }) {
-  const records = allRecords(native);
+function liveRecords(traces: Trace[]): Data[] {
+  return [
+    ...new Map(
+      traces.flatMap((t) =>
+        t.rows
+          .filter((r) => r.config && r.dataset)
+          .map(
+            (r) =>
+              [
+                `${r.dataset}:${r.record_id}`,
+                {
+                  id: r.record_id,
+                  dataset: r.dataset,
+                  config_id: r.config_id,
+                  params: r.config,
+                  status: r.status,
+                  verified: r.correctness_verified,
+                  latency_ms: r.latency_ms,
+                  dtype: r.dtype,
+                  implementation: r.implementation,
+                  samples: r.samples_count,
+                },
+              ] as [string, Data],
+          ),
+      ),
+    ).values(),
+  ];
+}
+function Exploration({
+  native,
+  traces = [],
+}: {
+  native: Data;
+  traces?: Trace[];
+}) {
+  const records = allRecords(native).length
+    ? allRecords(native)
+    : liveRecords(traces);
   const parameters = [
     ...new Set(records.flatMap((r) => Object.keys(r.params || {}))),
   ];
@@ -2159,10 +2200,12 @@ function Exploration({ native }: { native: Data }) {
 
 function ConfigurationTable({
   native,
+  traces = [],
   jobId,
   fail,
 }: {
   native: Data;
+  traces?: Trace[];
   jobId?: string;
   fail: (e: any) => void;
 }) {
@@ -2170,7 +2213,10 @@ function ConfigurationTable({
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
   const [detail, setDetail] = useState<Data | null>(null);
-  const rows = allRecords(native).filter(
+  const records = allRecords(native).length
+    ? allRecords(native)
+    : liveRecords(traces);
+  const rows = records.filter(
     (r) =>
       (!status || r.status === status) &&
       `${r.config_id} ${JSON.stringify(r.params)}`
@@ -2231,7 +2277,7 @@ function ConfigurationTable({
           }}
         >
           <option value="">全部状态</option>
-          {[...new Set(allRecords(native).map((r) => r.status))].map((s) => (
+          {[...new Set(records.map((r) => r.status))].map((s) => (
             <option key={s} value={s}>
               {names[s] || s}
             </option>
