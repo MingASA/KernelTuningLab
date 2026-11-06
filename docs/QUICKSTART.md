@@ -1,102 +1,180 @@
-# 安装、第一次实验与数据复用
+# 从安装到亲自运行实验
 
-Python ≥3.10。CPU流程无需Torch、Triton、Matplotlib或GPU，SVG报告使用标准库生成。安装来源是本仓库源码或自己构建的wheel。
+稳定入口为 `main`；复现实验固定 `v1.0.0` 或准确 commit。平台由本地 CLI / SDK 驱动，远端只在需要 GPU 时执行命令。
 
-## 源码安装与CPU实验
+## 1. CPU 五分钟上手
 
 ```bash
-git clone --branch research/5060ti-readiness https://github.com/MingASA/KernelTuningLab.git
+git clone https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
-git checkout --detach 35ac36ed66becf19271c9ed3e97950fb67a03d87
-python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/python -m pytest -q
-.venv/bin/ktlab probe
-.venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/cpu-plan --write-only
-.venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/cpu-study
+python3 scripts/bootstrap.py --profile core --env .venv
+source .venv/activate-ktlab.sh
+ktlab doctor
+ktlab run --spec examples/quickstart/cpu.json --output artifacts/first-run
+ktlab web --root artifacts/first-run
 ```
 
-若系统Python缺少ensurepip，使用本机完整Python或已有 `uv venv --python 3.12 --seed .venv`，再执行pip安装；无需修改其他CUDA环境。本轮实际复现过这个WSL问题。
+Python最低3.10。缺少venv/ensurepip时可用已安装的uv：`uv venv --python 3.12 --seed .venv`。Windows原生CPU使用 `.venv\Scripts\python.exe`，GPU使用WSL2/Linux。
 
-这是固定的5060 Ti交付基线；main尚未合并相关成果。需修改源码时先创建自己的开发分支。4090/H800已完成有限真实验收与Anchor；复现实验必须使用[跨GPU报告](CROSS_GPU_PHASE1.md)声明的准确6ec采集commit、独立控制脚本版本与[cu124约束](data/crossgpu-cu124-constraints.txt)，遵守目标服务器已有GPU/调度/workspace授权。不要把5060 Ti的cu132锁文件直接套到旧驱动服务器。
+成功时 summary 的 `status` 为 `passed`，独立验收通过，共四次算法观测。两种方法可能访问相同配置，真实执行数和缓存数以实际输出为准。浏览器打开 `http://127.0.0.1:8765`；退出查看器用 `Ctrl+C`。
 
-`probe`默认只检查CPU环境；`--gpu`才加载CUDA。CPU测试跳过需GPU项目，设置 `KT_RUN_GPU_TESTS=1` 才启用物理GPU回归。
+## 2. 实验 JSON 与预算
 
-研究命令在stderr显示计划和逐job进度，stdout保留JSON；`--quiet`关闭进度。`--write-only`列出job、trial、观测和独立验收上限，不加载插件，不证明GPU可运行。正式执行前可用 `ktlab check --spec <v2.json> --output <目录>` 做实际预检/验收。
+`examples/quickstart/cpu.json` 是 schema_version=2 的单算子实验。
 
-`validation.max_configs`是整个v2 job的独立验收尝试额度，不是每个Shape的额度。要覆盖全部可用Shape/context，至少给每个context一次尝试；例如6个Shape而额度4会如实返回partial，即使搜索观测本身均已数值通过。提高验收额度后用同一输出恢复，旧attempt保留，兼容搜索观测可缓存复用。
-
-## 阅读输出与恢复
-
-先打开 `artifacts/cpu-study/report.md`：
-
-| 文件 | 先看什么 |
+| 字段 | 控制什么 |
 |---|---|
-| `summary.json` | 状态、观测、新物理测量、缓存、验收和job墙钟 |
-| `trials.csv` / `observations.csv` | 同一上下文下的候选序列、best-so-far、延迟与成本 |
-| `failures.jsonl` | 失败job、具体case/config和分类原因 |
-| `research_manifest.json` | 请求维度、job状态、源码commit与原v2输出 |
-| `runs/<group>/measurements.sqlite` | 完整历史、原始样本、协议、正确性、源码/硬件和失败 |
+| `operator / dtype / parameters` | 算子语义；位宽、量化group属于任务 |
+| `kernels` | 实现及可选空间约束 |
+| `algorithms` | 搜索器引用与options |
+| `shapes / seed` | 规模与输入协议 |
+| `budget` | 每个算法/实现/Shape的揭示次数与墙钟；缓存和失败也计入 |
+| `validation` | 独立正确性验收预算 |
+| `warmup / repetitions / timing_mode` | 预热、采样与计时范围 |
 
-CPU测量证明CPU调用，不是GPU性能。GPU Graph样本是捕获的完整GPU计划摊销时间，编译、输入/参考、Python服务调用在该latency之外。编译成本是测量墙钟的组成部分，不可重复相加。
-
-```bash
-# 中断后继续；旧attempts保留，验收会重跑
-.venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/cpu-study
-# 只读已有证据重建报告，不执行新测量
-.venv/bin/ktlab research --report-only --output artifacts/cpu-study
-```
-
-兼容缓存命中仍消耗观测预算，不算新物理测量。被终止候选保留诊断，恢复时重试。不同输出目录之间没有GPU调度器，同一张卡应串行执行。
-
-## wheel与源码目录外使用
+多算子/dtype/seed矩阵使用 `kind: research`：
 
 ```bash
-.venv/bin/python -m pip wheel --no-deps . -w dist
-python3 -m venv /tmp/ktlab-wheel-env
-/tmp/ktlab-wheel-env/bin/python -m pip install /absolute/path/to/dist/kernel_tuning_lab-0.1.0-py3-none-any.whl
-cd /tmp
-/tmp/ktlab-wheel-env/bin/ktlab assets list
-/tmp/ktlab-wheel-env/bin/ktlab scaffold algorithm --output my_search
-/tmp/ktlab-wheel-env/bin/ktlab run --spec my_search/experiment.json --output my_search/results
+ktlab research --spec examples/research/cpu.json --write-only --output artifacts/cpu-plan
+ktlab research --spec examples/research/cpu.json --output artifacts/cpu-study
 ```
 
-wheel包含库、CLI、内置资产、公共数据小样本和第三方许可。仓库examples和完整研究脚本由源码仓库提供；只装wheel时用scaffold生成独立示例。文件插件相对实验JSON解析，安装包插件通过 `kernel_tuning_lab.assets` entry points 发现。
+`run` 与 `research` 的JSON结构不同。`--write-only` 只检查和展开预算。
 
-## RTX 5060 Ti最小GPU路径
+## 3. 找结果与恢复
 
-以下固定栈已在本机独立重新安装验证；不修改系统驱动、系统CUDA或其他项目环境：
+| 文件 | 内容 |
+|---|---|
+| `run_summary.json` | 状态、执行数、观测、缓存、验收 |
+| `measurements.sqlite / measurements.jsonl` | 原始样本、正确性、失败、环境和配置 |
+| `trials.json`、`trials/` | 搜索器、预算、逐步轨迹、墙钟与成本 |
+| `validation_report.json` | 独立验收、覆盖、失败 |
+| `experiment.json / assets.lock.json` | 实际规格、资产内容身份 |
+| `report.md` | 可读报告 |
+
+相同命令和输出目录可恢复；新实验使用新目录，保留原失败和规格。
 
 ```bash
-uv venv --python 3.12 --seed .venv-gpu
-.venv-gpu/bin/python -m pip install -r docs/data/5060ti-requirements.txt \
-  --extra-index-url https://download.pytorch.org/whl/cu132
-.venv-gpu/bin/python -m pip install -e .
-.venv-gpu/bin/python -m pip check
-.venv-gpu/bin/ktlab probe --gpu --hardware 5060ti16g
-.venv-gpu/bin/ktlab run --spec examples/research_phase2/gpu-minimal.json --output artifacts/first-gpu
-.venv-gpu/bin/ktlab research --spec examples/research_phase2/gpu-smoke-research.json --output artifacts/first-gpu-search
+ktlab run --spec examples/quickstart/cpu.json --output artifacts/first-run
+ktlab export --database artifacts/first-run/measurements.sqlite --output artifacts/first-run-export.jsonl
+ktlab report --database artifacts/first-run/measurements.sqlite --output artifacts/first-report
 ```
 
-最小示例为两种小GEMM配置，保留独立参考、最终实际输出与输入完整性检查。原四类十阶段gate和GPU回归另行执行：
+## 4. 本机5060 Ti
+
+保留原环境，使用独立profile。原验证栈为Python3.12、Torch2.13.0+cu132、Triton3.7.1；驱动和设备以实际probe为准。
 
 ```bash
-KT_PYTHON_BIN=.venv-gpu/bin/python bash scripts/run_gpu_smoke.sh 5060ti16g artifacts/core-smoke
-KT_RUN_GPU_TESTS=1 .venv-gpu/bin/python -m pytest -q tests/test_cuda_graph_runtime.py
+python3.12 scripts/bootstrap.py --profile 5060ti --env .venv-5060
+source .venv-5060/activate-ktlab.sh
+ktlab doctor --devices
+ktlab probe --gpu --hardware 5060ti16g
+python scripts/prepare_target_gpu.py --target 5060ti --output artifacts/5060-ready
 ```
 
-其他GPU先看[迁移检查单](GPU_MIGRATION.md)。完整proposal-suite有许多Kernel、Shape和额外验收，`max_evaluations=4`并非整套只测四次。
+最后一条只生成短验收规格。确认当前卡获准独占且无冲突后，才增加 `--execute`。不要自动恢复旧192点Anchor；5060栈也不能直接套用H800的FLUTE二进制。
 
-## 导出、Replay与L3
+## 5. SSH到H800/新服务器
 
-从manifest找到具体的 `runs/<group>/measurements.sqlite`，替换到下面命令；导入保留原证据等级：
+下文 `ktl-gpu` 是你配置的SSH别名，账户、地址、UUID留在私有记录。
 
 ```bash
-ktlab export --database measurements.sqlite --output measurements.jsonl
-ktlab import-jsonl --database restored.sqlite --input measurements.jsonl
-ktlab report --database restored.sqlite --output artifacts/restored-report
-ktlab replay --database restored.sqlite --split test --budgets 4 8 --seeds 0 1 --output artifacts/replay
-ktlab l3 --database restored.sqlite --output artifacts/l3
+# 本地：源码传输
+git bundle create ktlab-source.bundle --all
+scp ktlab-source.bundle ktl-gpu:~/ktlab-source.bundle
+ssh ktl-gpu
+# 远端：新私有目录
+mkdir -p ~/work/ktlab-v1
+git clone ~/ktlab-source.bundle ~/work/ktlab-v1/source
+cd ~/work/ktlab-v1/source
+git checkout v1.0.0
 ```
 
-示例只有train标签时，可用 `--split train` 做软件回放检查；正式评价先划分整个Shape/GPU再训练。CLI从已观测域重建有限候选：匹配SDK资产提供合法性，资产不可用时明确限制为已观测配置。coverage不代表完整开放空间。精确自定义空间可直接传给已有 `run_replay(records, searcher, explicit_space, budget)` API。见[科研协议](RESEARCH_PROTOCOL.md)。
+能正常访问GitHub时直接clone main即可。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；不需要H800常驻平台服务。
+
+选择MoE0.8.5兼容环境，`KTL_COMPONENTS`指向恢复的官方组件目录：
+
+```bash
+python3.11 scripts/bootstrap.py --profile moe-cu124 --with-optimizers \
+  --env "$HOME/venvs/ktlab-moe-v1" --components "$KTL_COMPONENTS"
+source "$HOME/venvs/ktlab-moe-v1/activate-ktlab.sh"
+ktlab doctor --devices
+```
+
+离线安装增加 `--wheel "$KTL_CORE_WHEEL" --wheelhouse "$KTL_WHEELHOUSE" --constraints "$KTL_LOCK"`。组件提取与选择见[部署指南](DEPLOYMENT.md)，不能以Marlin-only子集代替MoE组件。
+
+运行完整生产空间上的短预算搜索：
+
+```bash
+python scripts/with_idle_gpu.py --gpu auto --expected-model H800 \
+  --receipt artifacts/moe-v1-resource.json --timeout 360 -- \
+  python -m kernel_tuning_lab run --spec examples/quickstart/moe-h800.json --output artifacts/moe-v1
+```
+
+Random与SMAC每方法最多四次揭示，独立验收另计。候选失败会保留；没有空闲获准卡时包装器拒绝执行，不停止他人进程。
+
+复制JSON为新文件，修改 `algorithms` 即可切换：
+
+```json
+"algorithms": ["random@1.0.0"]
+```
+
+或：
+
+```json
+"algorithms": [{"asset": "smac_rf@1.0.0", "options": {"initial_design_size": 2}}]
+```
+
+SMAC需要 `kernel_tuning_lab.optimizers` 插件与可选依赖。修改输入、算法或预算时用新输出目录。
+
+## 6. 同步E盘与Web
+
+确认实验命令结束后同步整个目录；SQLite可能有WAL，不能仅复制运行中的主库。运行中数据库应使用标准SQLite backup。
+
+```bash
+# 本机WSL
+export KTL_VAULT=/mnt/e/GPT/KernelTuningLab
+mkdir -p "$KTL_VAULT/records/user/moe-v1"
+rsync -a --partial --append-verify ktl-gpu:work/ktlab-v1/source/artifacts/moe-v1/ \
+  "$KTL_VAULT/records/user/moe-v1/"
+ktlab web --root "$KTL_VAULT/records/user/moe-v1"
+```
+
+远端workspace不同则替换为自己的实际路径。SHA和恢复检查见[部署指南](DEPLOYMENT.md)。远端查看可用：
+
+```bash
+ssh -L 8765:127.0.0.1:8765 ktl-gpu
+# 远端另一个会话：ktlab web --root <实验目录> --port 8765
+```
+
+## 7. 创建自定义Searcher
+
+```bash
+ktlab scaffold algorithm --output my_search
+ktlab check --spec my_search/experiment.json --output artifacts/my-search-check
+ktlab run --spec my_search/experiment.json --output artifacts/my-search
+```
+
+编辑 `my_search/assets.py` 的 `suggest`。生成模板用于接口学习；研究可使用 `space.sample_feasible`、partial/region与条件空间，不把模板策略当成平台性能结论。算法只收到已揭示反馈，失败与尝试过的配置也属于历史。
+
+## 8. AI与L3入口
+
+- A：注册已有预测器，平台不代训练。
+- B：参考 `examples/production_suite/local-provider.example.json`、`api-provider.json`，统一返回配置、区域或查询。
+- C：`ktlab ai-program submit/review/check/development/freeze/test`；原文、审查、反馈与测试曝光分开保存。
+- L3：`ktlab l3 --database <SQLite> --output artifacts/l3`；K是配置数，不能代替物理二进制或Graph数量。
+
+API示例默认不授权真实付费调用。模型先核对来源、revision、文件SHA与访问许可，接口fixture不能代替实际模型效果。
+
+## 常见错误
+
+| 现象 | 先检查 |
+|---|---|
+| unknown research experiment fields | schema2用run，kind=research用research |
+| 找不到smac_rf | 优化器插件与匹配依赖 |
+| Torch/CUDA/ABI不匹配 | doctor、profile、binary manifest；新建兼容环境 |
+| native default准备失败 | 实际模板、packing契约和资源原因，不改容差 |
+| 资源拒绝/未知PID | 保存receipt，等待合法资源，不清理他人任务 |
+| Web没有曲线/成本 | 选择完整目录；旧记录可能没有保存轨迹 |
+
+更多见[排错](TROUBLESHOOTING.md)和[远端GPU手册](REMOTE_GPU_TROUBLESHOOTING.md)。

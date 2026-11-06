@@ -28,6 +28,7 @@ examples/scale/report.md
 examples/results/*.json
 !examples/results/README.md
 *.png
+!docs/assets/web-search.png
 *.whl
 *.pptx
 *.db

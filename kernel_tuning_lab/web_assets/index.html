@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>KernelTuningLab · 实验</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<aside>
+  <a class="brand" href="/">KernelTuningLab<span>EXPERIMENT VIEWER · v1</span></a>
+  <div class="side-heading"><h2>实验目录</h2><button id="refresh" title="重新扫描启动时指定的目录">刷新</button></div>
+  <label class="sr" for="experiment-filter">筛选实验</label><input id="experiment-filter" placeholder="筛选名称、目录、状态" type="search">
+  <p class="hint">勾选多个实验进行对比</p>
+  <div id="experiments"></div><p id="scan-state" class="hint" role="status"></p>
+  <footer>本地 · 只读<br>SQLite / JSONL / JSON / CSV</footer>
+</aside>
+<main>
+  <header><div><p class="eyebrow">REPRODUCIBLE KERNEL RESEARCH</p><h1>实验工作台</h1><p id="selection-label" class="muted">选择一个实验开始查看</p></div><a id="download-report" class="button" hidden>下载报告 ↗</a></header>
+  <div id="notice" class="notice" role="status" hidden></div>
+  <nav aria-label="实验视图"><button data-view="overview" class="active">总览</button><button data-view="search">搜索过程</button><button data-view="configs">配置分析</button><button data-view="cost">成本分析</button><button data-view="l3">L3 变体与分派</button></nav>
+  <section id="content" aria-live="polite"><div class="empty">选择左侧已有实验。也可以使用 <code>ktlab web --root 实验目录</code> 加载其他目录。</div></section>
+</main>
+<dialog id="record-dialog"><div class="dialog-header"><h2>记录详情</h2><button id="close-dialog">关闭</button></div><p class="hint">包含请求参数、正确性、执行注解与来源身份。</p><pre id="record-json"></pre></dialog>
+</body></html>

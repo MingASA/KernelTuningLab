@@ -1,25 +1,34 @@
-# 实验接续要求
+# KernelTuningLab 工作规范
 
-当前平台任务优先读取`artifacts/PRODUCTION_SUITE_CURRENT.json`及其root的state/private SESSION_NOTES，开发分支`platform/production-suite-readiness`。旧H800研究保持挂起，不自动恢复多seed模型/优化器大矩阵；旧PAUSE_REQUESTED不得由新平台任务删除。当前先做CPU、构建和定向工程验收，不无限轮询占用卡，不使用任何key发真实API。最新用户撤销了逐候选强制完整模型卸载的全局要求：常驻串行必须有可验证的合作门禁，并把资源上下文绑定记录，不能用一次利用率/empty_cache当作静默证明。
+## 当前入口
 
-2026-10-29真实LLM审查任务接续还要先读`artifacts/H800_LLM_CURRENT.json`，再读其root的`state.json`、`H800-state.json`及`private/SESSION_NOTES.md`。新任务分支`research/h800-local-llm-review`；A专门训练模型延期，B为真实小模型逐步决策，C为Qwen3.8-27B生成/迭代规则。旧接口fixture不算真实模型证据。留出测试策略已冻结，不能据目标性能修改提示/规则；已经有效的GPU阶段只读恢复，不重测。
+main为稳定使用入口，v1.0.0基础设施交付后，科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
 
-开始或压缩上下文后恢复实验时，先读：
+本机有私有状态时，优先读取artifacts/FINAL_RELEASE_CURRENT.json及其root的state.json、private/SESSION_NOTES.md、private/WORKPLAN.md；不存在时再读取PRODUCTION_STABILITY_CURRENT.json和PRODUCTION_SUITE_CURRENT.json。状态、原始receipt和记录优先于聊天推测。
 
-1. `docs/REMOTE_GPU_TROUBLESHOOTING.md`。
-2. 若本机存在，读 `artifacts/cross-gpu-run2/private/MACHINE_NOTES.md`、对应机器的 `H800_ISSUES.md` / `4090_ISSUES.md`。
-3. 读 `artifacts/cross-gpu-run2/state.json`、`4090-state.json` / `H800-state.json` 及相应私有 deployment/environment/receipt 日志。状态与原记录优先于对话中的推测。
+当前最终发布已获用户明确授权：审查和验收后正常合并main、推送并创建新稳定标签。保留历史分支和标签，不force push。后续main变更遵循当轮用户授权及CI审查，不从本条推断可发布任意后续实验。
 
-不要重做证据有效的5060 Ti 192观测。跨GPU Anchor采集源码固定为 `6ecde2ed6c6778bec4c68be0c326a3320212f43c`；外层资源包装器独立记录其commit/SHA。修改实现/协议后不得无说明地合并旧数据。
+## 数据与证据
 
-Git作者和提交者必须为 `MingASA <mingasa7@gmail.com>`。在研究分支工作，可推送，不合并main、不移动既有发布标签。
+- 本机主要保全位置E:\GPT\KernelTuningLab，WSL实际路径先核实。私有源路径、账户、UUID、他人PID及认证资料只放Git忽略的私有记录。
+- 不删除远端原始数据、不覆盖旧封存；传输可续传，核SHA、清单与SQLite，实际恢复后再标完成。
+- 已有效的GPU实验只读恢复、不重测。5060Ti192点和跨GPUAnchor冻结源码6ecde2ed6c6778bec4c68be0c326a3320212f43c不因平台发布改变身份。
+- 区分静态合法、编译、CPU验证、GPU数值通过及未验证。修复不放宽容差，不删除失败或改写旧记录。修改协议/实现后不混合旧数据。
+- 旧H800研究的PAUSE_REQUESTED不得删除或绕过。模型/优化器大矩阵、模型训练和真实付费API不能由基础设施任务自动恢复。
 
-用户已授权4090/H800当前账户使用空闲单卡，无额外固定配额；正常有界安装、编译、验证、Pilot、Anchor和分析无需重复申请批准。每台只用一张卡，性能任务串行；每批有明确数量和超时。仍须遵循实际管理员规则。
+## GPU与环境
 
-启动前检查显存、利用率及compute/graphics进程。绝不加入、停止、修改、抢占他人任务；未知PID不能因同一登录UID就视为自己。冲突时只停止身份已核实的本次任务，保留证据并推进独立工作。GPU UUID是身份，CUDA ordinal不是。
+- 只在获准空卡上做必要、有数量和超时的定向验收；每台一张卡，性能任务串行，不无限轮询占用卡。
+- 启动前检查显存、利用率及compute/graphics进程。UUID是身份，ordinal不是。未知PID不能仅因同UID视为自己。
+- 不加入、停止、修改或抢占他人任务。发生冲突只停止已经通过argv/父子关系/start_ticks核实属于本轮的进程树，保留证据。
+- 常驻推理采用可验证的合作门禁并绑定资源上下文；一次利用率和empty_cache不是静默证明。无逐候选全模型卸载的全局要求。
+- 不使用sudo，不改全局驱动/CUDA/Python/Docker/SSH安全配置。使用私有新环境，不复制旧venv宣称跨机可用；固定源码、二进制ABI、架构与重新验证范围。
+- GitHub不稳定时复用SHA核对的Bundle，不反复clone。依赖故障使用可信wheel/source缓存，不修改共享环境。
 
-不使用sudo，不改全局驱动/CUDA/Python/Docker/SSH安全配置，不读他人实验目录。采用登录入口的当前账户私有workspace。Docker历史排错线索不是本轮已验证结果，也不是一律添加参数的理由；当前优先宿主私有venv。
+## 工程交付
 
-GitHub不稳定的机器优先复用已核对的Git bundle；不要反复clone。所有新故障及时更新机器手册，写清复现、错误分类、原因是否证实、有效/无效处理、下一步及原始日志位置。长任务状态必须落盘，不能依赖本次会话的进程ID记忆。
-
-服务器路径、地址、账户、UUID、他人进程及认证资料只放本地私有且Git忽略的记录。公开手册去敏化。原始大数据单独封存与校验，不覆盖旧归档；异机备份没有授权目标，单列待办，不上传共享GPU服务器，也不阻塞实验。
+- Git作者/提交者：MingASA <mingasa7@gmail.com>。
+- 实验长任务状态、receipt、日志落盘，不能依赖会话PID记忆。新故障记录复现、分类、已证实原因、有效/无效处理和原始日志位置。
+- 本轮目标是恢复、发布、文档和本地只读Web；不新增Kernel、搜索算法或研究排名。小问题不补机械测试；数据完整性、访问边界和真实接口增加有意义的回归。
+- Web默认localhost、只读现有数据，不执行Python/Shell/GPU，不建立第二套实验数据库。
+- 用户亲自上手需用户执行后确认；自动模拟不能标成用户已验收。

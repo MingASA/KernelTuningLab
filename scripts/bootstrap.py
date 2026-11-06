@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 
@@ -31,7 +32,16 @@ def plan(args):
     elif profile.get('extra_index_url'):
         source_options = ['--extra-index-url', profile['extra_index_url']]
     constraints = ['-c', str(Path(args.constraints).resolve())] if args.constraints else []
-    commands = [[args.python, '-m', 'venv', str(target)], pip+source_options+['--no-deps', core]]
+    seed_probe = subprocess.check_output([args.python, '-c',
+        'import importlib.util;print(bool(importlib.util.find_spec("ensurepip")))'], text=True, timeout=15)
+    if seed_probe.strip() == 'False':
+        uv = shutil.which('uv')
+        if not uv:
+            raise ValueError('selected Python has no ensurepip; select a Python with venv support or install uv in your own account')
+        create = [uv, 'venv', '--python', args.python, '--seed', str(target)]
+    else:
+        create = [args.python, '-m', 'venv', str(target)]
+    commands = [create, pip+source_options+['--no-deps', core]]
     packages = list(profile['packages'])
     if args.with_optimizers:
         extra = profiles()['optimizers']['packages']
@@ -77,6 +87,11 @@ def main(argv=None):
         print(json.dumps({'commands': commands, 'environment': str(target), 'GPU_work': False}, indent=2));return
     env = {**os.environ, 'CUDA_VISIBLE_DEVICES': '', 'PYTHONNOUSERSITE': '1', 'PIP_DISABLE_PIP_VERSION_CHECK': '1'}
     for key in ('PYTHONPATH', 'PYTHONHOME'):env.pop(key, None)
+    # Keep host-wide extra indexes from changing this profile's dependency
+    # sources or introducing unrelated network timeouts. No global file edits.
+    for key in tuple(env):
+        if key.startswith('PIP_'):env.pop(key)
+    env.update(PIP_CONFIG_FILE=os.devnull, PIP_DISABLE_PIP_VERSION_CHECK='1')
     for command in commands:
         subprocess.run(command, env=env, check=True, timeout=1800)
     overrides = {}
@@ -88,14 +103,17 @@ def main(argv=None):
     if args.profile == 'moe-cu124':overrides['KT_VLLM085_MOE_COMPONENTS'] = str(Path(args.components).resolve())
     if args.profile == 'flute-cu124':
         overrides.update(PYTHONPATH=str(Path(args.components).resolve()), KT_FLUTE_BUILD_MANIFEST=str(Path(args.flute_manifest).resolve()))
-    qualification = subprocess.check_output([str(python), '-m', 'kernel_tuning_lab', 'doctor'], env={**env, **overrides}, text=True, timeout=45)
+    qualification_code = ('import json,kernel_tuning_lab;from kernel_tuning_lab.portable import doctor;'
+                          'result=doctor();result["imported_package"]=kernel_tuning_lab.__file__;print(json.dumps(result))')
+    qualification = subprocess.check_output([str(python), '-c', qualification_code], cwd=target,
+                                            env={**env, **overrides}, text=True, timeout=45)
     component_evidence = None
     if args.profile in ('moe-cu124', 'flute-cu124'):
         code = ('from kernel_tuning_lab.production.vllm_moe_compat import execution_identity;identity=execution_identity()'
                 if args.profile == 'moe-cu124' else
                 'from kernel_tuning_lab.production.flute import native_api;identity=native_api()[3]')
         code += ';import json;print(json.dumps(identity))'
-        raw = subprocess.check_output([str(python), '-c', code], env={**env, **overrides}, text=True, timeout=90)
+        raw = subprocess.check_output([str(python), '-c', code], cwd=target, env={**env, **overrides}, text=True, timeout=90)
         component_evidence = json.loads(raw.splitlines()[-1])
     runtime = {'profile': args.profile, 'python': str(python), 'commands': commands, 'environment': overrides,
                'doctor': json.loads(qualification), 'component_evidence': component_evidence,

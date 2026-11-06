@@ -475,6 +475,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ktlab", description="KernelTuningLab "+__version__)
     parser.add_argument("--plugin", action="append", default=[], metavar="MODULE_OR_PATH", help="explicitly load a trusted Python extension; repeatable")
     sub = parser.add_subparsers(dest="command", required=True)
+    web = sub.add_parser('web', help='open a localhost read-only experiment viewer')
+    web.add_argument('--root', action='append', required=True, help='experiment directory or parent; repeat to compare roots')
+    web.add_argument('--port', type=int, default=8765)
+    def view_experiments(args):
+        from .web import serve
+        return serve(args.root, args.port)
+    web.set_defaults(handler=view_experiments)
     doctor = sub.add_parser('doctor', help='CPU-safe runtime profiles and optional read-only nvidia-smi inspection')
     doctor.add_argument('--devices', action='store_true')
     def diagnose(args):

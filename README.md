@@ -1,85 +1,120 @@
 # KernelTuningLab
 
-面向真实硬件的算子配置寻优研究平台。研究者提交 **SDK 插件和实验 JSON**，用一条命令运行多个算子/实现、Shape、dtype、seed 和预算，比较搜索算法并生成报告。
+[![CPU CI](https://github.com/MingASA/KernelTuningLab/actions/workflows/cpu.yml/badge.svg?branch=main)](https://github.com/MingASA/KernelTuningLab/actions/workflows/cpu.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](pyproject.toml)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
 
-- **L2**：有限观测预算下的配置搜索、历史迁移和离线 Replay。
-- **L3**：有限配置集合选择与分派；配置数、编译特化数和二进制体积分别记录。
-- **AI 接口**：配置预测、下一步建议和只读历史；当前没有AI已优于专家库的声明。
+面向真实硬件的算子配置寻优平台。用 **CLI / SDK、实验 JSON 和统一 Runner** 连接生产算子、搜索算法、AI 决策与可恢复的测量记录。
 
-## 五分钟 CPU 上手
+`main` 是稳定使用入口，固定版本为 **v1.0.0**。研究请建立独立分支，论文与实验记录固定源码 commit。
 
-Python ≥3.10，核心包无第三方运行依赖；CPU路径不需要Torch/Triton。
+## 主要功能
 
-```bash
-git clone --branch platform/production-stability-delivery https://github.com/MingASA/KernelTuningLab.git
-cd KernelTuningLab
-python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/ktlab research --spec examples/research/cpu.json --output artifacts/first-study
-```
+- **统一实验**：多个算子、实现、Shape、dtype、seed 和预算；静态检查、参考验证、完整调用计时与失败记录。
+- **真实配置空间**：条件参数、离散模板、原生默认与显式配置；大空间按需访问，完整集合与采样前缀分开。
+- **成熟搜索器**：Random、Grid、启发式及原生 SMAC RF、Kernel Tuner DE；预算、失败反馈、缓存和恢复共用接口。
+- **三种 AI 路线**：已有模型预测、模型逐步决策、生成并审查 SDK Searcher；API 与本地模型是独立部署方式。
+- **L3 与分析**：有限配置集合、Shape 分派、K–Loss、成本、覆盖和部署身份。
+- **本地 Web 查看器**：读取现有 SQLite、轨迹和报告，筛选实验、查看搜索过程、配置与成本；默认 localhost，只读。
+- **迁移与恢复**：私有环境 bootstrap、CPU 安全 doctor、SHA 校验和归档恢复。
 
-打开 `artifacts/first-study/report.md` 查看搜索曲线、已验证性能、成本、失败和覆盖。相同命令恢复；`--write-only` 预览预算，`--report-only` 重建报告，`--quiet` 关闭stderr进度。若Python缺少ensurepip，可使用已有uv：`uv venv --python 3.12 --seed .venv`。
-
-完整安装、wheel、GPU最小实验、恢复与数据导出见 **[QUICKSTART.md](docs/QUICKSTART.md)**。
-
-当前开发分支 `research/space-production-integration` 新增可行空间构造、SMAC3/Kernel Tuner 原生优化器、三条外部 AI 接口与固定 vLLM0.8.5 Marlin 插件。它们的安装、单命令示例和逐项证据见 **[SPACE_PRODUCTION.md](docs/SPACE_PRODUCTION.md)**；CPU 契约、真实 GPU 覆盖和未完成实验分别列出。
-
-生产套件开发继续在 `platform/production-suite-readiness`：GemLite W4/W2、FLUTE W3、FlexAttention、SGLang paged decode、vLLM MoE的默认/显式入口，以及统一API/本地AI、合作驻留门禁和有限配置表。见 **[PRODUCTION_SUITE.md](docs/PRODUCTION_SUITE.md)**。源码、构建、加载和GPU验收分别标记；旧的大规模模型/算法比较保持暂停。
-
-补充轮已完成[平台审查](docs/PRODUCTION_SUITE_AUDIT.md)及[真实AI与原生优化器的有限实测](docs/PRODUCTION_AI_FOLLOWUP.md)：7个新任务、640次揭示，保留全部失败和运行时修正。分支 `research/production-ai-followup`；单seed结果不作总体算法排名。
-
-生产稳定性收尾见 **[PRODUCTION_STABILITY.md](docs/PRODUCTION_STABILITY.md)**：GemLite Split-K 元数据尾部修复、独立 FLUTE FP32 归约 profile、逐模板资源拒绝，以及 MoE 3200 点 CPU 构建从47.926秒降至0.501秒。分支 `platform/production-stability-delivery`，逐点证据与未验证路径明确分开，没有重跑旧研究矩阵。
-
-当前 `main` 尚未包含这套验证交付；精确交付 commit、源码bundle和校验值见交付receipt，复现实验请固定该commit。开发请另建分支。跨硬件 Anchor 使用独立冻结的实验 commit，见[跨 GPU 研究报告](docs/CROSS_GPU_PHASE1.md)，不能以浮动 main 代替。
-
-## 添加实现或算法
-
-```bash
-.venv/bin/ktlab scaffold kernel --runtime python --output my_kernel
-.venv/bin/ktlab check --spec my_kernel/experiment.json --output artifacts/check
-.venv/bin/ktlab run --spec my_kernel/experiment.json --output artifacts/run
-.venv/bin/ktlab scaffold algorithm --output my_algorithm
-```
-
-修改生成的 `assets.py`，无需修改核心注册表。文件、模块和安装包entry points均可发现资产。多步骤Kernel用 `ExecutionPlan` 表达初始化与有序步骤，正确性和完整调用计时共用同一流程。见 **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**、[EXTENDING.md](docs/EXTENDING.md)。
+## 系统结构
 
 ```mermaid
 flowchart LR
-    C[实验 JSON 与 SDK 资产] --> V[预检与独立验收]
-    V --> S[预算化搜索]
-    S -->|候选| R[v2 Runner]
-    R -->|已揭示观测| S
-    R --> D[SQLite / JSONL]
-    D --> A[Replay · L3 · 报告]
+    A[实验 JSON · SDK 插件] --> B[预检与参考验收]
+    B --> C[预算化搜索]
+    C -->|候选| D[Runner · 编译 · 完整调用]
+    D -->|已揭示反馈| C
+    D --> E[SQLite · JSONL · 轨迹]
+    E --> F[Web · 报告 · L3]
 ```
 
-版本化资产、合法性、输入完整性、实际计时输出检查、进程期限、兼容缓存和恢复共用现有Runner/存储。[ARCHITECTURE.md](ARCHITECTURE.md)说明详细设计。
+平台不要求 H800 常驻一个服务。本地负责开发、数据保全与分析；GPU 服务器按需执行实验。SSH 负责登录和命令，Git / Bundle 负责源码版本，rsync / scp 负责结果和部署资产。
 
-## 当前证据与边界
+## Quickstart：CPU 五分钟上手
 
-| 能力 | 证据 |
+CPU 核心包没有第三方运行依赖，不需要 Torch、Triton 或 GPU。
+
+```bash
+git clone https://github.com/MingASA/KernelTuningLab.git
+cd KernelTuningLab
+python3 scripts/bootstrap.py --profile core --env .venv
+source .venv/activate-ktlab.sh
+ktlab doctor
+ktlab run --spec examples/quickstart/cpu.json --output artifacts/first-run
+ktlab web --root artifacts/first-run
+```
+
+浏览器打开 `http://127.0.0.1:8765`。示例对一个小型 CPU GEMM 使用 Random / Grid，每方法最多两次揭示；输出应为 `status: passed`。缓存可能使真实执行数少于观测数。
+
+相同命令和输出目录可恢复实验；新实验使用新目录。完整流程见 [Quickstart](docs/QUICKSTART.md)。Windows GPU 使用 WSL2；Windows 原生 CPU 环境的程序位于 `.venv\Scripts\`。
+
+## 生产算子与硬件支持
+
+以下是固定 profile 的定向实机覆盖，新增配置仍由 Runner 验算。
+
+| 生产算子 | 已验证路径 | 主要边界 |
+|---|---|---|
+| GemLite A16 W4/W2 | 4090 FP16/BF16，GEMM / Split-K、默认与显式 | uniform group-scale；Split-K 元数据尾部已修复；GEMV/RevSplit-K 未实机验收 |
+| FLUTE W3 High | H800 FP16/BF16；4090 部分模板及 FP16 默认 | P32 packing；独立 FP32 归约 profile；逐模板共享内存检查；原 Mixed 有精度限制 |
+| FlexAttention | H800 Torch2.6 TRITON forward，dense/causal，FP16/BF16 | 与 Torch2.14、FLASH、backward 等路径分开 |
+| SGLang paged decode | H800 原生/显式、等长/不等长分页，FP16/BF16 | 关闭 PDL 的兼容路径，保留 Split-KV 与 merge |
+| vLLM MoE 0.8.5 | H800 完整两次 GEMM、SiLU、对齐和归约，FP16/BF16 | 官方固定组件 + Torch2.6/CUDA12/ABI0；与0.30分开 |
+
+5060 Ti 已验证核心 GPU Runner 与研究算子栈。不同后端可以使用独立环境；一个环境的支持不能推到全部生产路径。
+
+[最终支持说明](docs/PRODUCTION_STABILITY.md)列出静态合法、编译成功、数值通过及未验证范围。一次实际工程修复将完整3200点 MoE CPU 构建从47.926秒降至0.501秒，集合一致；这是特定任务的数据，见[原始记录](examples/production_stability/CPU_PROFILE.json)。
+
+## 自定义搜索算法与 AI 接入
+
+```bash
+ktlab scaffold algorithm --output my_search
+ktlab run --spec my_search/experiment.json --output artifacts/my-search
+```
+
+生成的 `assets.py` 实现公开 SDK 的 `suggest`。模型可以返回配置、partial、region 或空间查询；生成程序经过审查、开发和冻结后进入测试。平台不代训练路线A，也不将协议 fixture 当作模型效果。
+
+- [SDK 与插件](docs/EXTENDING.md)
+- [SMAC / KT 与生产配置空间](docs/SPACE_PRODUCTION.md)
+- [AI 接口与资源协议](docs/PRODUCTION_SUITE.md)
+- [团队使用指南](docs/TEAM_GUIDE.md)
+
+## 结果、Web 与数据恢复
+
+```bash
+ktlab web --root artifacts/first-run --root artifacts/another-run
+ktlab report --database artifacts/first-run/measurements.sqlite --output artifacts/report
+ktlab l3 --database artifacts/first-run/measurements.sqlite --output artifacts/l3
+ktlab export --database artifacts/first-run/measurements.sqlite --output records.jsonl
+```
+
+Web 读取启动时指定的目录，不启动实验或修改数据。远端可通过 SSH 端口转发查看，也可将结果同步到本地打开。见 [Web 使用说明](docs/WEB.md)。
+
+从私有归档库按源机器和目录前缀恢复：
+
+```bash
+ktlab archive verify --vault "$KTL_VAULT"
+ktlab archive restore --vault "$KTL_VAULT" --source H800 \
+  --prefix "$EXPERIMENT_PREFIX" --output restored-data
+```
+
+私有原始数据、机器信息和模型权重不随 GitHub 发布。部署层、ABI、可信来源与恢复验收见[部署与恢复](docs/DEPLOYMENT.md)。
+
+## 文档导航
+
+| 想做什么 | 文档 |
 |---|---|
-| CPU-only安装、测试、SDK、搜索与SVG报告 | 已在独立无Torch/Triton环境执行，源码和wheel均验证 |
-| RTX 5060 Ti 16GB / WSL2 | 原四类十阶段严格gate、新八类有限验证；[GPU报告](docs/5060TI_RESULTS.md) |
-| T1 GEMM / L2 / L3 | C64的10 Shape×64配置×3输入seed真实矩阵；[第一阶段研究](docs/RESEARCH_PHASE1.md) |
-| 扩展tile、Shape-generic、交付审计 | [第二阶段研究与验收](docs/RESEARCH_PHASE2.md)逐项标注通过、部分通过、未执行与限制 |
-| 真实跨GPU Anchor / 迁移 | [5060 Ti / 4090 / H800](docs/CROSS_GPU_PHASE1.md)各192条FP16观测，8160条离线Replay及18条真实在线轨迹；有限16候选与软件差异有明确边界 |
-| 可行空间 / 原生优化器 / 生产W4 | [早期报告](docs/SPACE_PRODUCTION.md)：SMAC/KT完整声明空间、4090原生Marlin及有限L3；后续[真实LLM审查](docs/H800_LLM_REVIEW.md)与[生产套件工程验收](docs/PRODUCTION_SUITE.md)分别保留协议和证据范围 |
-| H20/H200及更广Hopper路径 | [迁移检查单](docs/GPU_MIGRATION.md)；H20/H200未执行，H800的MoE TMA/完整proposal-suite仍未验证 |
-| Mock / Replay | Mock是合成性能；Replay揭示已有标签，均不产生新GPU测量 |
+| 从安装到第一个实验 | [Quickstart](docs/QUICKSTART.md) · [个人练习](docs/PERSONAL_HANDOFF.md) |
+| 新服务器、环境选择与 E 盘恢复 | [部署与恢复](docs/DEPLOYMENT.md) |
+| 团队学习与工作流 | [团队指南](docs/TEAM_GUIDE.md) |
+| 查看、筛选和对比实验 | [Web](docs/WEB.md) |
+| 开发 Kernel / Searcher 插件 | [SDK 扩展](docs/EXTENDING.md) · [接口](docs/INTERFACES.md) |
+| 正确性、计时与证据 | [验证](docs/VALIDATION.md) · [协议](docs/PROTOCOL.md) |
+| 有限配置集合和分派 | [L3](docs/L3.md) |
+| 当前能力与限制 | [STATUS](docs/STATUS.md) · [生产支持](docs/PRODUCTION_STABILITY.md) |
+| 历史研究 | [阶段一](docs/RESEARCH_PHASE1.md) · [阶段二](docs/RESEARCH_PHASE2.md) · [跨 GPU](docs/CROSS_GPU_PHASE1.md) |
 
-已接入GEMM、BMM、Softmax、LayerNorm、W4/W3/W2反量化与量化GEMM、连续Attention、MoE Grouped GEMM。[算子文档](docs/PROPOSAL_OPERATORS.md)给出语义边界；canonical bitstream、连续Attention、局部MoE不代表GPTQ/AWQ、paged KV或完整生产推理。
+## 许可证
 
-GPU环境需独立安装兼容Torch/Triton；CPU安装成功不表示CUDA可用。5060Ti固定栈与最小实测命令见[Quickstart](docs/QUICKSTART.md)。其他GPU须重新probe、编译和数值验收。
-
-## 研究与维护入口
-
-| 需要做什么 | 入口 |
-|---|---|
-| 搜索插件与多case一站式比较 | [RESEARCH_WORKFLOW.md](docs/RESEARCH_WORKFLOW.md) |
-| 预算、正确性、计时、划分和结果解释 | [RESEARCH_PROTOCOL.md](docs/RESEARCH_PROTOCOL.md) → [PROTOCOL.md](docs/PROTOCOL.md) |
-| 环境、编译、数值、缓存与恢复排错 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
-| 历史示例、Mock Demo、规模与公共数据 | [examples](examples/README.md)、[PUBLIC_DATA.md](docs/PUBLIC_DATA.md) |
-| 支持状态和源码接口 | [STATUS.md](docs/STATUS.md)、[INTERFACES.md](docs/INTERFACES.md) |
-
-大型SQLite/JSONL、日志、编译产物放在 `artifacts/`，单独归档校验；Git中的精简矩阵和图表不替代原始证据。立项书历史图表缺少原始表，未作为新实测数据导入。
+原始平台代码采用 [Apache-2.0](LICENSE)。第三方源码保留各自许可证与版权，见 [NOTICE](NOTICE)。
