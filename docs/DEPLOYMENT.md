@@ -7,7 +7,7 @@
 ```bash
 git clone --branch main https://github.com/MingASA/KernelTuningLab.git
 cd KernelTuningLab
-git checkout v1.0.0
+git checkout v1.0.1
 python3 scripts/bootstrap.py --profile core --env .venv
 source .venv/activate-ktlab.sh
 ktlab doctor
@@ -20,7 +20,7 @@ python3 scripts/bootstrap.py --profile core --env .venv \
   --wheel "$KTL_CORE_WHEEL" --wheel-sha256 "$KTL_CORE_SHA256"
 ```
 
-`bootstrap` 新建私有venv，拒绝覆盖旧环境，安装后记录 `runtime.json`，生成 `activate-ktlab.sh`。它不执行GPU实验或模型/API调用。
+`bootstrap` 新建私有venv，拒绝覆盖旧环境，安装后记录 `runtime.json`，生成 `activate-ktlab.sh`；激活时清理旧PYTHONPATH/PYTHONHOME，再设置当前后端路径。它不执行GPU实验或模型/API调用。
 
 ## 二、选择执行环境
 

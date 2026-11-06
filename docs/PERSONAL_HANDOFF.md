@@ -17,7 +17,7 @@ ktlab run --spec examples/quickstart/cpu.json --output artifacts/my-cpu
 ktlab web --root artifacts/my-cpu
 ```
 
-预期：`doctor.version=1.0.0`；实验`status=passed`、独立验收`passed`、四次算法观测。真实执行与缓存数以输出为准。打开`http://127.0.0.1:8765`，选择搜索过程，切换观测/墙钟；进入配置分析点击一个配置ID。完成后`Ctrl+C`。
+预期：`doctor.version=1.0.1`；实验`status=passed`、独立验收`passed`、四次算法观测。真实执行与缓存数以输出为准。打开`http://127.0.0.1:8765`，选择搜索过程，切换观测/墙钟；进入配置分析点击一个配置ID。完成后`Ctrl+C`。
 
 ## 2. 登录并选对生产环境
 
