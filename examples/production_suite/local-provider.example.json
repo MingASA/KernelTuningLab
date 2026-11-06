@@ -1,0 +1,8 @@
+{
+  "kind": "local_model",
+  "configuration": {
+    "model_manifest": "REPLACE_WITH_PRIVATE_EXISTING_MODEL_MANIFEST",
+    "manifest_sha256": "REPLACE_WITH_ACTUAL_SHA256",
+    "resource_mode": "single_card_resident"
+  }
+}

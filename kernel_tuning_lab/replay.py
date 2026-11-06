@@ -274,7 +274,8 @@ def run_replay(
         operator_name=operator.name, operator_kind=operator.kind,
         measurement_mode=first.measurement_mode, source_context_id=context_id,
         max_wall_time_s=budget.max_wall_time_s,
-        coverage_scope="known_observations_only" if approximate else "legal_space",
+        coverage_scope=(space.identity.get("inference_scope", "known_observations_only" if approximate else "legal_space") if isinstance(getattr(space, "identity", None), dict)
+                        else "known_observations_only" if approximate else "legal_space"),
         known_coverage_raw_space=len(raw_observed) / cardinality if cardinality else 0.0,
         space_cardinality=cardinality, candidate_pool_size=getattr(searcher, "candidate_pool_size", 512),
         candidate_pool_approximate=approximate,

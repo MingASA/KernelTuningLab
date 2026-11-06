@@ -1,0 +1,45 @@
+{
+  "status": "final_archive_SHA_and_restore_verified",
+  "raw_data_publication": "large raw evidence remains private under artifacts; not uploaded to GitHub",
+  "source_archives": [
+    {
+      "bytes": 4134323,
+      "sha256": "9fc290e8b5c7dad6fb87f390d58c56b4d56de969db41438d11c15fc3dbeaa368",
+      "archive": "initial-gpu-results-v1.tar.gz"
+    },
+    {
+      "bytes": 1943607,
+      "sha256": "badedc013dcb80627dbd13d99057c49a1a7ad3bd7cf088819faa99638bd27a24",
+      "archive": "remaining-gpu-results-v1.tar.gz"
+    },
+    {
+      "bytes": 19205178,
+      "sha256": "50e346081c86ef57653c06ab6b2946fefdeb61302fbfcbeba483dad85a708b9b",
+      "archive": "compiler-and-dispatch-products-v1.tar.gz"
+    }
+  ],
+  "SQLite_quick_checks": 76,
+  "physical_research_attempts": 869,
+  "independent_acceptance_attempts": 159,
+  "cache_observations": 270,
+  "status_counts": {
+    "success": 866,
+    "compile_error": 3
+  },
+  "all_successful_research_records_reference_verified_on_GPU": true,
+  "off_host_backup": "pending_authorized_destination",
+  "final_archive": "space-production-evidence-20261028.tar.gz",
+  "final_archive_SHA256": "b25b49f30bb50cc92ef45e65b6337ef178ab2f249b375837b9d0e238929fa117",
+  "final_archive_bytes": 27681576,
+  "sealed_source_commit": "d5aad907645bceb8a93172556ebca6f460cb4356",
+  "inventory_files_verified": 448,
+  "SQLite_quick_checks_restored": 76,
+  "GPU_research_record_roundtrips": 869,
+  "full_record_payload_equality": true,
+  "offline_analysis_without_site_packages": true,
+  "restored_open_observations": 800,
+  "restored_native_records": 72,
+  "restored_actual_runtime_dispatch_cases": 6,
+  "final_archive_mode": "0600_private",
+  "source_snapshot_notice": "The sealed source includes the received-archives manifest; this later commit attests the final archive SHA and restore without a circular self-reference. No measurement records were changed."
+}

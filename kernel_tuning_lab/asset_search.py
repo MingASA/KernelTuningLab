@@ -10,6 +10,7 @@ import time
 from typing import Any
 
 from .acceptance import create_searcher, request_candidates
+from .datasets import training_record_manifest
 from .models import MeasurementRecord, RecordStatus, SearchBudget, canonical_json, stable_id
 from .runner import BenchmarkRunner
 from .search import SearchHistory
@@ -63,11 +64,57 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                 "budget": {"max_evaluations": budget.max_evaluations, "max_wall_time_s": budget.max_wall_time_s}}
     trial_id = stable_id(identity)
     records = []
+    trace = []
     attempted = set()
     failures = []
     attempts = evaluations = cache_hits = contract_failures = unrecorded_failures = 0
     status = "passed"
     stop_reason = "evaluation_budget"
+    searcher = None
+    searcher_closed=False
+    algorithm_costs = {'factory_ms': 0.0, 'proposal_ms': 0.0, 'feedback_ms': 0.0,'shutdown_ms':0.0}
+    def algorithm_call(label, callback, *args, **kwargs):
+        before = time.perf_counter()
+        try:
+            return callback(*args, **kwargs)
+        finally:
+            algorithm_costs[label] += (time.perf_counter() - before) * 1000
+
+    def algorithm_diagnostics():
+        if searcher is None:
+            return {}
+        try:
+            details = getattr(searcher, 'diagnostics', {})
+            details = details() if callable(details) else details
+            value = {'optimizer': deepcopy(details), 'space': deepcopy(getattr(searcher, 'space_diagnostics', {}))}
+            canonical_json(value)
+            return value
+        except Exception as exc:
+            return {'diagnostics_error': type(exc).__name__ + ': ' + str(exc)}
+    trace_path = output / "observations.jsonl"
+    trace_path.write_text("", encoding="utf-8")
+    _save_json(output / "trial.json", {**identity, "trial_id": trial_id, "status": "running",
+        "kernel_ref": case.kernel.ref, "operator_ref": case.operator_definition.ref,
+        "shape": dict(case.shape.dims), "dtype": case.operator.dtype, "trace_schema_version": 1})
+
+    def observed(record, cached, admitted_at):
+        verified = _correctness(record)[0]
+        previous = trace[-1]["best_verified_latency_ms"] if trace else None
+        best = min(previous, record.median_ms) if verified and previous is not None else (
+            record.median_ms if verified else previous)
+        row = {"observation": len(records), "record_id": record.id, "config_id": record.config.id,
+               "status": record.status.value, "cache_hit": cached, "correctness_verified": verified,
+               "latency_ms": record.median_ms if verified else None, "best_verified_latency_ms": best,
+               "elapsed_wall_time_s": time.perf_counter() - started,
+               "lookup_and_measurement_wall_time_s": time.perf_counter() - admitted_at,
+               "source_compile_time_ms": record.compile_time_ms, "source_measurement_wall_time_s": record.wall_time_s,
+               "physical_compile_time_ms": 0.0 if cached else record.compile_time_ms,
+               "physical_measurement_wall_time_s": 0.0 if cached else record.wall_time_s,
+               "algorithm_costs_ms": dict(algorithm_costs), 'algorithm_diagnostics': algorithm_diagnostics()}
+        trace.append(row)
+        # Linear append-only checkpoint; final trial.json remains the manifest.
+        with trace_path.open("a", encoding="utf-8") as stream:
+            stream.write(canonical_json(row) + "\n")
 
     def notify(value):
         if progress is not None:
@@ -84,16 +131,29 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             stream.write(canonical_json(event) + "\n")
 
     def finish():
+        nonlocal searcher_closed,status,stop_reason
+        if not searcher_closed and searcher is not None:
+            searcher_closed=True
+            close=getattr(searcher,'close',None)
+            if callable(close):
+                try:algorithm_call('shutdown_ms',close)
+                except Exception as exc:
+                    note_failure('algorithm_shutdown',exc);status='failed';stop_reason='algorithm_shutdown_failed'
         successes = [record for record in records if record.successful]
-        best = min(successes, key=lambda record: (record.median_ms, record.config.id), default=None)
+        fastest_observed = min(successes, key=lambda record: (record.median_ms, record.config.id), default=None)
         verified_rows = [record for record in successes if _correctness(record)[0]]
         best_verified = min(verified_rows, key=lambda record: (record.median_ms, record.config.id), default=None)
-        verified, origin = _correctness(best)
+        # Accepted submitter claims remain recorded, but a generic best_config
+        # consumer must never mistake an unverified latency for a recommendation.
+        best = best_verified
+        verified, origin = _correctness(best if best is not None else fastest_observed)
         result = {"trial_id": trial_id, "case_id": case.id, "status": status, "stop_reason": stop_reason,
                   "kernel_ref": case.kernel.ref, "kernel_fingerprint": identity["kernel_fingerprint"],
                   "operator_ref": case.operator_definition.ref,
                   "algorithm_ref": algorithm_definition.ref, "algorithm_fingerprint": identity["algorithm_fingerprint"],
                   "algorithm_options": options, "options": options, "seed": seed,
+                  "training_data": identity.get("training_data"),
+                  'algorithm_runtime': identity.get('algorithm_runtime'),
                   "shape": dict(case.shape.dims), "dtype": case.operator.dtype,
                   "record_ids": [record.id for record in records], "evaluations": evaluations,
                   "observations": len(records),
@@ -105,6 +165,12 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "best_config": dict(best.config.params) if best is not None else None,
                   "best_latency_ms": best.median_ms if best is not None else None,
                   "best_record_id": best.id if best is not None else None,
+                  "unverified_successes": len(successes)-len(verified_rows),
+                  "fastest_observed_success": ({"config":dict(fastest_observed.config.params),
+                      "record_id":fastest_observed.id,"latency_ms":fastest_observed.median_ms,
+                      "correctness_verified":_correctness(fastest_observed)[0],
+                      "notice":"Observation diagnostic only; recommendations require reference verification"}
+                      if fastest_observed is not None else None),
                   "recommendation_verified": verified, "correctness_origin": origin,
                   "best_verified_config": dict(best_verified.config.params) if best_verified is not None else None,
                   "best_verified_latency_ms": best_verified.median_ms if best_verified is not None else None,
@@ -112,6 +178,12 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                   "wall_time_s": time.perf_counter() - started, "budget": identity["budget"],
                   "space_cardinality": case.space.cardinality,
                   "space_fingerprint": identity["space_fingerprint"], "failures": failures,
+                  "trace_schema_version": 1, "observation_trace": trace,
+                  "physical_compile_time_ms": sum(row["physical_compile_time_ms"] for row in trace),
+                  "physical_measurement_wall_time_s": sum(row["physical_measurement_wall_time_s"] for row in trace),
+                  "source_compile_time_ms": sum(row["source_compile_time_ms"] for row in trace),
+                  "source_measurement_wall_time_s": sum(row["source_measurement_wall_time_s"] for row in trace),
+                  'algorithm_costs_ms': dict(algorithm_costs), 'algorithm_diagnostics': algorithm_diagnostics(),
                   "budget_semantics": "max_evaluations bounds revealed candidates, including failures and cache hits; physical evaluations are reported separately; parent enforces hard wall deadline"}
         _save_json(output / "trial.json", result)
         return result
@@ -130,7 +202,28 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
 
     try:
         notify({"event": "algorithm_factory"})
-        searcher = create_searcher(algorithm_definition, options, seed)
+        searcher = algorithm_call('factory_ms', create_searcher, algorithm_definition, options, seed)
+        if callable(getattr(searcher, 'bind_trial', None)):
+            algorithm_call('factory_ms', searcher.bind_trial, output_dir=str(output), identity=deepcopy(identity))
+        runtime = algorithm_call('factory_ms', lambda: deepcopy(getattr(searcher, 'runtime_identity', None)))
+        if runtime is not None:
+            canonical_json(runtime)
+            identity['algorithm_runtime'] = runtime
+            trial_id = stable_id(identity)
+            _save_json(output / 'trial.json', {**identity, 'trial_id': trial_id, 'status': 'running',
+                'kernel_ref': case.kernel.ref, 'operator_ref': case.operator_definition.ref,
+                'shape': dict(case.shape.dims), 'dtype': case.operator.dtype, 'trace_schema_version': 1})
+        # Built-in Transfer and opt-in plugins expose their actual historical
+        # records. Bind content after loading; a database path can change in
+        # place while algorithm code/options remain identical.
+        training = getattr(searcher, "training_records", None)
+        if training is not None:
+            identity["training_data"] = training_record_manifest(training)
+            trial_id = stable_id(identity)
+            _save_json(output / "trial.json", {**identity, "trial_id": trial_id, "status": "running",
+                "kernel_ref": case.kernel.ref, "operator_ref": case.operator_definition.ref,
+                "shape": dict(case.shape.dims), "dtype": case.operator.dtype, "trace_schema_version": 1})
+            notify({"event": "algorithm_ready", "training_data_sha256": identity["training_data"]["record_ids_sha256"]})
     except Exception as exc:
         status, stop_reason = "failed", "algorithm_contract_error"
         contract_failures += 1
@@ -147,7 +240,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
         try:
             notify({"event": "algorithm_suggest", "attempts": attempts,
                     "evaluations": evaluations, "cache_hits": cache_hits})
-            proposals = request_candidates(
+            proposals = algorithm_call('proposal_ms', request_candidates,
                 searcher, case.hardware, case.operator, case.shape, case.space,
                 SearchHistory(tuple(deepcopy(records)), frozenset(attempted)),
                 budget.remaining(len(records), time.perf_counter() - started), batch_size=1)
@@ -157,7 +250,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             note_failure("algorithm_suggest", exc)
             break
         if not proposals:
-            stop_reason = "searcher_exhausted"
+            stop_reason = getattr(searcher, 'last_proposal_status', None) or "searcher_exhausted"
             break
         config = proposals[0]
         # Suggestion time is charged before admitting compilation or execution.
@@ -195,10 +288,22 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
             if record.case_id != initial.case_id or record.config.id != config.id or record.split != split:
                 raise ValueError("runner returned a record for a different case/configuration/split")
             records.append(deepcopy(record))
+            feedback_failed = False
+            if callable(getattr(searcher, 'observe', None)):
+                try:
+                    algorithm_call('feedback_ms', searcher.observe, deepcopy(record), cache_hit=runner.last_cache_hit)
+                except Exception as exc:
+                    status, stop_reason = 'failed', 'algorithm_feedback_error'
+                    contract_failures += 1
+                    note_failure('algorithm_feedback', exc)
+                    feedback_failed = True
+            observed(record, runner.last_cache_hit, attempt_started)
             notify({"event": "measurement_completed", "config": dict(config.params),
                     "record_id": record.id, "record_status": record.status.value,
                     "cache_hit": runner.last_cache_hit, "attempts": attempts,
                     "evaluations": evaluations, "cache_hits": cache_hits})
+            if feedback_failed:
+                break
         except Exception as exc:
             status, stop_reason = "failed", "runner_error"
             note_failure("measurement", exc)
@@ -212,6 +317,7 @@ def search_case(case, algorithm_definition, options, budget: SearchBudget, *, st
                     if store is not None:
                         store.add(failed)
                     records.append(failed)
+                    observed(failed, False, attempt_started)
                     archived = True
                 except Exception as archive_error:
                     note_failure("failure_archive", archive_error)

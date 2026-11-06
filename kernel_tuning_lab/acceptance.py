@@ -98,6 +98,21 @@ def probe_legal_configs(space: ConfigSpace, hardware: HardwareSpec, operator: Op
     """Bound sparse-space rejection; retain examples and counts of invalid points."""
     if count < 1 or max_inspected < 1:
         return {"configs": [], "inspected": 0, "rejected": 0, "rejection_examples": [], "exhaustive": False}
+    if space.cardinality > max_inspected and (space.rules or getattr(space, 'conditional', False)):
+        # Preflight must not reject a constructible sparse space merely because
+        # a Cartesian random pool missed it. Explicit relations/conditions can
+        # propagate; arbitrary callbacks still run only at complete leaves.
+        from .space_tools import SpaceBuildBudget
+        built = space.complete({}, hardware, operator, shape, count=count, rng=random.Random(seed),
+            budget=SpaceBuildBudget(max_nodes=min(50_000, max_inspected * (len(space.domains) + 1)),
+                                    max_configs=count, max_wall_time_s=2))
+        diagnostics = dict(built.diagnostics)
+        reasons = diagnostics.get('rejection_reasons', {})
+        return {"configs": list(built.configs), "inspected": diagnostics.get('final_checks', 0),
+            "rejected": sum(reasons.values()), "rejection_examples": [],
+            "exhaustive": built.complete, "legal_found": len(built.configs), "selected": len(built.configs),
+            "construction_status": built.status, "construction_diagnostics": diagnostics,
+            "notice": "Dependency-aware nonuniform construction; budget exhaustion does not prove an empty space."}
     limit = min(space.cardinality, max_inspected)
     if space.cardinality <= max_inspected:
         candidates = (space.config_at(index) for index in range(limit))
@@ -124,27 +139,33 @@ def probe_legal_configs(space: ConfigSpace, hardware: HardwareSpec, operator: Op
 def _synthetic_interactions(definition, options, seed, hardware, operator, shape, space, label) -> dict:
     searcher = create_searcher(definition, options, seed)
     empty = SearchHistory()
-    request_candidates(searcher, hardware, operator, shape, space, empty, SearchBudget(0), 1)
+    try:
+        request_candidates(searcher, hardware, operator, shape, space, empty, SearchBudget(0), 1)
+    finally:
+        if callable(getattr(searcher,"close",None)):searcher.close()
     searcher = create_searcher(definition, options, seed)
-    rows, attempted = [], set()
-    for index in range(min(3, space.cardinality)):
-        proposals = request_candidates(searcher, hardware, operator, shape, space,
-                                       SearchHistory(tuple(rows), frozenset(attempted)), SearchBudget(3 - index), 1)
-        if not proposals:
-            if not rows:
-                raise ContractError(f"algorithm returned no candidate for nonempty {label} space")
-            break
-        config = proposals[0]
-        attempted.add(config.id)
-        failure = index == 1
-        rows.append(MeasurementRecord(hardware, operator, shape, config,
-                                      RecordStatus.COMPILE_ERROR if failure else RecordStatus.SUCCESS,
-                                      runtime_samples_ms=() if failure else (1.0 + int(config.id[:4], 16) / 65536,),
-                                      failure_reason="synthetic acceptance failure observation" if failure else None,
-                                      provenance="mock", environment={"purpose": "algorithm_acceptance_only"},
-                                      metadata={"synthetic": True}))
-    return {"space": label, "status": "passed", "suggestions": len(rows),
-            "synthetic": True, "checks": ["zero_budget", "bounded_batch", "legal_configs", "revealed_history", "no_repeats"]}
+    try:
+        rows, attempted = [], set()
+        for index in range(min(3, space.cardinality)):
+            proposals = request_candidates(searcher, hardware, operator, shape, space,
+                                           SearchHistory(tuple(rows), frozenset(attempted)), SearchBudget(3 - index), 1)
+            if not proposals:
+                if not rows:
+                    raise ContractError(f"algorithm returned no candidate for nonempty {label} space")
+                break
+            config = proposals[0]
+            attempted.add(config.id)
+            failure = index == 1
+            rows.append(MeasurementRecord(hardware, operator, shape, config,
+                                          RecordStatus.COMPILE_ERROR if failure else RecordStatus.SUCCESS,
+                                          runtime_samples_ms=() if failure else (1.0 + int(config.id[:4], 16) / 65536,),
+                                          failure_reason="synthetic acceptance failure observation" if failure else None,
+                                          provenance="mock", environment={"purpose": "algorithm_acceptance_only"},
+                                          metadata={"synthetic": True}))
+        return {"space": label, "status": "passed", "suggestions": len(rows),
+                "synthetic": True, "checks": ["zero_budget", "bounded_batch", "legal_configs", "revealed_history", "no_repeats"]}
+    finally:
+        if callable(getattr(searcher,"close",None)):searcher.close()
 
 
 def check_algorithm(definition, options, seed, hardware, operator, shape, space) -> dict:
@@ -156,7 +177,7 @@ def check_algorithm(definition, options, seed, hardware, operator, shape, space)
     cases = [("resolved_kernel_space", space)]
     if not definition.capabilities.required_parameters:
         singleton = ConfigSpace({key: (values[0],) for key, values in space.domains.items()}, name="acceptance_singleton", allow_empty=True)
-        cases.append(("singleton", singleton))
+        if definition.capabilities.min_cardinality<=1:cases.append(("singleton", singleton))
         kinds = set(definition.capabilities.parameter_kinds)
         if {"integer", "categorical", "boolean"} <= kinds:
             cases.append(("mixed_finite", ConfigSpace({"tile": (1, 2), "mode": ("a", "b"), "enabled": (False, True)},

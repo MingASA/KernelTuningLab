@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">C48 offline Replay</title>
+<desc id="desc">validation; source data costs separate; no new GPU execution</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >C48 offline Replay</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >validation; source data costs separate; no new GPU execution</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >10.8</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >21.7</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >32.5</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >43.3</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >54.1</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >16</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >32</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Revealed target observations / 48</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Mean finite-set regret (%)</text>
+<polyline points="100.00,120.56 201.43,283.94 404.29,368.30 810.00,440.00" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#2563eb"><title>grid: 4, 50.12</title></circle>
+<circle cx="201.43" cy="283.94" r="3" fill="#2563eb"><title>grid: 8, 24.49</title></circle>
+<circle cx="404.29" cy="368.30" r="3" fill="#2563eb"><title>grid: 16, 11.25</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#2563eb"><title>grid: 32, 0</title></circle>
+<g><title>grid</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >grid</text>
+</g>
+<polyline points="100.00,369.57 201.43,383.25 404.29,436.86 810.00,440.00" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="369.57" r="3" fill="#d97706"><title>heuristic: 4, 11.05</title></circle>
+<circle cx="201.43" cy="383.25" r="3" fill="#d97706"><title>heuristic: 8, 8.905</title></circle>
+<circle cx="404.29" cy="436.86" r="3" fill="#d97706"><title>heuristic: 16, 0.4921</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#d97706"><title>heuristic: 32, 0</title></circle>
+<g><title>heuristic</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >heuristic</text>
+</g>
+<polyline points="100.00,272.98 201.43,347.38 404.29,395.98 810.00,420.14" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="272.98" r="3" fill="#059669"><title>random: 4, 26.21</title></circle>
+<circle cx="201.43" cy="347.38" r="3" fill="#059669"><title>random: 8, 14.53</title></circle>
+<circle cx="404.29" cy="395.98" r="3" fill="#059669"><title>random: 16, 6.907</title></circle>
+<circle cx="810.00" cy="420.14" r="3" fill="#059669"><title>random: 32, 3.116</title></circle>
+<g><title>random</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >random</text>
+</g>
+<polyline points="100.00,272.98 201.43,375.18 404.29,419.66 810.00,439.39" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="272.98" r="3" fill="#dc2626"><title>surrogate: 4, 26.21</title></circle>
+<circle cx="201.43" cy="375.18" r="3" fill="#dc2626"><title>surrogate: 8, 10.17</title></circle>
+<circle cx="404.29" cy="419.66" r="3" fill="#dc2626"><title>surrogate: 16, 3.191</title></circle>
+<circle cx="810.00" cy="439.39" r="3" fill="#dc2626"><title>surrogate: 32, 0.09514</title></circle>
+<g><title>surrogate</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >surrogate</text>
+</g>
+<polyline points="100.00,410.83 201.43,435.41 404.29,435.41 810.00,440.00" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="410.83" r="3" fill="#7c3aed"><title>transfer_current_train: 4, 4.577</title></circle>
+<circle cx="201.43" cy="435.41" r="3" fill="#7c3aed"><title>transfer_current_train: 8, 0.7209</title></circle>
+<circle cx="404.29" cy="435.41" r="3" fill="#7c3aed"><title>transfer_current_train: 16, 0.7209</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#7c3aed"><title>transfer_current_train: 32, 0</title></circle>
+<g><title>transfer_current_train</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >transfer_current_train</text>
+</g>
+<polyline points="100.00,163.49 201.43,260.32 404.29,260.32 810.00,440.00" fill="none" stroke="#0891b2" stroke-width="2.5"/>
+<circle cx="100.00" cy="163.49" r="3" fill="#0891b2"><title>transfer_phase1: 4, 43.39</title></circle>
+<circle cx="201.43" cy="260.32" r="3" fill="#0891b2"><title>transfer_phase1: 8, 28.19</title></circle>
+<circle cx="404.29" cy="260.32" r="3" fill="#0891b2"><title>transfer_phase1: 16, 28.19</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#0891b2"><title>transfer_phase1: 32, 0</title></circle>
+<g><title>transfer_phase1</title><line x1="840" x2="858" y1="205" y2="205" stroke="#0891b2" stroke-width="3"/>
+<text x="865.00" y="209.00" font-size="11" fill="#334155" text-anchor="start" >transfer_phase1</text>
+</g>
+</g></svg>

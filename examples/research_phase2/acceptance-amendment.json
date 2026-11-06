@@ -1,0 +1,27 @@
+{
+  "kind": "acceptance allowance amendment",
+  "reason": "6 Shape contexts exceed independent acceptance allowance of 4; first 96 search observations already verified; aggregate remains partial until rerun",
+  "created_utc": "2026-10-26T05:43:05.063779+00:00",
+  "original_spec_sha256": "22d31299d7b0a1eedd926be21781e55241f1e37125ec460773d8c5e92ad1abcc",
+  "amended_spec_sha256": "a52c0063dc591194a32383d39fc556101e1561dfdf1c2403cc419878e8e71213",
+  "changes": {
+    "validation.max_configs": [
+      4,
+      24
+    ],
+    "validation.max_wall_time_s": [
+      90,
+      120
+    ]
+  },
+  "retained_output": "artifacts/research-phase2/generic",
+  "unchanged": [
+    "Shapes",
+    "configs",
+    "input seeds",
+    "kernel source",
+    "measurement protocol",
+    "search budget"
+  ],
+  "resume": "archive original partial attempt; rerun acceptance and consume compatible search cache; report new vs cached separately"
+}

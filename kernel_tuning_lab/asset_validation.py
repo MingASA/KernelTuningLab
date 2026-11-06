@@ -12,7 +12,7 @@ from .acceptance import probe_legal_configs
 from .asset_context import AssetCase
 from .asset_experiments import ValidationBudget
 from .backends.base import BackendUnavailableError
-from .models import MeasurementRecord, RecordStatus, canonical_json
+from .models import MeasurementRecord, RecordStatus, canonical_json,KernelConfig
 from .runner import BenchmarkRunner
 
 
@@ -114,7 +114,17 @@ def validate_cases(cases: list[AssetCase], budget: ValidationBudget, *, store,
             break
         emit({"case_id": case.id, "kernel": case.kernel.ref, "shape": dict(case.shape.dims), "operation": "probe_legal_configs"})
         try:
-            probe = probe_legal_configs(case.space, case.hardware, case.operator, case.shape,
+            explicit=budget.configs.get(case.kernel.ref)
+            if explicit is not None:
+                selected=[case.space.normalize(value) for value in explicit]
+                if len({value.id for value in selected})!=len(selected):raise ValueError('duplicate explicit validation configurations after normalization')
+                for value in selected:
+                    valid=case.space.validate(value,case.hardware,case.operator,case.shape)
+                    if not valid.valid:raise ValueError('explicit validation config is outside authoritative space: '+';'.join(valid.reasons))
+                probe={'configs':selected[:budget.max_configs],'selection':'explicit_validation_configs',
+                    'inspected':len(selected),'rejected':0,'exhaustive':False,'legal_found':len(selected),
+                    'selected':min(len(selected),budget.max_configs),'notice':'Only independent acceptance sampling is pinned; search space is unchanged.'}
+            else:probe = probe_legal_configs(case.space, case.hardware, case.operator, case.shape,
                                         seed=budget.seed + int(case.id[:8], 16),
                                         count=budget.max_configs, max_inspected=512)
             pool = probe.pop("configs")

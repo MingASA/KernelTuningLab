@@ -1,0 +1,20 @@
+KernelTuningLab
+Copyright 2026 MingASA and contributors.
+
+KernelTuningLab original source is distributed under Apache License 2.0.
+Included third-party source retains its original copyright and license.
+
+Triton tutorial-derived implementations:
+  third_party/triton-tutorial-LICENSE (MIT)
+
+Pinned vLLM source and adapted wrappers:
+  kernel_tuning_lab/production/upstream/LICENSE (Apache-2.0)
+
+Production source extracts and their original licenses:
+  kernel_tuning_lab/production/upstream/suite/*/LICENSE
+  GemLite, FLUTE, vLLM, SGLang and PyTorch sources are individually
+  identified by the accompanying source manifests and retained notices.
+
+Optional Torch, Triton, CUDA, CUTLASS, optimizer and model dependencies are
+separate distributions governed by their own licenses. Model weights are
+not part of the core package or its public release artifacts.

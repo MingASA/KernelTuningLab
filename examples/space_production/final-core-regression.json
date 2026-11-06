@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "final-core-targeted-GPU-regression-v1",
+  "plugins": [
+    "kernel_tuning_lab.production.marlin",
+    "kernel_tuning_lab.optimizers"
+  ],
+  "algorithms": [
+    {
+      "asset": "smac_rf@1.0.0",
+      "options": {
+        "initial_design_size": 2
+      }
+    }
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    31
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 8,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 60,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "controlled",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "validation",
+      "kernels": [
+        {
+          "asset": "controlled/w4a16_fused@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32,
+              64
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1,
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "asset": "controlled/w4a16_pipeline@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32,
+              64
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1,
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1,
+              2
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              256
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 512,
+          "K": 1024
+        }
+      ]
+    },
+    {
+      "name": "native-finite-exhaustion",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "validation",
+      "kernels": [
+        "production/marlin_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 512,
+          "K": 1024
+        }
+      ]
+    },
+    {
+      "name": "conditional-moe",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "split": "validation",
+      "kernels": [
+        {
+          "asset": "triton/moe_grouped_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              2
+            ],
+            "SCHEDULE": [
+              "persistent"
+            ],
+            "PERSISTENT_CTA_MULT": [
+              2
+            ],
+            "REDUCE_BLOCK_SIZE": [
+              512
+            ],
+            "USE_TMA": [
+              false
+            ],
+            "MAP_BLOCK_SIZE": [
+              64
+            ],
+            "MAP_NUM_WARPS": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 128,
+          "K": 256,
+          "Groups": 8
+        }
+      ]
+    }
+  ]
+}

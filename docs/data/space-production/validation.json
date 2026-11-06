@@ -1,0 +1,58 @@
+{
+  "baseline_commit": "d7eaca5b69995f3c10f45473d012574f83ed6d71",
+  "functional_code_commit": "46a33442f307fee1451ff4ef6cfef748a759be79",
+  "primary_compute_commit": "8171d3ae7e339cf8f9819bceb3ead9b2d73af363",
+  "final_core_GPU_regression_commit": "f2518bcbeb5d09f23ee91f42ea48dd11452dff40",
+  "physical_GPU": "RTX4090 sm89",
+  "software": {
+    "driver": "550.54.15",
+    "python": "3.11.11",
+    "torch": "2.6.0+cu124",
+    "triton": "3.2.0",
+    "numpy": "2.2.2",
+    "SMAC": "2.4.1",
+    "ConfigSpace": "1.2.2",
+    "Kernel_Tuner": "1.5.0"
+  },
+  "CPU_tests": {
+    "core_passed": 415,
+    "skipped": 12,
+    "optional_integration_passed": 33,
+    "native_equivalence_resume_tests_passed": 8,
+    "GPU_opt_in": true,
+    "clean_wheel_without_Torch_or_Triton": "passed"
+  },
+  "GPU_counts": {
+    "physical_research_attempts": 869,
+    "independent_acceptance_attempts": 159,
+    "cache_observations": 270,
+    "unique_current_research_records": 869,
+    "status_counts": {
+      "success": 866,
+      "compile_error": 3
+    }
+  },
+  "GPU_successes_reference_verified": true,
+  "open_search_scope": "2Shapes,2implementations,5methods,B8/B32,one algorithmseed; best-known observed union only",
+  "native_default_and_explicit": "passed on4090 native source profile; not stock wheel identity",
+  "AI": {
+    "artifact": "actual untrained interface policy +GPUfeedback",
+    "process_HTTP": "contract fixtures; process+GPUfeedback, HTTP CPUcontract",
+    "generated_programs": "two reviewed versions frozen before32target observations; development72new evaluations+15acceptance",
+    "real_LLM": "not_executed"
+  },
+  "production_L3": {
+    "primary_cohort": "USE_FP32_REDUCE=True;2atomic request options",
+    "shapes": 6,
+    "synthetic_weights": true,
+    "actual_TableDispatcher_GPU_cases": 6,
+    "uncovered_inputs": "reject",
+    "budget": "Config Budget only",
+    "per_kernel_CUBIN_code_size": "unknown"
+  },
+  "H800_new_GPU": "not_executed_occupied",
+  "5060ti_new_GPU": "not_executed_display_admission_denied",
+  "old_archives_verified_unchanged": 5,
+  "off_host_backup": "pending_authorized_destination",
+  "failure_evidence_preserved": true
+}

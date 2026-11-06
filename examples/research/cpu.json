@@ -1,0 +1,74 @@
+{
+  "name": "cpu-search-comparison",
+  "schema_version": 1,
+  "kind": "research",
+  "plugins": [
+    "stride_search.py"
+  ],
+  "algorithms": [
+    "example/stride@1.0.0",
+    "random@1.0.0"
+  ],
+  "dtypes": [
+    "float32",
+    "float64"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 2,
+      "max_wall_time_s": 15
+    },
+    {
+      "max_evaluations": 4,
+      "max_wall_time_s": 15
+    }
+  ],
+  "defaults": {
+    "warmup": 1,
+    "repetitions": 5,
+    "validation": {
+      "max_configs": 2,
+      "max_cases": 0,
+      "max_wall_time_s": 15,
+      "seed": 17,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        "python/gemm@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 5,
+          "K": 7
+        },
+        {
+          "M": 7,
+          "N": 9,
+          "K": 3
+        }
+      ]
+    },
+    {
+      "name": "softmax",
+      "operator": "softmax@1.0.0",
+      "kernels": [
+        "python/softmax@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 3,
+          "N": 17
+        }
+      ]
+    }
+  ]
+}

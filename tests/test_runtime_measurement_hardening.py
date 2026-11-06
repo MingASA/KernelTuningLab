@@ -84,6 +84,51 @@ def test_output_aliasing_input_is_rejected(tmp_path):
     assert record.metadata["correctness"]["outputs"]["__inputs__"]["aliased_outputs"]
 
 
+def test_native_artifact_identity_is_resolved_before_cache_lookup(tmp_path):
+    from dataclasses import replace
+    from kernel_tuning_lab.production.environment import file_identity
+    from kernel_tuning_lab.storage import ExperimentStore
+    artifact=tmp_path/'native-component.bin';artifact.write_bytes(b'version-one')
+    operator=_fixture._operator()
+    kernel=replace(_fixture._kernel(operator),execution_identity=lambda:{'binary_sha256':file_identity(artifact)})
+    fingerprint=kernel.fingerprint
+    adapter,hardware,op,shape,config=_fixture._cpu_context(kernel,operator)
+    hardware=adapter.probe_hardware();space=ConfigSpace({'tile':(1,)})
+    with ExperimentStore(tmp_path/'cache.sqlite') as store:
+        runner=BenchmarkRunner(adapter,store=store,warmup=0,repetitions=1)
+        first=runner.measure(hardware,op,shape,config,space)
+        assert first.correctness_verified and not runner.last_cache_hit
+        assert runner.measure(hardware,op,shape,config,space).id==first.id and runner.last_cache_hit
+        artifact.write_bytes(b'version-two')
+        assert kernel.fingerprint==fingerprint # plugin declaration unchanged
+        second=runner.measure(hardware,op,shape,config,space)
+        assert second.correctness_verified and not runner.last_cache_hit
+        assert first.cache_key!=second.cache_key
+        assert first.environment['native_execution_identity']!=second.environment['native_execution_identity']
+
+
+def test_native_unsupported_packing_is_not_fabricated_as_compilation_or_latency(tmp_path):
+    from kernel_tuning_lab.sdk import UnsupportedPreparationError
+    def build(ctx,tile=1):
+        raise UnsupportedPreparationError('native selection has no logical packer',details={'native_template_id':0,'TileP':64})
+    record,*_=_evaluate(build,tmp_path)
+    assert record.status==RecordStatus.INVALID_CONFIG and not record.runtime_samples_ms
+    assert record.metadata['failure_class']=='unsupported_preparation'
+    assert record.metadata['native_preparation_details']['TileP']==64
+
+
+def test_config_dependent_packed_input_mutation_is_checked_without_hiding_task_input_changes(tmp_path):
+    def build(ctx,tile=1):
+        packed=ctx.register_prepared_input('backend_packed',[1.0])
+        def launch():
+            packed[0]=2.0
+            ctx.outputs['out'][0][0]=1.0
+        return launch
+    record,*_=_evaluate(build,tmp_path)
+    assert record.status==RecordStatus.CORRECTNESS_ERROR
+    assert 'prepared::backend_packed' in record.metadata['correctness']['input_integrity']['changed_inputs']
+
+
 @pytest.mark.parametrize("value", [True, "not numeric"])
 def test_malformed_python_outputs_are_persisted_as_correctness_failures(tmp_path, value):
     def build(ctx, tile=1):

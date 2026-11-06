@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="278" viewBox="0 0 1080 278" role="img" aria-labelledby="title desc">
+<title id="title">GROUP control beyond 32 MiB L2</title>
+<desc id="desc">M256/N8192/K4096, FP16 B=64 MiB; two runs, same tile/warps/stages</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >GROUP control beyond 32 MiB L2</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >M256/N8192/K4096, FP16 B=64 MiB; two runs, same tile/warps/stages</text>
+<g><title>BM64/BN64</title>
+<text x="325.00" y="111.00" font-size="11" fill="#334155" text-anchor="end" >BM64/BN64</text>
+<rect x="335" y="93.0" width="480.160" height="22" rx="3" fill="#2563eb"/>
+<text x="823.16" y="110.00" font-size="11" fill="#334155" text-anchor="start" >0.757</text>
+</g>
+<g><title>BM32/BN128</title>
+<text x="325.00" y="143.00" font-size="11" fill="#334155" text-anchor="end" >BM32/BN128</text>
+<rect x="335" y="125.0" width="369.285" height="22" rx="3" fill="#d97706"/>
+<text x="712.29" y="142.00" font-size="11" fill="#334155" text-anchor="start" >0.582</text>
+</g>
+<g><title>BM128/BN128</title>
+<text x="325.00" y="175.00" font-size="11" fill="#334155" text-anchor="end" >BM128/BN128</text>
+<rect x="335" y="157.0" width="635.000" height="22" rx="3" fill="#059669"/>
+<text x="978.00" y="174.00" font-size="11" fill="#334155" text-anchor="start" >1</text>
+</g>
+<g><title>BM16/BN64</title>
+<text x="325.00" y="207.00" font-size="11" fill="#334155" text-anchor="end" >BM16/BN64</text>
+<rect x="335" y="189.0" width="361.679" height="22" rx="3" fill="#dc2626"/>
+<text x="704.68" y="206.00" font-size="11" fill="#334155" text-anchor="start" >0.57</text>
+</g>
+<text x="652.50" y="263.00" font-size="13" fill="#334155" text-anchor="middle" >GROUP8 latency / GROUP1 latency</text>
+</g></svg>

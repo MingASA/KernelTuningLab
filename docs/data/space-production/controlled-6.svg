@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">mid-m / controlled/w4a16_pipeline@1.0.0 / B8</title>
+<desc id="desc">Actual revealed feedback; failures/cache consume observations; best-known union reference</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >mid-m / controlled/w4a16_pipeline@1.0.0 / B8</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Actual revealed feedback; failures/cache consume observations; best-known union reference</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >112</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >223</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >335</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >446</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >558</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="302.86" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >3</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="505.71" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >5</text>
+<text x="607.14" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >6</text>
+<text x="708.57" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >7</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Observations</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Loss to finite observed best-known (%)</text>
+<polyline points="100.00,400.89 201.43,419.81 302.86,419.81 404.29,419.81 505.71,419.81 607.14,419.81 708.57,419.81 810.00,425.67" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="400.89" r="3" fill="#2563eb"><title>heuristic@1.0.0: 1, 63.26</title></circle>
+<circle cx="201.43" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 2, 32.66</title></circle>
+<circle cx="302.86" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 3, 32.66</title></circle>
+<circle cx="404.29" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 4, 32.66</title></circle>
+<circle cx="505.71" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 5, 32.66</title></circle>
+<circle cx="607.14" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 6, 32.66</title></circle>
+<circle cx="708.57" cy="419.81" r="3" fill="#2563eb"><title>heuristic@1.0.0: 7, 32.66</title></circle>
+<circle cx="810.00" cy="425.67" r="3" fill="#2563eb"><title>heuristic@1.0.0: 8, 23.17</title></circle>
+<g><title>heuristic@1.0.0</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >heuristic@1.0.0</text>
+</g>
+<polyline points="100.00,416.86 201.43,419.89 302.86,419.89 404.29,423.65 505.71,423.65 607.14,423.65 708.57,423.65 810.00,423.65" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="416.86" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 1, 37.43</title></circle>
+<circle cx="201.43" cy="419.89" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 2, 32.53</title></circle>
+<circle cx="302.86" cy="419.89" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 3, 32.53</title></circle>
+<circle cx="404.29" cy="423.65" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 4, 26.45</title></circle>
+<circle cx="505.71" cy="423.65" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 5, 26.45</title></circle>
+<circle cx="607.14" cy="423.65" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 6, 26.45</title></circle>
+<circle cx="708.57" cy="423.65" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 7, 26.45</title></circle>
+<circle cx="810.00" cy="423.65" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 8, 26.45</title></circle>
+<g><title>kernel_tuner_de@1.0.0</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >kernel_tuner_de@1.0.0</text>
+</g>
+<polyline points="100.00,378.93 201.43,417.23 302.86,417.23 404.29,429.59 505.71,429.59 607.14,429.59 708.57,429.59 810.00,429.59" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="378.93" r="3" fill="#059669"><title>random@1.0.0: 1, 98.8</title></circle>
+<circle cx="201.43" cy="417.23" r="3" fill="#059669"><title>random@1.0.0: 2, 36.83</title></circle>
+<circle cx="302.86" cy="417.23" r="3" fill="#059669"><title>random@1.0.0: 3, 36.83</title></circle>
+<circle cx="404.29" cy="429.59" r="3" fill="#059669"><title>random@1.0.0: 4, 16.85</title></circle>
+<circle cx="505.71" cy="429.59" r="3" fill="#059669"><title>random@1.0.0: 5, 16.85</title></circle>
+<circle cx="607.14" cy="429.59" r="3" fill="#059669"><title>random@1.0.0: 6, 16.85</title></circle>
+<circle cx="708.57" cy="429.59" r="3" fill="#059669"><title>random@1.0.0: 7, 16.85</title></circle>
+<circle cx="810.00" cy="429.59" r="3" fill="#059669"><title>random@1.0.0: 8, 16.85</title></circle>
+<g><title>random@1.0.0</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >random@1.0.0</text>
+</g>
+<polyline points="100.00,120.56 201.43,427.09 302.86,427.09 404.29,438.73 505.71,438.73 607.14,438.73 708.57,438.73 810.00,438.73" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 1, 516.8</title></circle>
+<circle cx="201.43" cy="427.09" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 2, 20.88</title></circle>
+<circle cx="302.86" cy="427.09" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 3, 20.88</title></circle>
+<circle cx="404.29" cy="438.73" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 4, 2.055</title></circle>
+<circle cx="505.71" cy="438.73" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 5, 2.055</title></circle>
+<circle cx="607.14" cy="438.73" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 6, 2.055</title></circle>
+<circle cx="708.57" cy="438.73" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 7, 2.055</title></circle>
+<circle cx="810.00" cy="438.73" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 8, 2.055</title></circle>
+<g><title>smac_rf@1.0.0</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >smac_rf@1.0.0</text>
+</g>
+<polyline points="100.00,378.93 201.43,417.23 302.86,417.23 404.29,429.59 505.71,429.59 607.14,429.59 708.57,429.59 810.00,429.59" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="378.93" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 1, 98.8</title></circle>
+<circle cx="201.43" cy="417.23" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 2, 36.83</title></circle>
+<circle cx="302.86" cy="417.23" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 3, 36.83</title></circle>
+<circle cx="404.29" cy="429.59" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 4, 16.85</title></circle>
+<circle cx="505.71" cy="429.59" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 5, 16.85</title></circle>
+<circle cx="607.14" cy="429.59" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 6, 16.85</title></circle>
+<circle cx="708.57" cy="429.59" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 7, 16.85</title></circle>
+<circle cx="810.00" cy="429.59" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 8, 16.85</title></circle>
+<g><title>surrogate@1.0.0</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >surrogate@1.0.0</text>
+</g>
+</g></svg>

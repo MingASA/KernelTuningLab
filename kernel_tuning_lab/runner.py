@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import hashlib
 import math
 from pathlib import Path
 import time
@@ -35,10 +36,19 @@ class BenchmarkRunner:
 
     def measure(self, hardware: HardwareSpec, operator: OperatorSpec, shape: ShapeSpec, config: KernelConfig,
                 space: ConfigSpace, split: str = "train", resume: bool = True) -> MeasurementRecord:
+        from .inference_resources import COORDINATOR
+        with COORDINATOR.measurement_window(hardware):
+            return self._measure_serial(hardware,operator,shape,config,space,split=split,resume=resume)
+
+    def _measure_serial(self,hardware,operator,shape,config,space,split='train',resume=True):
         started = time.perf_counter()
         self.last_cache_hit = False
         environment = self.adapter.environment()
+        from .inference_resources import COORDINATOR
+        environment['inference_resource_context']=COORDINATOR.resource_identity()
         protocol = {**self.adapter.protocol_metadata(),
+                    'inference_resource_context':COORDINATOR.resource_identity(),
+                    "measurement_driver_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                     "config_space": {"name": space.name, "fingerprint": space.fingerprint,
                                      "cardinality": space.cardinality}}
         # Always revalidate before cache lookup: plugins may tighten constraints.
@@ -66,7 +76,20 @@ class BenchmarkRunner:
 
         compile_ms = 0.0
         samples: tuple[float, ...] = ()
-        metadata = {"protocol": protocol}
+        from copy import deepcopy
+        metadata = {"protocol": protocol,'resource_quiescence':deepcopy(COORDINATOR.last_proof)}
+        if getattr(space, 'advisory_callbacks', ()):
+            metadata['constraint_advisories'] = space.assess(config, hardware, operator, shape)
+        phase_costs = {"preflight_and_cache": (time.perf_counter() - started) * 1000}
+        metadata["phase_wall_time_ms"] = phase_costs
+
+        def timed(label, callback, *args):
+            before = time.perf_counter()
+            try:
+                return callback(*args)
+            finally:
+                phase_costs[label] = (time.perf_counter() - before) * 1000
+
         status = RecordStatus.SUCCESS
         reason = None
         phase = "validation"
@@ -79,7 +102,7 @@ class BenchmarkRunner:
             else:
                 phase = "preparation"
                 prepare_start = time.perf_counter()
-                prepared = self.adapter.prepare(hardware, operator, shape, self.seed)
+                prepared = timed("preparation", self.adapter.prepare, hardware, operator, shape, self.seed)
                 metadata["preparation_time_ms"] = (time.perf_counter() - prepare_start) * 1000
                 phase = "compile"
                 compile_start = time.perf_counter()
@@ -87,8 +110,9 @@ class BenchmarkRunner:
                     compiled = self.adapter.compile(prepared, config)
                 finally:
                     compile_ms = (time.perf_counter() - compile_start) * 1000
+                    phase_costs["compile"] = compile_ms
                 phase = "correctness"
-                correct, details = self.adapter.check_correctness(compiled)
+                correct, details = timed("initial_correctness", self.adapter.check_correctness, compiled)
                 metadata["correctness"] = details
                 if details.get("status") in {"verified", "declared", "failed"}:
                     metadata["correctness_verified"] = correct and details["status"] == "verified"
@@ -98,9 +122,9 @@ class BenchmarkRunner:
                     status, reason = RecordStatus.CORRECTNESS_ERROR, "kernel output does not match correctness baseline"
                 else:
                     phase = "warmup"
-                    self.adapter.warmup(compiled, self.warmup)
+                    timed("warmup", self.adapter.warmup, compiled, self.warmup)
                     phase = "measurement"
-                    samples = tuple(self.adapter.measure(compiled, self.repetitions))
+                    samples = timed("measurement", lambda: tuple(self.adapter.measure(compiled, self.repetitions)))
                     if len(samples) != self.repetitions:
                         raise ValueError("backend returned a different number of samples than requested")
                     if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0 for v in samples):
@@ -108,7 +132,7 @@ class BenchmarkRunner:
                     post_check = getattr(self.adapter, "check_after_measurement", None)
                     if post_check is not None:
                         phase = "correctness"
-                        final_correct, final_details = post_check(compiled)
+                        final_correct, final_details = timed("post_correctness", post_check, compiled)
                         details["post_measurement"] = final_details
                         if not final_correct:
                             details.update(initial_status=details.get("status"), status="failed",
@@ -120,8 +144,18 @@ class BenchmarkRunner:
         except Exception as exc:
             status = (RecordStatus.COMPILE_ERROR if phase == "compile" else
                       RecordStatus.CORRECTNESS_ERROR if phase == "correctness" else RecordStatus.RUNTIME_ERROR)
+            from .backends.base import UnsupportedPreparationError
+            if isinstance(exc,UnsupportedPreparationError):
+                status=RecordStatus.INVALID_CONFIG
+                metadata.update(failure_class='unsupported_preparation',
+                    failure_scope='this implementation/input/software/packing path only; not architecture-wide',
+                    native_preparation_details=exc.details)
             reason = f"{phase}: {type(exc).__name__}: {exc}"
             metadata["traceback"] = traceback.format_exc(limit=8)
+            from .inference_resources import COORDINATOR,ResourceContextLimit
+            if isinstance(exc,ResourceContextLimit) or ('out of memory' in str(exc).lower() and COORDINATOR.participants):
+                metadata['failure_class']='resource_context_memory_limit'
+                metadata['failure_scope']='current registered model/workspace/software context, not permanent architecture support'
             samples = ()
             if phase == "correctness":
                 details = metadata.setdefault("correctness", {})

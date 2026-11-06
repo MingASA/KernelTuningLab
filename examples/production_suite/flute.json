@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-acceptance-flute-float16",
+  "plugins": [
+    "kernel_tuning_lab.production.flute"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    17
+  ],
+  "algorithms": [
+    {
+      "asset": "grid@1.0.0"
+    }
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "warmup": 5,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 64,
+    "workspace_memory_limit_bytes": 536870912,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 3,
+      "max_cases": 0,
+      "max_wall_time_s": 240,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "int3-template-packing",
+      "operator": "production/uniform_lowbit_gemm@1.0.0",
+      "parameters": {
+        "bits": 3,
+        "group_size": 128
+      },
+      "kernels": [
+        "production/flute_w3_default@1.0.0",
+        "production/flute_w3_explicit@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 128,
+          "N": 2048,
+          "K": 2048
+        }
+      ]
+    }
+  ],
+  "max_jobs": 16
+}

@@ -1,0 +1,45 @@
+{
+  "study": "bounded-production-ai-followup-v1",
+  "GPU_execution_source": "f9b5b38f967faf19bfa4a47e59139f484a569e0b",
+  "C0_generation_source": "365428ab4fd40b7adf4abeb12a8287a529521afa",
+  "C0_development_sources": {
+    "H800": "f9b5b38f967faf19bfa4a47e59139f484a569e0b",
+    "4090": "365428ab4fd40b7adf4abeb12a8287a529521afa"
+  },
+  "protocol_sha256": "08caa49a7b5e7b7a5a2e82c4d1c9e8926a1e17f6e2ad044f46b9a694d6fa4297",
+  "protocol_frozen_before_generation": true,
+  "programs_frozen_before_first_target_read": true,
+  "C0_C1_source_identical": true,
+  "C_program_sha256": "9553bf6057fafd737c76a925359644572f47ad0db4bcc470d0aa411e243072ee",
+  "human_program_edits": false,
+  "initial_reveals": 608,
+  "recovered_zero_observation_trials": 2,
+  "final_reveals": 640,
+  "actual_B_model_calls": 80,
+  "actual_C_generation_calls": 2,
+  "API_calls": 0,
+  "new_model_weights": false,
+  "initial_evidence_sha256": "7db5a1140245829d9f83989ea592bb804add4cb2c7c61bb8693d1e97261131f2",
+  "final_evidence_sha256": "04c0ff4a2d9ca1e73638d6bf674ecb35a3d980a53fb2e3a3ad2a00f3a738563d",
+  "analysis_source_sha256": "b392f647b65f4913214cda4edd6df9dbbaffe42627f261082dfd5c5dd926f02d",
+  "recovery_helper_sha256": "112038b8fc4939a7a9a7b50f12077baaebd32319d08e3b0bd6c35d700db83871",
+  "raw_archives": {
+    "H800": {
+      "status": "passed",
+      "archive_sha256": "0f07cc60a530772261ce613ff55cbc4b9261a886e138672c1d001dd1844c499c",
+      "files": 617,
+      "SQLite_quick_checks": 26,
+      "new_GPU_work": false,
+      "source_files_unchanged": true
+    },
+    "4090": {
+      "status": "passed",
+      "archive_sha256": "922fffb5585a311a00d9b58ee9c756b405b75d2fd3aeedfbfe6237d7a13ca6ca",
+      "files": 208,
+      "SQLite_quick_checks": 8,
+      "new_GPU_work": false,
+      "source_files_unchanged": true
+    }
+  },
+  "privacy": "Raw host/account/device UUID data retained only in private local artifacts; no shared GPU backup upload"
+}

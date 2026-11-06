@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="374" viewBox="0 0 1080 374" role="img" aria-labelledby="title desc">
+<title id="title">Primary observation phase costs</title>
+<desc id="desc">1920 real observations; non-overlapping phase walls. Acceptance/startup/storage costs are separate.</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Primary observation phase costs</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >1920 real observations; non-overlapping phase walls. Acceptance/startup/storage costs are separate.</text>
+<g><title>compile</title>
+<text x="325.00" y="111.00" font-size="11" fill="#334155" text-anchor="end" >compile</text>
+<rect x="335" y="93.0" width="32.255" height="22" rx="3" fill="#2563eb"/>
+<text x="375.26" y="110.00" font-size="11" fill="#334155" text-anchor="start" >144</text>
+</g>
+<g><title>initial_correctness</title>
+<text x="325.00" y="143.00" font-size="11" fill="#334155" text-anchor="end" >initial_correctness</text>
+<rect x="335" y="125.0" width="53.791" height="22" rx="3" fill="#d97706"/>
+<text x="396.79" y="142.00" font-size="11" fill="#334155" text-anchor="start" >240</text>
+</g>
+<g><title>measurement</title>
+<text x="325.00" y="175.00" font-size="11" fill="#334155" text-anchor="end" >measurement</text>
+<rect x="335" y="157.0" width="635.000" height="22" rx="3" fill="#059669"/>
+<text x="978.00" y="174.00" font-size="11" fill="#334155" text-anchor="start" >2.83e+03</text>
+</g>
+<g><title>post_correctness</title>
+<text x="325.00" y="207.00" font-size="11" fill="#334155" text-anchor="end" >post_correctness</text>
+<rect x="335" y="189.0" width="17.526" height="22" rx="3" fill="#dc2626"/>
+<text x="360.53" y="206.00" font-size="11" fill="#334155" text-anchor="start" >78.2</text>
+</g>
+<g><title>preflight_and_cache</title>
+<text x="325.00" y="239.00" font-size="11" fill="#334155" text-anchor="end" >preflight_and_cache</text>
+<rect x="335" y="221.0" width="2.219" height="22" rx="3" fill="#7c3aed"/>
+<text x="345.22" y="238.00" font-size="11" fill="#334155" text-anchor="start" >9.91</text>
+</g>
+<g><title>preparation</title>
+<text x="325.00" y="271.00" font-size="11" fill="#334155" text-anchor="end" >preparation</text>
+<rect x="335" y="253.0" width="34.276" height="22" rx="3" fill="#0891b2"/>
+<text x="377.28" y="270.00" font-size="11" fill="#334155" text-anchor="start" >153</text>
+</g>
+<g><title>warmup</title>
+<text x="325.00" y="303.00" font-size="11" fill="#334155" text-anchor="end" >warmup</text>
+<rect x="335" y="285.0" width="0.635" height="22" rx="3" fill="#be185d"/>
+<text x="343.64" y="302.00" font-size="11" fill="#334155" text-anchor="start" >2.84</text>
+</g>
+<text x="652.50" y="359.00" font-size="13" fill="#334155" text-anchor="middle" >Summed wall seconds</text>
+</g></svg>

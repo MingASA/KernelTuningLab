@@ -18,7 +18,7 @@
 .venv/bin/ktlab scaffold kernel --operator w4a16_gemm@1.0.0 --runtime cuda --output my_w4
 ```
 
-H800/4090 使用对应硬件别名；不指定 `--hardware` 会探测实际 CUDA 设备，因此也可在 H20 等 sm80+ 设备上采集实际属性。本机缺 CUDA，GPU 项保持 `deferred`。
+H800/4090 使用对应硬件别名；不指定 `--hardware` 会探测实际 CUDA 设备，因此也可在 H20 等 sm80+ 设备上采集实际属性。5060 Ti 的 FP16/BF16 采样结果见 [5060TI_RESULTS.md](5060TI_RESULTS.md)；缺设备时 GPU 项仍保持 `deferred`。
 
 `--operators`、`--algorithms`、`--dtypes` 可缩小实验；`--variants` 加入算子声明的语义参数案例。默认严格模式会将实际被测配置的失败计入整套失败；研究时可显式使用 `--allow-config-failures` 保留失败继续比较。结果入口为 `suite_report.md`、`suite_summary.json`，每项继续保留标准 lock/预检/验收/SQLite/JSONL/trials 档案。
 
@@ -66,4 +66,4 @@ MoE 接收已经分组的 A `[M,K]`、专家 B `[Groups,K,N]` 和 `group_offsets
 - 在线 softmax 与执行结构参考 [FlashAttention-2](https://arxiv.org/abs/2307.08691) 和 [官方 fused attention](https://triton-lang.org/main/getting-started/tutorials/06-fused-attention.html)。
 - MoE 参考 [vLLM fused MoE](https://docs.vllm.ai/en/latest/api/vllm/model_executor/layers/fused_moe/fused_moe/)、[grouped GEMM](https://triton-lang.org/main/getting-started/tutorials/08-grouped-gemm.html) 和 [persistent/TMA GEMM](https://triton-lang.org/main/getting-started/tutorials/09-persistent-matmul.html)。
 
-这些是独立实现的优化结构，未导入库内写死的最优配置表，也未使用内嵌 autotuner 抢走平台预算。性能参数由本平台算法选择并进入日志。当前证据包含 CPU 数学/格式回归、接口及空间检查、GPU 源码静态检查和生成的生产规模配置；**尚无本机 GPU 编译、正确性或性能实测，不能声称已达到专家库速度**。实机结果须在 5060 Ti、4090 或 Hopper 上独立采集。
+这些是独立实现的优化结构，未导入库内写死的最优配置表，也未使用内嵌 autotuner 抢走平台预算。性能参数由本平台算法选择并进入日志。已有 5060 Ti 的真实 GPU 编译、FP16/BF16 数值、尾块、语义变体和默认套件采样；没有宣称达到专家库速度或覆盖整个生产空间。4090/Hopper 必须独立采集。首次资源失败、融合 int32 staging 约束修复及分组合法性修复见 [5060TI_RESULTS.md](5060TI_RESULTS.md)。

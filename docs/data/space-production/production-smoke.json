@@ -1,0 +1,558 @@
+{
+  "compute_commit": "8171d3ae7e339cf8f9819bceb3ead9b2d73af363",
+  "GPU": "NVIDIA GeForce RTX 4090 / sm89",
+  "status": "passed",
+  "new_research_measurements": 12,
+  "independent_acceptance": 6,
+  "input_protocol": "portable_counter_u32_v1",
+  "protocol": {
+    "mode": "cuda_graph_gpu_plan_with_native_output_copy",
+    "batch": 128,
+    "warmup": 10,
+    "samples": 15
+  },
+  "profile": "vLLM0.8.5 native source build; numerical sources and internal template selectors unchanged",
+  "binary_sha256": "099d5481a21aa35750b18deb9324e944fd6828d90dfff0338b49263d98502c67",
+  "native_build_wall_s": 669.5409315377474,
+  "records": [
+    {
+      "id": "a4eecf23de43b860493b0b44",
+      "kernel": "production/marlin_default@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {},
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.015835750848054886,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "028d86e9f0ae398f1139a430",
+      "kernel": "production/marlin_atomic_opt_in@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {},
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.00655749998986721,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": true,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul>)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty",
+        "aten::zeros"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "c77c4a105e6aa6ce460deef8",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": true
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.01583850011229515,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "ea45d51bb184ec035ec55aa6",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": false
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.015014000236988068,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": false
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "e24e3da74d28d75b4fbd199c",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": true
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.006523500196635723,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": true,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul>)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty",
+        "aten::zeros"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "7ff286441fa89ab62e4003e3",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 2048,
+        "M": 1,
+        "N": 512
+      },
+      "config": {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": false
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.006540500093251467,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": true,
+        "use_fp32_reduce": false
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul>)",
+        "void marlin::Marlin<__half, 1125899907892224l, 256, 1, 8, 8, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty",
+        "aten::zeros"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "1bc6b896072fe0ae2c6b2b8a41dad11945f12345aaf649fb14af1602c605af73",
+        "codes_sha256": "396aa7f66e529abc3c76408f5b6aa725617f61e62d8a2c8443937ae389b7ce3c",
+        "scales_sha256": "6a8e96503f13e9df4ad9576dac51319e96463c43cd008c8d3ffa6e3a21f6c4cb",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "d47f790321511e71f7b6c376f25c42f3e8bc702546912a9b7a6de9ff080d4c10",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "7816d91efba251f3b8a67699abdc20fe5a167b601b3a9034a00645232885e0b6",
+        "marlin_scales_sha256": "d0844d2cc7327c8e7b306b6d2d1147352d3321f08a8973e4fde21aaa990bfc72"
+      }
+    },
+    {
+      "id": "f3ec29f0db819f320a181a4a",
+      "kernel": "production/marlin_default@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {},
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.020142249763011932,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    },
+    {
+      "id": "0f16a81ce522872937816c27",
+      "kernel": "production/marlin_atomic_opt_in@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {},
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.020184749737381935,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    },
+    {
+      "id": "0f526853287b252928167dd2",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": true
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.019738750532269478,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    },
+    {
+      "id": "2e0398810bc0792911d85906",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {
+        "USE_ATOMIC_ADD": false,
+        "USE_FP32_REDUCE": false
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.016304749995470047,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": false,
+        "use_fp32_reduce": false
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    },
+    {
+      "id": "ee81a9a1c3559e25452f2d95",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": true
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.01471749972552061,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": true,
+        "use_fp32_reduce": true
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul>)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty",
+        "aten::zeros"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    },
+    {
+      "id": "62a150b3bb7581a19c26810e",
+      "kernel": "production/marlin_explicit@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 64,
+        "N": 2048
+      },
+      "config": {
+        "USE_ATOMIC_ADD": true,
+        "USE_FP32_REDUCE": false
+      },
+      "status": "success",
+      "verified": true,
+      "verified_on_gpu": true,
+      "latency_ms": 0.01471799984574318,
+      "seed": 7,
+      "native_call_flags": {
+        "has_zp": false,
+        "is_zp_float": false,
+        "use_atomic_add": true,
+        "use_fp32_reduce": false
+      },
+      "profiler_status": "observed",
+      "kernel_symbols": [
+        "Memcpy DtoD (Device -> Device)",
+        "void at::native::vectorized_elementwise_kernel<4, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::Half>, std::array<char*, 1ul>)",
+        "void marlin::Marlin<__half, 1125899907892224l, 128, 4, 8, 4, 4, false, false, 8, false>(int4 const*, int4 const*, int4*, int4*, int4 const*, int4 const*, int const*, int, int, int, int, int, int*, bool, bool)"
+      ],
+      "observed_allocation_ops": [
+        "_C::gptq_marlin_gemm",
+        "aten::empty",
+        "aten::zeros"
+      ],
+      "logical_input_identity": {
+        "a_sha256": "c5a76d890212c76ced16a16c151502f6071cb7f8e9ab420ba41b03696733d600",
+        "codes_sha256": "61ee7373caae184ef2fe31af1f338c71860b7bed8f41b476feebd7fe92c63356",
+        "scales_sha256": "77996ebb7c6ffa76ddda4a6367bad659f73a4c66162b245dce5f212f9175a2ef",
+        "zero_point": 8
+      },
+      "backend_packing_identity": {
+        "canonical_gptq_k_words_sha256": "83a0af5be75e291d48fd403042ef463b3a54ff852c058f69636a62a73679d6d5",
+        "logical_roundtrip": "passed independent bit unpack",
+        "marlin_packed_sha256": "6cb1dc3974da785157855d0330ff77e359a07e3c50e74b54eadb8f75b436a11e",
+        "marlin_scales_sha256": "9da555dc8cbc60a5d8dc13e5db3e1258af0b83f209e6fd27a6eaa1f4b99c15e9"
+      }
+    }
+  ],
+  "scope": "Two shapes, one input seed. Exploratory latency points, no inference of broad speedups or physical CUBIN counts. Full raw records remain in guarded private journals."
+}

@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">mid-m / controlled/w4a16_fused@1.0.0 / B32</title>
+<desc id="desc">Actual revealed feedback; failures/cache consume observations; best-known union reference</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >mid-m / controlled/w4a16_fused@1.0.0 / B32</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Actual revealed feedback; failures/cache consume observations; best-known union reference</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >59.8</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >120</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >179</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >239</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >299</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="188.75" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4.88</text>
+<text x="277.50" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8.75</text>
+<text x="366.25" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >12.6</text>
+<text x="455.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >16.5</text>
+<text x="543.75" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >20.4</text>
+<text x="632.50" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >24.2</text>
+<text x="721.25" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >28.1</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >32</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Observations</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Loss to finite observed best-known (%)</text>
+<polyline points="100.00,406.36 122.90,416.44 145.81,429.77 168.71,429.77 191.61,430.10 214.52,430.10 237.42,430.10 260.32,430.10 283.23,430.10 306.13,430.10 329.03,430.10 351.94,430.10 374.84,430.10 397.74,430.10 420.65,430.10 443.55,430.10 466.45,430.10 489.35,430.10 512.26,430.10 535.16,430.10 558.06,430.10 580.97,430.10 603.87,430.10 626.77,430.70 649.68,430.70 672.58,430.70 695.48,430.70 718.39,430.70 741.29,430.70 764.19,430.70 787.10,430.70 810.00,430.70" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="406.36" r="3" fill="#2563eb"><title>heuristic@1.0.0: 1, 29.17</title></circle>
+<circle cx="122.90" cy="416.44" r="3" fill="#2563eb"><title>heuristic@1.0.0: 2, 20.43</title></circle>
+<circle cx="145.81" cy="429.77" r="3" fill="#2563eb"><title>heuristic@1.0.0: 3, 8.871</title></circle>
+<circle cx="168.71" cy="429.77" r="3" fill="#2563eb"><title>heuristic@1.0.0: 4, 8.871</title></circle>
+<circle cx="191.61" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 5, 8.585</title></circle>
+<circle cx="214.52" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 6, 8.585</title></circle>
+<circle cx="237.42" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 7, 8.585</title></circle>
+<circle cx="260.32" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 8, 8.585</title></circle>
+<circle cx="283.23" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 9, 8.585</title></circle>
+<circle cx="306.13" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 10, 8.585</title></circle>
+<circle cx="329.03" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 11, 8.585</title></circle>
+<circle cx="351.94" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 12, 8.585</title></circle>
+<circle cx="374.84" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 13, 8.585</title></circle>
+<circle cx="397.74" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 14, 8.585</title></circle>
+<circle cx="420.65" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 15, 8.585</title></circle>
+<circle cx="443.55" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 16, 8.585</title></circle>
+<circle cx="466.45" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 17, 8.585</title></circle>
+<circle cx="489.35" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 18, 8.585</title></circle>
+<circle cx="512.26" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 19, 8.585</title></circle>
+<circle cx="535.16" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 20, 8.585</title></circle>
+<circle cx="558.06" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 21, 8.585</title></circle>
+<circle cx="580.97" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 22, 8.585</title></circle>
+<circle cx="603.87" cy="430.10" r="3" fill="#2563eb"><title>heuristic@1.0.0: 23, 8.585</title></circle>
+<circle cx="626.77" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 24, 8.065</title></circle>
+<circle cx="649.68" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 25, 8.065</title></circle>
+<circle cx="672.58" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 26, 8.065</title></circle>
+<circle cx="695.48" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 27, 8.065</title></circle>
+<circle cx="718.39" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 28, 8.065</title></circle>
+<circle cx="741.29" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 29, 8.065</title></circle>
+<circle cx="764.19" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 30, 8.065</title></circle>
+<circle cx="787.10" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 31, 8.065</title></circle>
+<circle cx="810.00" cy="430.70" r="3" fill="#2563eb"><title>heuristic@1.0.0: 32, 8.065</title></circle>
+<g><title>heuristic@1.0.0</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >heuristic@1.0.0</text>
+</g>
+<polyline points="100.00,356.63 122.90,356.63 145.81,356.63 168.71,421.86 191.61,421.86 214.52,421.86 237.42,432.25 260.32,432.25 283.23,432.25 306.13,432.25 329.03,432.25 351.94,432.25 374.84,432.25 397.74,432.25 420.65,432.25 443.55,432.25 466.45,432.25 489.35,432.25 512.26,432.25 535.16,432.25 558.06,432.25 580.97,432.25 603.87,432.25 626.77,432.25 649.68,432.25 672.58,432.40 695.48,432.40 718.39,432.40 741.29,432.40 764.19,432.40 787.10,432.40 810.00,432.40" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="356.63" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 1, 72.29</title></circle>
+<circle cx="122.90" cy="356.63" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 2, 72.29</title></circle>
+<circle cx="145.81" cy="356.63" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 3, 72.29</title></circle>
+<circle cx="168.71" cy="421.86" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 4, 15.73</title></circle>
+<circle cx="191.61" cy="421.86" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 5, 15.73</title></circle>
+<circle cx="214.52" cy="421.86" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 6, 15.73</title></circle>
+<circle cx="237.42" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 7, 6.72</title></circle>
+<circle cx="260.32" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 8, 6.72</title></circle>
+<circle cx="283.23" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 9, 6.72</title></circle>
+<circle cx="306.13" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 10, 6.72</title></circle>
+<circle cx="329.03" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 11, 6.72</title></circle>
+<circle cx="351.94" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 12, 6.72</title></circle>
+<circle cx="374.84" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 13, 6.72</title></circle>
+<circle cx="397.74" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 14, 6.72</title></circle>
+<circle cx="420.65" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 15, 6.72</title></circle>
+<circle cx="443.55" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 16, 6.72</title></circle>
+<circle cx="466.45" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 17, 6.72</title></circle>
+<circle cx="489.35" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 18, 6.72</title></circle>
+<circle cx="512.26" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 19, 6.72</title></circle>
+<circle cx="535.16" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 20, 6.72</title></circle>
+<circle cx="558.06" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 21, 6.72</title></circle>
+<circle cx="580.97" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 22, 6.72</title></circle>
+<circle cx="603.87" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 23, 6.72</title></circle>
+<circle cx="626.77" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 24, 6.72</title></circle>
+<circle cx="649.68" cy="432.25" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 25, 6.72</title></circle>
+<circle cx="672.58" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 26, 6.586</title></circle>
+<circle cx="695.48" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 27, 6.586</title></circle>
+<circle cx="718.39" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 28, 6.586</title></circle>
+<circle cx="741.29" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 29, 6.586</title></circle>
+<circle cx="764.19" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 30, 6.586</title></circle>
+<circle cx="787.10" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 31, 6.586</title></circle>
+<circle cx="810.00" cy="432.40" r="3" fill="#d97706"><title>kernel_tuner_de@1.0.0: 32, 6.586</title></circle>
+<g><title>kernel_tuner_de@1.0.0</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >kernel_tuner_de@1.0.0</text>
+</g>
+<polyline points="100.00,120.56 122.90,417.37 145.81,417.37 168.71,417.37 191.61,417.37 214.52,417.37 237.42,417.37 260.32,426.20 283.23,426.20 306.13,426.20 329.03,426.20 351.94,426.20 374.84,426.20 397.74,426.20 420.65,426.20 443.55,426.20 466.45,426.20 489.35,426.20 512.26,426.20 535.16,426.20 558.06,426.20 580.97,426.20 603.87,426.20 626.77,426.20 649.68,426.20 672.58,426.20 695.48,426.20 718.39,426.20 741.29,435.50 764.19,435.50 787.10,435.50 810.00,435.50" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#059669"><title>random@1.0.0: 1, 277</title></circle>
+<circle cx="122.90" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 2, 19.62</title></circle>
+<circle cx="145.81" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 3, 19.62</title></circle>
+<circle cx="168.71" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 4, 19.62</title></circle>
+<circle cx="191.61" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 5, 19.62</title></circle>
+<circle cx="214.52" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 6, 19.62</title></circle>
+<circle cx="237.42" cy="417.37" r="3" fill="#059669"><title>random@1.0.0: 7, 19.62</title></circle>
+<circle cx="260.32" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 8, 11.96</title></circle>
+<circle cx="283.23" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 9, 11.96</title></circle>
+<circle cx="306.13" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 10, 11.96</title></circle>
+<circle cx="329.03" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 11, 11.96</title></circle>
+<circle cx="351.94" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 12, 11.96</title></circle>
+<circle cx="374.84" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 13, 11.96</title></circle>
+<circle cx="397.74" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 14, 11.96</title></circle>
+<circle cx="420.65" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 15, 11.96</title></circle>
+<circle cx="443.55" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 16, 11.96</title></circle>
+<circle cx="466.45" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 17, 11.96</title></circle>
+<circle cx="489.35" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 18, 11.96</title></circle>
+<circle cx="512.26" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 19, 11.96</title></circle>
+<circle cx="535.16" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 20, 11.96</title></circle>
+<circle cx="558.06" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 21, 11.96</title></circle>
+<circle cx="580.97" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 22, 11.96</title></circle>
+<circle cx="603.87" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 23, 11.96</title></circle>
+<circle cx="626.77" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 24, 11.96</title></circle>
+<circle cx="649.68" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 25, 11.96</title></circle>
+<circle cx="672.58" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 26, 11.96</title></circle>
+<circle cx="695.48" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 27, 11.96</title></circle>
+<circle cx="718.39" cy="426.20" r="3" fill="#059669"><title>random@1.0.0: 28, 11.96</title></circle>
+<circle cx="741.29" cy="435.50" r="3" fill="#059669"><title>random@1.0.0: 29, 3.898</title></circle>
+<circle cx="764.19" cy="435.50" r="3" fill="#059669"><title>random@1.0.0: 30, 3.898</title></circle>
+<circle cx="787.10" cy="435.50" r="3" fill="#059669"><title>random@1.0.0: 31, 3.898</title></circle>
+<circle cx="810.00" cy="435.50" r="3" fill="#059669"><title>random@1.0.0: 32, 3.898</title></circle>
+<g><title>random@1.0.0</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >random@1.0.0</text>
+</g>
+<polyline points="100.00,323.62 122.90,362.81 145.81,362.81 168.71,421.42 191.61,421.42 214.52,421.42 237.42,421.42 260.32,421.42 283.23,421.42 306.13,421.42 329.03,429.15 351.94,429.15 374.84,431.94 397.74,431.94 420.65,440.00 443.55,440.00 466.45,440.00 489.35,440.00 512.26,440.00 535.16,440.00 558.06,440.00 580.97,440.00 603.87,440.00 626.77,440.00 649.68,440.00 672.58,440.00 695.48,440.00 718.39,440.00 741.29,440.00 764.19,440.00 787.10,440.00 810.00,440.00" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="323.62" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 1, 100.9</title></circle>
+<circle cx="122.90" cy="362.81" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 2, 66.94</title></circle>
+<circle cx="145.81" cy="362.81" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 3, 66.94</title></circle>
+<circle cx="168.71" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 4, 16.11</title></circle>
+<circle cx="191.61" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 5, 16.11</title></circle>
+<circle cx="214.52" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 6, 16.11</title></circle>
+<circle cx="237.42" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 7, 16.11</title></circle>
+<circle cx="260.32" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 8, 16.11</title></circle>
+<circle cx="283.23" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 9, 16.11</title></circle>
+<circle cx="306.13" cy="421.42" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 10, 16.11</title></circle>
+<circle cx="329.03" cy="429.15" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 11, 9.404</title></circle>
+<circle cx="351.94" cy="429.15" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 12, 9.404</title></circle>
+<circle cx="374.84" cy="431.94" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 13, 6.989</title></circle>
+<circle cx="397.74" cy="431.94" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 14, 6.989</title></circle>
+<circle cx="420.65" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 15, 0</title></circle>
+<circle cx="443.55" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 16, 0</title></circle>
+<circle cx="466.45" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 17, 0</title></circle>
+<circle cx="489.35" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 18, 0</title></circle>
+<circle cx="512.26" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 19, 0</title></circle>
+<circle cx="535.16" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 20, 0</title></circle>
+<circle cx="558.06" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 21, 0</title></circle>
+<circle cx="580.97" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 22, 0</title></circle>
+<circle cx="603.87" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 23, 0</title></circle>
+<circle cx="626.77" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 24, 0</title></circle>
+<circle cx="649.68" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 25, 0</title></circle>
+<circle cx="672.58" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 26, 0</title></circle>
+<circle cx="695.48" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 27, 0</title></circle>
+<circle cx="718.39" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 28, 0</title></circle>
+<circle cx="741.29" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 29, 0</title></circle>
+<circle cx="764.19" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 30, 0</title></circle>
+<circle cx="787.10" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 31, 0</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#dc2626"><title>smac_rf@1.0.0: 32, 0</title></circle>
+<g><title>smac_rf@1.0.0</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >smac_rf@1.0.0</text>
+</g>
+<polyline points="100.00,120.56 122.90,417.37 145.81,417.37 168.71,417.37 191.61,418.45 214.52,418.45 237.42,418.45 260.32,434.26 283.23,434.26 306.13,434.26 329.03,434.26 351.94,434.26 374.84,434.26 397.74,434.26 420.65,434.26 443.55,434.26 466.45,434.26 489.35,434.26 512.26,434.26 535.16,437.83 558.06,437.83 580.97,437.83 603.87,437.83 626.77,437.83 649.68,437.83 672.58,437.83 695.48,437.83 718.39,437.83 741.29,437.83 764.19,437.83 787.10,437.83 810.00,437.83" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 1, 277</title></circle>
+<circle cx="122.90" cy="417.37" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 2, 19.62</title></circle>
+<circle cx="145.81" cy="417.37" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 3, 19.62</title></circle>
+<circle cx="168.71" cy="417.37" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 4, 19.62</title></circle>
+<circle cx="191.61" cy="418.45" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 5, 18.68</title></circle>
+<circle cx="214.52" cy="418.45" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 6, 18.68</title></circle>
+<circle cx="237.42" cy="418.45" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 7, 18.68</title></circle>
+<circle cx="260.32" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 8, 4.973</title></circle>
+<circle cx="283.23" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 9, 4.973</title></circle>
+<circle cx="306.13" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 10, 4.973</title></circle>
+<circle cx="329.03" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 11, 4.973</title></circle>
+<circle cx="351.94" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 12, 4.973</title></circle>
+<circle cx="374.84" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 13, 4.973</title></circle>
+<circle cx="397.74" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 14, 4.973</title></circle>
+<circle cx="420.65" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 15, 4.973</title></circle>
+<circle cx="443.55" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 16, 4.973</title></circle>
+<circle cx="466.45" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 17, 4.973</title></circle>
+<circle cx="489.35" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 18, 4.973</title></circle>
+<circle cx="512.26" cy="434.26" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 19, 4.973</title></circle>
+<circle cx="535.16" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 20, 1.882</title></circle>
+<circle cx="558.06" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 21, 1.882</title></circle>
+<circle cx="580.97" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 22, 1.882</title></circle>
+<circle cx="603.87" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 23, 1.882</title></circle>
+<circle cx="626.77" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 24, 1.882</title></circle>
+<circle cx="649.68" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 25, 1.882</title></circle>
+<circle cx="672.58" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 26, 1.882</title></circle>
+<circle cx="695.48" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 27, 1.882</title></circle>
+<circle cx="718.39" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 28, 1.882</title></circle>
+<circle cx="741.29" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 29, 1.882</title></circle>
+<circle cx="764.19" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 30, 1.882</title></circle>
+<circle cx="787.10" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 31, 1.882</title></circle>
+<circle cx="810.00" cy="437.83" r="3" fill="#7c3aed"><title>surrogate@1.0.0: 32, 1.882</title></circle>
+<g><title>surrogate@1.0.0</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >surrogate@1.0.0</text>
+</g>
+</g></svg>

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "controlled-open-w4-native-optimizers-v1",
+  "plugins": [
+    "kernel_tuning_lab.production.marlin",
+    "kernel_tuning_lab.optimizers"
+  ],
+  "algorithms": [
+    "random@1.0.0",
+    "heuristic@1.0.0",
+    "surrogate@1.0.0",
+    {
+      "asset": "smac_rf@1.0.0",
+      "options": {
+        "initial_design_size": 4
+      }
+    },
+    {
+      "asset": "kernel_tuner_de@1.0.0",
+      "options": {
+        "population_size": 8
+      }
+    }
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 8,
+      "max_wall_time_s": 180
+    },
+    {
+      "max_evaluations": 32,
+      "max_wall_time_s": 600
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 60,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "low-m",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "train",
+      "kernels": [
+        "controlled/w4a16_fused@1.0.0",
+        "controlled/w4a16_pipeline@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 512,
+          "K": 1024
+        }
+      ]
+    },
+    {
+      "name": "mid-m",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "train",
+      "kernels": [
+        "controlled/w4a16_fused@1.0.0",
+        "controlled/w4a16_pipeline@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 128,
+          "N": 512,
+          "K": 1024
+        }
+      ]
+    }
+  ]
+}

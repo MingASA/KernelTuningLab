@@ -1,128 +1,120 @@
-# Kernel Tuning Research Lab v0.1
+# KernelTuningLab
 
-面向硬件特性的算子参数寻优研究平台，覆盖 L2（有限测量预算下单 Shape 搜索）和 L3（有限变体集合与分派）。原始立项书和 PPTX 保留在仓库根目录；其中历史实验图表没有原始数据，**不会作为本平台实测数据导入**。
+[![CPU CI](https://github.com/MingASA/KernelTuningLab/actions/workflows/cpu.yml/badge.svg?branch=main)](https://github.com/MingASA/KernelTuningLab/actions/workflows/cpu.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](pyproject.toml)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
 
-Python >= 3.10，核心包无第三方运行依赖；Mock、搜索、Policy、SQLite、L3 和 SVG 报告均可在 CPU 上运行。
+面向真实硬件的算子配置寻优平台。用 **CLI / SDK、实验 JSON 和统一 Runner** 连接生产算子、搜索算法、AI 决策与可恢复的测量记录。
 
-## 新 Kernel 与算法：配置驱动接入
+`main` 是稳定使用入口，固定版本为 **v1.0.0**。研究请建立独立分支，论文与实验记录固定源码 commit。
 
-新贡献者从公开 SDK 和可运行模板开始，无需阅读或修改平台底层：
+## 主要功能
 
-```bash
-ktlab scaffold kernel --operator gemm@1.0.0 --runtime python --output my_kernel
-ktlab check --spec my_kernel/experiment.json --output artifacts/my-kernel-check
-ktlab run --spec my_kernel/experiment.json --output artifacts/my-kernel-run
+- **统一实验**：多个算子、实现、Shape、dtype、seed 和预算；静态检查、参考验证、完整调用计时与失败记录。
+- **真实配置空间**：条件参数、离散模板、原生默认与显式配置；大空间按需访问，完整集合与采样前缀分开。
+- **成熟搜索器**：Random、Grid、启发式及原生 SMAC RF、Kernel Tuner DE；预算、失败反馈、缓存和恢复共用接口。
+- **三种 AI 路线**：已有模型预测、模型逐步决策、生成并审查 SDK Searcher；API 与本地模型是独立部署方式。
+- **L3 与分析**：有限配置集合、Shape 分派、K–Loss、成本、覆盖和部署身份。
+- **本地 Web 查看器**：读取现有 SQLite、轨迹和报告，筛选实验、查看搜索过程、配置与成本；默认 localhost，只读。
+- **迁移与恢复**：私有环境 bootstrap、CPU 安全 doctor、SHA 校验和归档恢复。
+
+## 系统结构
+
+```mermaid
+flowchart LR
+    A[实验 JSON · SDK 插件] --> B[预检与参考验收]
+    B --> C[预算化搜索]
+    C -->|候选| D[Runner · 编译 · 完整调用]
+    D -->|已揭示反馈| C
+    D --> E[SQLite · JSONL · 轨迹]
+    E --> F[Web · 报告 · L3]
 ```
 
-`scaffold algorithm` 生成独立算法模板。算子、Kernel、搜索算法是各自版本化的资产，通过文件、模块或 entry points 注册；v2 实验只选择资产、Shape、精度、空间范围和预算。平台自动做接口/参数映射检查、空间交集、算法合成验收、有限预算数值核对、完整流程计时、断点缓存与结果归档。多步骤实现声明 `ExecutionPlan` 和工作区，初始化也计入每次完整调用。
+平台不要求 H800 常驻一个服务。本地负责开发、数据保全与分析；GPU 服务器按需执行实验。SSH 负责登录和命令，Git / Bundle 负责源码版本，rsync / scp 负责结果和部署资产。
 
-正确性声明可按版本、内容和范围跳过重复数值核对；声明来源与平台实测核对分开保存，默认 verified Replay/L3/报告不使用声明性能。父进程执行阶段硬超时。缺 CUDA 为 `deferred`，不会冒充 GPU 验收成功。
+## Quickstart：CPU 五分钟上手
 
-底层可靠性检查覆盖输入完整性、重复调用及计时后输出；失败样本不会作为成功性能。执行配置先冻结为快照，输出目录互斥，重跑保留 `attempts/` 历史；被终止的候选可恢复重试。证据等级、预算和生产使用边界见 [HARDENING.md](docs/HARDENING.md)。
-
-```bash
-ktlab assets list
-ktlab run --spec examples/extensions/cpu_gemm.json --output artifacts/extensions/cpu
-```
-
-这条 CPU 示例自动组合两个实现、两个算法和两个 Shape，并复用跨算法的测量缓存。新增算子、条件空间、正确性声明以及错误输出/非法建议/不兼容能力示例均已提供。接入步骤、契约和配置说明见 **[EXTENDING.md](docs/EXTENDING.md)**；实施计划见 [AUTO_INTEGRATION_PLAN.md](docs/AUTO_INTEGRATION_PLAN.md)。原 v1 `benchmark` 和完整 Adapter 插件继续可用。
-
-## 基础研究工作流
-
-项目书中的 W4/W3/W2A16 反量化 GEMM、独立反量化、Attention 和 MoE Grouped GEMM 已接入同一资产流程，并提供生产形状与开放搜索空间：
+CPU 核心包没有第三方运行依赖，不需要 Torch、Triton 或 GPU。
 
 ```bash
-ktlab proposal-suite --runtime python --output artifacts/proposal-cpu
-ktlab proposal-suite --runtime cuda --hardware 5060ti16g --output artifacts/proposal-gpu
-ktlab proposal-suite --runtime cuda --scale production --hardware H200 --write-only --output artifacts/production-specs
+git clone https://github.com/MingASA/KernelTuningLab.git
+cd KernelTuningLab
+python3 scripts/bootstrap.py --profile core --env .venv
+source .venv/activate-ktlab.sh
+ktlab doctor
+ktlab run --spec examples/quickstart/cpu.json --output artifacts/first-run
+ktlab web --root artifacts/first-run
 ```
 
-融合量化、分块 Attention、persistent/grouped MoE、Split-K 和实际 TMA 路径保留可调 tile、流水线等参数；接口支持硬件/输入/工作区预算裁剪及参数化验证案例。实现范围、公开优化来源、格式和实验说明见 [PROPOSAL_OPERATORS.md](docs/PROPOSAL_OPERATORS.md)。本机仍没有 GPU 实测证据。
+浏览器打开 `http://127.0.0.1:8765`。示例对一个小型 CPU GEMM 使用 Random / Grid，每方法最多两次揭示；输出应为 `status: passed`。缓存可能使真实执行数少于观测数。
+
+相同命令和输出目录可恢复实验；新实验使用新目录。完整流程见 [Quickstart](docs/QUICKSTART.md)。Windows GPU 使用 WSL2；Windows 原生 CPU 环境的程序位于 `.venv\Scripts\`。
+
+## 生产算子与硬件支持
+
+以下是固定 profile 的定向实机覆盖，新增配置仍由 Runner 验算。
+
+| 生产算子 | 已验证路径 | 主要边界 |
+|---|---|---|
+| GemLite A16 W4/W2 | 4090 FP16/BF16，GEMM / Split-K、默认与显式 | uniform group-scale；Split-K 元数据尾部已修复；GEMV/RevSplit-K 未实机验收 |
+| FLUTE W3 High | H800 FP16/BF16；4090 部分模板及 FP16 默认 | P32 packing；独立 FP32 归约 profile；逐模板共享内存检查；原 Mixed 有精度限制 |
+| FlexAttention | H800 Torch2.6 TRITON forward，dense/causal，FP16/BF16 | 与 Torch2.14、FLASH、backward 等路径分开 |
+| SGLang paged decode | H800 原生/显式、等长/不等长分页，FP16/BF16 | 关闭 PDL 的兼容路径，保留 Split-KV 与 merge |
+| vLLM MoE 0.8.5 | H800 完整两次 GEMM、SiLU、对齐和归约，FP16/BF16 | 官方固定组件 + Torch2.6/CUDA12/ABI0；与0.30分开 |
+
+5060 Ti 已验证核心 GPU Runner 与研究算子栈。不同后端可以使用独立环境；一个环境的支持不能推到全部生产路径。
+
+[最终支持说明](docs/PRODUCTION_STABILITY.md)列出静态合法、编译成功、数值通过及未验证范围。一次实际工程修复将完整3200点 MoE CPU 构建从47.926秒降至0.501秒，集合一致；这是特定任务的数据，见[原始记录](examples/production_stability/CPU_PROFILE.json)。
+
+## 自定义搜索算法与 AI 接入
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e .
-.venv/bin/python -m kernel_tuning_lab demo --output artifacts/demo
+ktlab scaffold algorithm --output my_search
+ktlab run --spec my_search/experiment.json --output artifacts/my-search
 ```
 
-Demo 覆盖三个虚构 GPU、四类算子、每类八组 Shape 和 24 个候选配置，执行六种搜索算法、独立 Policy 评分、K=1/2/4/8/16 的 L3 选择和精确对照，再输出 SQLite、JSONL、数据划分清单、策略版本日志和 Markdown/SVG 报告。已完成的一轮运行包含 2304 条记录、2880 次搜索比较、64 次策略评分和 240 个 L3 结果。所有模拟输出均标为 `mock`，**只能验证基础设施，不能证明真实 GPU 性能**。
+生成的 `assets.py` 实现公开 SDK 的 `suggest`。模型可以返回配置、partial、region 或空间查询；生成程序经过审查、开发和冻结后进入测试。平台不代训练路线A，也不将协议 fixture 当作模型效果。
 
-较大规模的 CPU 路径也提供一条命令：
+- [SDK 与插件](docs/EXTENDING.md)
+- [SMAC / KT 与生产配置空间](docs/SPACE_PRODUCTION.md)
+- [AI 接口与资源协议](docs/PRODUCTION_SUITE.md)
+- [团队使用指南](docs/TEAM_GUIDE.md)
+
+## 结果、Web 与数据恢复
 
 ```bash
-ktlab scale-demo --output artifacts/scale
+ktlab web --root artifacts/first-run --root artifacts/another-run
+ktlab report --database artifacts/first-run/measurements.sqlite --output artifacts/report
+ktlab l3 --database artifacts/first-run/measurements.sqlite --output artifacts/l3
+ktlab export --database artifacts/first-run/measurements.sqlite --output records.jsonl
 ```
 
-这会在 **139,968 个配置**上执行六类有界候选池搜索，并求解 **128 Shape × 64 Config** 的合成 L3 问题，同时给小规模投影做精确对照。大空间未全量测量，因此全局 regret 保持未知。核心测试另覆盖百万级空间下的采样和 Replay，禁止隐式全量展开。
+Web 读取启动时指定的目录，不启动实验或修改数据。远端可通过 SSH 端口转发查看，也可将结果同步到本地打开。见 [Web 使用说明](docs/WEB.md)。
 
-可选安装绘图与开发依赖：
+从私有归档库按源机器和目录前缀恢复：
 
 ```bash
-.venv/bin/python -m pip install -e '.[plots,dev]'
-.venv/bin/python -m pytest -q
+ktlab archive verify --vault "$KTL_VAULT"
+ktlab archive restore --vault "$KTL_VAULT" --source H800 \
+  --prefix "$EXPERIMENT_PREFIX" --output restored-data
 ```
 
-真实 NVIDIA GPU 上安装对应 CUDA 版本的 PyTorch 和 Triton 后运行：
+私有原始数据、机器信息和模型权重不随 GitHub 发布。部署层、ABI、可信来源与恢复验收见[部署与恢复](docs/DEPLOYMENT.md)。
 
-```bash
-.venv/bin/python -m pip install -e '.[gpu]'
-.venv/bin/python -m kernel_tuning_lab benchmark --backend triton --operator gemm --hardware H200 --max-evaluations 8 --require-success --output artifacts/gpu-smoke
-```
+## 文档导航
 
-支持 **H200 SXM、H800 SXM5、RTX 4090、RTX 5060 Ti 16GB** 的规格配置及实际设备兼容性检查，`--hardware` 接受 `H200`、`H800`、`4090`、`5060ti16g`。5060 Ti 用作上传 Hopper 前的轻量单卡验证机；会拒绝将 8GB 版本识别为 16GB。未核实的字段保留未知，真实执行读取物理设备属性；这些硬件均尚待实机验证。
+| 想做什么 | 文档 |
+|---|---|
+| 从安装到第一个实验 | [Quickstart](docs/QUICKSTART.md) · [个人练习](docs/PERSONAL_HANDOFF.md) |
+| 新服务器、环境选择与 E 盘恢复 | [部署与恢复](docs/DEPLOYMENT.md) |
+| 团队学习与工作流 | [团队指南](docs/TEAM_GUIDE.md) |
+| 查看、筛选和对比实验 | [Web](docs/WEB.md) |
+| 开发 Kernel / Searcher 插件 | [SDK 扩展](docs/EXTENDING.md) · [接口](docs/INTERFACES.md) |
+| 正确性、计时与证据 | [验证](docs/VALIDATION.md) · [协议](docs/PROTOCOL.md) |
+| 有限配置集合和分派 | [L3](docs/L3.md) |
+| 当前能力与限制 | [STATUS](docs/STATUS.md) · [生产支持](docs/PRODUCTION_STABILITY.md) |
+| 历史研究 | [阶段一](docs/RESEARCH_PHASE1.md) · [阶段二](docs/RESEARCH_PHASE2.md) · [跨 GPU](docs/CROSS_GPU_PHASE1.md) |
 
-| 算子 | Shape | Dtype | 实现边界 |
-| --- | --- | --- | --- |
-| GEMM | M/N/K | FP16/BF16 | Contiguous、FP32 累加、掩码处理尾块 |
-| Batched GEMM | Batch/M/N/K | FP16/BF16 | 独立等形矩阵，三维 grid，无广播 |
-| Softmax | M/N | FP16/BF16/FP32 | 最后一维、稳定减最大值、任意行长需由 BLOCK_SIZE 覆盖 |
-| LayerNorm | M/N | FP16/BF16/FP32 | 最后一维、非仿射、显式 eps、FP32 统计 |
+## 许可证
 
-上述四个 v1 适配器中，GEMM 搜索 BLOCK_M/N/K、num_warps、num_stages；归约算子使用独立的 BLOCK_SIZE 空间。它们提供独立 JIT 计时、Torch 正确性验证和 CUDA Event 热态采样。新增资产中的 Split-K、TMA 和完整流程计时见 [PROPOSAL_OPERATORS.md](docs/PROPOSAL_OPERATORS.md)。
-
-后续在目标 CUDA 机器上一次检查全部算子与支持的精度：
-
-```bash
-KT_PYTHON_BIN=.venv/bin/python bash scripts/run_gpu_smoke.sh 5060ti16g artifacts/5060ti
-# 本地通过后，在服务器将 profile 替换为 H200 或 H800 再运行。
-```
-
-5060 Ti 属于 `sm_120` Blackwell。原生后端要求 Torch >= 2.7、其 CUDA runtime >= 12.8、Triton >= 3.3；可选依赖为 `.[gpu-blackwell]`。脚本执行十组严格检查，任何被测试配置失败即退出，成功后生成 `validation_summary.json`。安装、预检及迁移步骤见 [RTX5060TI.md](docs/RTX5060TI.md)。
-
-CLI 更多命令：
-
-```bash
-ktlab --help
-ktlab hardware
-ktlab write-spec --backend mock --output examples/mock_experiment.json
-ktlab benchmark --spec examples/mock_experiment.json --output artifacts/spec-run
-ktlab replay --database artifacts/demo/measurements.sqlite --output artifacts/replay
-ktlab report --database artifacts/demo/measurements.sqlite --output artifacts/report
-ktlab export --database artifacts/demo/measurements.sqlite --output artifacts/export.jsonl
-ktlab import-jsonl --database artifacts/import.sqlite --input artifacts/export.jsonl
-ktlab import-public --database artifacts/public.sqlite --input kernel_tuning_lab/adapters/data/benchmark_hub_convolution_A100.sample.json
-ktlab demo --holdout shape --output artifacts/unseen-shape
-ktlab benchmark --backend mock --operator layernorm --searcher surrogate --max-evaluations 8 --output artifacts/online-layernorm
-ktlab demo --hardware H200 H800 4090 --operators gemm softmax --budgets 8 16 --seeds 0 --output artifacts/profile-mock
-```
-
-AutoTuning Benchmark Hub 已支持固定 commit 的完整目录发现、校验下载和整文件导入：
-
-```bash
-ktlab hub list
-ktlab hub import --kernel convolution_milo --gpu A100 --database artifacts/hub.sqlite
-ktlab hub import --kernel dedispersion_milo --gpu A4000 --database artifacts/hub.sqlite
-ktlab report --database artifacts/hub.sqlite --output artifacts/hub-report
-```
-
-本轮实际导入上述两份完整缓存，共 **15,492 条真实上游记录**；带运行时间的记录缺少可独立确认的正确性证据，因此保持 `correctness_unknown`，不进入已验证性能 oracle。目录核实、文件哈希、许可证及已导入范围见 [PUBLIC_DATA.md](docs/PUBLIC_DATA.md)。已核对的活动目录没有 H200/H800/4090 数据。
-
-本地插件也能从 CLI 使用，外部实现无需修改核心包：
-
-```bash
-ktlab --plugin examples/plugins/deterministic_mock.py benchmark --spec examples/experiments/plugin_mock.json --require-success --output artifacts/plugin
-```
-
-`examples/experiments/` 提供四类算子的 Mock/CUDA 实验规范；[自动生成的报告示例](examples/report/report.md) 包含比较曲线与精确解对照。核心实现状态、研究边界与后续工作见 [STATUS.md](docs/STATUS.md)，架构见 [ARCHITECTURE.md](ARCHITECTURE.md)，实验协议见 [PROTOCOL.md](docs/PROTOCOL.md)，硬件来源见 [HARDWARE.md](docs/HARDWARE.md)，扩展接口见 [INTERFACES.md](docs/INTERFACES.md)。
-
-新资产接入见 [EXTENDING.md](docs/EXTENDING.md)，完整 Adapter 见 [PLUGINS.md](docs/PLUGINS.md)，结果入口见 [examples/README.md](examples/README.md)，完整验证记录及规模/数据证据见 [VALIDATION.md](docs/VALIDATION.md)。初版日志在 `artifacts/final_validation/`，5060 Ti 回归在 `artifacts/rtx5060ti-validation/`，自动接入的合同/端到端测试、成功失败示例与模板执行日志在 `artifacts/auto-integration-validation/`。
+原始平台代码采用 [Apache-2.0](LICENSE)。第三方源码保留各自许可证与版权，见 [NOTICE](NOTICE)。

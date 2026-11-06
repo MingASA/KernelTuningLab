@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "study": "H800 real local LLM versus native optimizers",
+  "baseline_commit": "fcbe7677494b0d106d35e7167b7092feade15c08",
+  "target_GPU": "H800 one idle authorized device",
+  "model_choice": {
+    "primary": "Qwen/Qwen3.8-27B",
+    "weights": "existing complete BF16 local safetensors; manifest671107f354e3d6e0eb72e6d422914e3b0844a4137948cce1122ca6666cf7981a",
+    "fallback": "existing Qwen/Qwen2.5-Coder-32B-Instruct only if pre-performance compatibility pilot cannot run primary",
+    "selection_uses_target_performance": false
+  },
+  "kernels": [
+    {
+      "operator": "gemm@1.0.0",
+      "kernel": "triton/t1_gemm@1.0.0"
+    },
+    {
+      "operator": "w4a16_gemm@2.0.0",
+      "kernel": "controlled/w4a16_fused@1.0.0"
+    },
+    {
+      "operator": "w4a16_gemm@2.0.0",
+      "kernel": "controlled/w4a16_pipeline@1.0.0"
+    }
+  ],
+  "dtype": "float16",
+  "train_shapes": [
+    {
+      "M": 4,
+      "N": 512,
+      "K": 1024
+    },
+    {
+      "M": 32,
+      "N": 1024,
+      "K": 1024
+    },
+    {
+      "M": 128,
+      "N": 512,
+      "K": 1024
+    }
+  ],
+  "validation_shapes": [
+    {
+      "M": 16,
+      "N": 512,
+      "K": 1024
+    },
+    {
+      "M": 65,
+      "N": 1024,
+      "K": 2048
+    }
+  ],
+  "test_shapes": [
+    {
+      "M": 1,
+      "N": 1024,
+      "K": 2048
+    },
+    {
+      "M": 33,
+      "N": 768,
+      "K": 1024
+    },
+    {
+      "M": 257,
+      "N": 1024,
+      "K": 512
+    },
+    {
+      "M": 512,
+      "N": 1024,
+      "K": 2048
+    }
+  ],
+  "measurement": {
+    "mode": "cuda_graph",
+    "batch": 128,
+    "warmup": 10,
+    "repetitions": 15,
+    "workspace_memory_limit_bytes": 268435456
+  },
+  "target_prefix_budgets": [
+    1,
+    4,
+    8,
+    16,
+    32
+  ],
+  "trajectory_max_observations": 32,
+  "tuning_seeds": [
+    7,
+    19,
+    31
+  ],
+  "development_seed": 7,
+  "development_observations_per_task": 16,
+  "cold_baselines": [
+    "random@1.0.0",
+    "heuristic@1.0.0",
+    "smac_rf@1.0.0",
+    "kernel_tuner_de@1.0.0"
+  ],
+  "SMAC_initial_design": 4,
+  "DE_population": 8,
+  "direct_prediction": {
+    "ranked_portfolio_size": 16,
+    "target_latency_feedback": false,
+    "predict_before_development_labels": true,
+    "zero_feedback_top1_evaluation_requires_one_real_candidate_measurement": true,
+    "role": "static no-target-feedback ablation only; does not replace routeB live next-action"
+  },
+  "generated_heuristic": {
+    "versions": [
+      "rule0-no-measurement-feedback",
+      "rule1-after-train-feedback"
+    ],
+    "train_feedback_only": true,
+    "validation_used_for_version_selection": true,
+    "test_after_all_artifacts_frozen": true,
+    "executor": "bounded numeric scoring expression; no filesystem or tool access",
+    "source_model_response_immutable": true,
+    "model_self_repair_max_rounds": 2,
+    "agent_rewriting_policy_forbidden": true
+  },
+  "warm_baseline": "native SMAC initialized with at most2 train-only configs, plus native remaining design and full-domain RF search; source acquisition costs shared and reported",
+  "model_inference": {
+    "dtype": "bfloat16",
+    "backend": "Transformers5.8.1/sdpa/Torch2.6cu124",
+    "only_local_files": true,
+    "single_GPU": true,
+    "weights_exit_before_kernel_measurement": true,
+    "do_sample": true,
+    "template": {
+      "enable_thinking": false,
+      "preserve_thinking": false,
+      "reasoning_effort": "low"
+    },
+    "sampling": {
+      "temperature": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "repetition_penalty": 1.0
+    },
+    "presence_penalty": "not supplied: this Transformers path does not assert API presence_penalty support",
+    "profile_scope": "B sampled, C greedy structured rule generation; initial greedy pilots separate"
+  },
+  "analysis": {
+    "reference": "best-known union of actually verified observations in each exact kernel/hardware/shape/dtype/protocol; not a global oracle",
+    "equal_budget_comparisons": "compare only shared prefix budgets; static portfolios exhausted early remain censored",
+    "statistics": "B real sampled calls acrossseed7/19 (coupled input/tuning seed); traditional/C across7/19/31. Use matched seeds for comparisons; no independent frozen-policy development replications. No model scaling law inference across different release families.",
+    "counts": "new physical attempts,cache observations,static rejections,failed measurements,LLM tokens/load/generation cost separately",
+    "warm_versus_cold": "warm feedback costs never hidden; zero-target prediction is not zero-physical-evaluation proof",
+    "no_expected_algorithm_winner": true
+  },
+  "bounds": {
+    "per_GPU_batch_wall_s": 3600,
+    "inference_phase_wall_s": 2400,
+    "CPU_compile_workers": 1,
+    "GPU_tasks_per_machine": 1,
+    "no_model_or_weight_downloads": true
+  },
+  "user_route_A": "dedicated trained performance/decision model deferred to next round; native SMAC internal RF remains an optimizer baseline",
+  "user_route_B": {
+    "primary_models": [
+      "Qwen/Qwen3-1.7B",
+      "Qwen/Qwen3.5-4B"
+    ],
+    "mode": "real next-action decisions with revealed target history",
+    "target_budget": 8,
+    "main_tuning_seeds": [
+      7,
+      19
+    ],
+    "large_model_paired_budget": 4,
+    "pilot_based_cost_scope": "4B about10s and27B about50s/action including full offload; B8 over2seeds bounds online cost, matched-size B4 overseed7. 0.8B greedy pilot returned one legal config then repeated it despite explicit retry. Models not chosen by heldout latency. Greedy pilots retained; sampled main protocol chosen from official model cards and pre-test compatibility evidence.",
+    "paired_large_model": "same H800/offload/backend for one seed/prefixB1/B4; generation vs transfer costs separate",
+    "model_size_and_release_family_confounded": true,
+    "isolation": "same admitted H800, full model CPU offload and CUDA allocated-byte barrier between each real inference and Kernel measurement",
+    "separate_costs": [
+      "CPUload",
+      "upload",
+      "model_generate",
+      "offload",
+      "model_retry",
+      "Kernelcompile_validation_measurement"
+    ],
+    "small_model_final_choice": "0.8B and4B, compare both; no trained performance model",
+    "paired_ablation_models": [
+      "Qwen/Qwen3.5-0.8B",
+      "Qwen/Qwen3.8-27B"
+    ],
+    "paired_ablation_budget": 4,
+    "paired_ablation_seeds": [
+      7
+    ],
+    "structured_output": {
+      "primary": true,
+      "grammar": "full statically feasible set, not a random pool; actual HF model logits choose token branches; removes revealed configs without changing any selected config",
+      "allowance": "complete static set<=50000configs,<=15s build,<=1000000token nodes; otherwise explicit refusal",
+      "freeform_pilots": "greedy and sampled original outputs/repetitions retained as output-contract ablations; no automatic heuristic substitution"
+    }
+  },
+  "user_route_C": {
+    "model": "Qwen/Qwen3.8-27B",
+    "mode": "real LLM generated/iterated expression/rule, frozen before target tests",
+    "thinking": false,
+    "reasoning_effort": "medium",
+    "no_agent_policy_rewriting": true,
+    "decoding": {
+      "do_sample": false,
+      "max_new_tokens": 2048
+    },
+    "static_failure": "initial thinking greedy8192token attempt did not produce a final program; concise no-thinking rule0 accepted unchanged; rule1 uses the SAME final decoding to avoid confounding feedback with decoding"
+  },
+  "protocol_revision": "post-pilot, before target labels; scalar-choice-v3 plus fixed sampled decoding"
+}

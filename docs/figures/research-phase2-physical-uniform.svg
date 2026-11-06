@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Finite physical compiler-identity budget</title>
+<desc id="desc">6 Shapes / 4 configs; guarded observed identity mappings; not a general deployment solver</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Finite physical compiler-identity budget</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >6 Shapes / 4 configs; guarded observed identity mappings; not a general deployment solver</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >18.9</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >37.7</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >56.6</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >75.4</text>
+<line x1="100" x2="810" y1="95.0" y2="95.0" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >94.3</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="607.14" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >6</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Maximum compiled identities</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Weighted latency loss (%)</text>
+<polyline points="100.00,120.56 201.43,234.29 404.29,234.29 607.14,234.29 810.00,234.29" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#2563eb"><title>generic: 1, 87.29</title></circle>
+<circle cx="201.43" cy="234.29" r="3" fill="#2563eb"><title>generic: 2, 56.21</title></circle>
+<circle cx="404.29" cy="234.29" r="3" fill="#2563eb"><title>generic: 4, 56.21</title></circle>
+<circle cx="607.14" cy="234.29" r="3" fill="#2563eb"><title>generic: 6, 56.21</title></circle>
+<circle cx="810.00" cy="234.29" r="3" fill="#2563eb"><title>generic: 8, 56.21</title></circle>
+<g><title>generic</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >generic</text>
+</g>
+<polyline points="100.00,120.56 201.43,373.70 404.29,413.92 607.14,440.00 810.00,440.00" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#d97706"><title>mixed: 1, 87.29</title></circle>
+<circle cx="201.43" cy="373.70" r="3" fill="#d97706"><title>mixed: 2, 18.12</title></circle>
+<circle cx="404.29" cy="413.92" r="3" fill="#d97706"><title>mixed: 4, 7.127</title></circle>
+<circle cx="607.14" cy="440.00" r="3" fill="#d97706"><title>mixed: 6, 0</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#d97706"><title>mixed: 8, 0</title></circle>
+<g><title>mixed</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >mixed</text>
+</g>
+<polyline points="607.14,440.00 810.00,440.00" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="607.14" cy="440.00" r="3" fill="#059669"><title>specialized: 6, 0</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#059669"><title>specialized: 8, 0</title></circle>
+<g><title>specialized</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >specialized</text>
+</g>
+</g></svg>

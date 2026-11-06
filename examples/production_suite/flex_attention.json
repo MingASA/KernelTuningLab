@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "production-acceptance-flex_attention-float16",
+  "plugins": [
+    "kernel_tuning_lab.production.flex_attention"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    17
+  ],
+  "algorithms": [
+    {
+      "asset": "grid@1.0.0"
+    }
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "warmup": 5,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 64,
+    "workspace_memory_limit_bytes": 536870912,
+    "preflight_seconds": 45,
+    "validation": {
+      "max_configs": 3,
+      "max_cases": 0,
+      "max_wall_time_s": 240,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "dense",
+      "operator": "production/attention_prefill@1.0.0",
+      "parameters": {
+        "mask": "dense"
+      },
+      "kernels": [
+        "production/flex_auto@1.0.0",
+        "production/flex_triton@1.0.0"
+      ],
+      "shapes": [
+        {
+          "B": 1,
+          "H_Q": 4,
+          "H_KV": 2,
+          "D": 64,
+          "Q_LEN": 129,
+          "KV_LEN": 129
+        }
+      ]
+    },
+    {
+      "name": "causal",
+      "operator": "production/attention_prefill@1.0.0",
+      "parameters": {
+        "mask": "causal"
+      },
+      "kernels": [
+        "production/flex_auto@1.0.0",
+        "production/flex_triton@1.0.0"
+      ],
+      "shapes": [
+        {
+          "B": 1,
+          "H_Q": 4,
+          "H_KV": 2,
+          "D": 64,
+          "Q_LEN": 129,
+          "KV_LEN": 129
+        }
+      ]
+    }
+  ],
+  "max_jobs": 16
+}

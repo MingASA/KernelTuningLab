@@ -1,0 +1,102 @@
+{
+  "old_constraint_commit": "d7eaca5b69995f3c10f45473d012574f83ed6d71",
+  "applied_to": "actual GPU successes from new pilot/open study, including group128 common semantics",
+  "diagnostic_limit_bytes": 101376,
+  "limit_source": "Actual compiler OutOfResources on this GPU; supplied only for this CPU counterfactual, original records unchanged",
+  "original_probe_limit_bytes": 0,
+  "false_exclusions": [
+    {
+      "record_id": "f684cb8fc75d4b7cc288bbca",
+      "kernel": "triton_pipeline/w4a16_gemm@1.0.0",
+      "shape": {
+        "K": 512,
+        "M": 4,
+        "N": 256
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "DEQUANT_BLOCK_SIZE": 512,
+        "GROUP_M": 8,
+        "SPLIT_K": 1,
+        "num_stages": 4,
+        "num_warps": 8
+      },
+      "old_rejection": "staged A16 tile estimate 131072 exceeds 101376 shared-memory bytes",
+      "latency_ms": 0.01672700047492981,
+      "actual_compiled_shared_bytes": {
+        "dequantize": 0,
+        "gemm": 98304
+      },
+      "cubin_sha256": {
+        "dequantize": "a843e612fc19eca9069a9083f25d71962165272968380216060ed5d1126703c4",
+        "gemm": "8964c24e4220cddc8a1786ebfcaa460aa33331af61eb43e5580264a98c57b241"
+      }
+    },
+    {
+      "record_id": "8b9a2b71f349dd4ff137590e",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 4,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "DEQUANT_BLOCK_SIZE": 512,
+        "GROUP_M": 1,
+        "SPLIT_K": 8,
+        "num_stages": 4,
+        "num_warps": 8
+      },
+      "old_rejection": "staged A16 tile estimate 131072 exceeds 101376 shared-memory bytes",
+      "latency_ms": 0.009415999986231327,
+      "actual_compiled_shared_bytes": {
+        "dequantize": 0,
+        "gemm": 98304,
+        "split_k_reduce": 4096
+      },
+      "cubin_sha256": {
+        "dequantize": "c6e7cbddf0791c1527869049fa4bc069d5ba0f0aca748a95678ad32588b53522",
+        "gemm": "a09c4c48e728452c79083368fa1f07ddbf743d4637ea25b8ec3c28011ba1a1f3",
+        "split_k_reduce": "c5453dc4eabdc3b7051dc81843b434909a69f508a5cacbea71d8e70c174be2d2"
+      }
+    },
+    {
+      "record_id": "e7221744829d64dc96f97550",
+      "kernel": "controlled/w4a16_pipeline@1.0.0",
+      "shape": {
+        "K": 1024,
+        "M": 128,
+        "N": 512
+      },
+      "config": {
+        "BLOCK_K": 64,
+        "BLOCK_M": 128,
+        "BLOCK_N": 128,
+        "DEQUANT_BLOCK_SIZE": 512,
+        "GROUP_M": 1,
+        "SPLIT_K": 8,
+        "num_stages": 4,
+        "num_warps": 8
+      },
+      "old_rejection": "staged A16 tile estimate 131072 exceeds 101376 shared-memory bytes",
+      "latency_ms": 0.011048000305891037,
+      "actual_compiled_shared_bytes": {
+        "dequantize": 0,
+        "gemm": 98304,
+        "split_k_reduce": 4096
+      },
+      "cubin_sha256": {
+        "dequantize": "c6e7cbddf0791c1527869049fa4bc069d5ba0f0aca748a95678ad32588b53522",
+        "gemm": "62962c1e60479923e49532f153f3b7a49ec5f642cf0567494f5a2d31aeb22c7f",
+        "split_k_reduce": "0c762f66c0d48a2eb2271a7b0f2b88d9a320af5b43a9832332a8e3318ed19071"
+      }
+    }
+  ],
+  "notice": "Counterfactual CPU reevaluation only: Torch2.6 physical probe stored shared-memory limit0 (unknown), so the old runtime did not actually exclude these observations. Supplying only the compiler-reported limit101376 makes the old estimator reject these real passing records. Original HardwareSpec/cache/records are unchanged.",
+  "actual_exclusions_under_original_unknown_probe": 0
+}

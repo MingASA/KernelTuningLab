@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "new-user-gpu-search",
+  "algorithms": [
+    "random@1.0.0",
+    "heuristic@1.0.0"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 2,
+      "max_wall_time_s": 30
+    }
+  ],
+  "defaults": {
+    "hardware": "5060ti16g",
+    "warmup": 3,
+    "repetitions": 9,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 512,
+    "validation": {
+      "max_configs": 2,
+      "max_cases": 0,
+      "max_wall_time_s": 30,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        {
+          "asset": "triton/gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32
+            ],
+            "BLOCK_N": [
+              32
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 37,
+          "N": 71,
+          "K": 65
+        }
+      ]
+    }
+  ]
+}

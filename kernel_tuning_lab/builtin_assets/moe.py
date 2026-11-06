@@ -13,6 +13,7 @@ import random
 import re
 import struct
 
+from ..torch_context import strict_fp32_reference
 from ..sdk import (ExecutionPlan, ExecutionStep, KernelDefinition, OperatorDefinition,
                    ParameterSpec, ShapeSpec, SpaceDefinition)
 
@@ -153,9 +154,7 @@ def _reference(ctx):
     torch = ctx.torch
     host_offsets = validate_group_offsets(offsets.cpu().tolist(), m, groups)
     output = torch.empty((m, n), dtype=getattr(torch, ctx.operator.dtype), device=f"cuda:{ctx.device}")
-    previous = torch.backends.cuda.matmul.allow_tf32
-    try:
-        torch.backends.cuda.matmul.allow_tf32 = False
+    with strict_fp32_reference(torch):
         for expert in range(groups):
             start, stop = host_offsets[expert:expert + 2]
             if start == stop:
@@ -164,8 +163,6 @@ def _reference(ctx):
             for row in range(start, stop, 128):
                 end = min(stop, row + 128)
                 output[row:end] = (a[row:end].float() @ weight).to(output.dtype)
-    finally:
-        torch.backends.cuda.matmul.allow_tf32 = previous
     return {"out": output}
 
 
@@ -228,8 +225,6 @@ def _constraint(config, context):
         return "schedule preprocessing warps exceed the physical thread limit"
     if type(config.get("USE_TMA")) is not bool:
         return "USE_TMA must be boolean"
-    if hardware.smem_per_block and 2 * (bm + bn) * bk * stages > hardware.smem_per_block:
-        return "conservative pipelined operand storage exceeds shared memory limit"
     if split > (shape.get("K") + bk - 1) // bk:
         return "Split-K exceeds the number of nonempty K tiles"
     if _workspace_bytes(shape, bm, split) > context.workspace_memory_limit_bytes:
@@ -241,12 +236,19 @@ def _constraint(config, context):
     return None
 
 
+def _resource_advisory(config, hardware, operator, shape):
+    estimate = 2 * (config.get('BLOCK_M') + config.get('BLOCK_N')) * config.get('BLOCK_K') * config.get('num_stages')
+    return {'kind':'resource_estimate','model':'moe_pipelined_operands_v1',
+            'estimated_shared_memory_bytes':estimate,'device_limit_bytes':hardware.smem_per_block or None,
+            'excludes_candidate':False,'calibration':'Conservative model, compiler-layout dependent',
+            'authoritative_check':'Actual compiler resources and execution'}
+
+
 def _resolve_space(context):
     hardware, operator, shape = context.hardware, context.operator, context.shape
     k_tiles = (shape.get("K") + 31) // 32
     splits = tuple(value for value in (1, 2, 4, 8) if value <= k_tiles and _workspace_bytes(shape, 128, value) <= context.workspace_memory_limit_bytes)
-    stages = tuple(value for value in (1, 2, 3, 4, 5)
-                   if not hardware.smem_per_block or 2 * (16 + 32) * 32 * value <= hardware.smem_per_block)
+    stages = (1, 2, 3, 4, 5)
     return {"USE_TMA": (False, True) if _tma_allowed(hardware, shape) else (False,),
             "SPLIT_K": splits or (1,), "num_stages": stages or (1,)}
 
@@ -336,6 +338,7 @@ def register_assets(catalog):
         {"float16": (0.02, 0.02), "bfloat16": (0.03, 0.03), "float32": (1e-5, 1e-4), "float64": (1e-10, 1e-9)},
         validation_shapes=_validation_cases({}, ()), parameters={"distribution": "balanced", "group_sizes": None},
         validate=_validate, validation_case_factory=_validation_cases,
+        source_files=("../torch_context.py",),
         metadata={"input_names": ["a", "b", "group_offsets"], "output_names": ["out"],
                   "validation_seeds": [0, 104729, 130363], "proposal_family": "MoEGroupedGEMM",
                   "smoke_shapes": [{"M": 7, "N": 13, "K": 35, "Groups": 4},
@@ -372,7 +375,7 @@ def register_assets(catalog):
     }
     catalog.register(KernelDefinition(
         "triton/moe_grouped_gemm", _VERSION, operator.ref, _build_triton,
-        SpaceDefinition(parameters, constraints=(_constraint,), name="ragged_expert_production_space", resolver=_resolve_space),
+        SpaceDefinition(parameters, constraints=(_constraint,), name="ragged_expert_production_space", resolver=_resolve_space, advisories=(_resource_advisory,)),
         runtime="cuda", dtypes=("float16", "bfloat16"), architectures=("sm_*",),
         source_files=("../backends/_triton_moe.py",),
         metadata={"requires_triton": True, "primary_sources": list(_SOURCES),

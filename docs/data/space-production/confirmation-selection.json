@@ -1,0 +1,17 @@
+{
+  "chosen_after_exploration": true,
+  "source_record_ids": [
+    "a5441ac9372f596a4cc50669",
+    "b7653974858ea2e5912ae10a",
+    "5b0b247b39e805f3399abcd4",
+    "ee6b30ab29eb807ccbe973aa",
+    "1911b537bbc086c10d10a572",
+    "89ec9f5ff1634493a0748dd3",
+    "0ac0cec17b5a27d29c1564ef",
+    "5ae519acd8ae2ecaf82b744e"
+  ],
+  "cohort": "observed-union best and B32 heuristic best per implementation/Shape",
+  "not_a_blind_algorithm_comparison": true,
+  "repetitions": "independent seed7/19 physical calls, existing compiler cache allowed",
+  "test_split_labels_used": false
+}

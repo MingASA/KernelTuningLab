@@ -246,6 +246,8 @@ def test_declared_correctness_is_archived_as_claim_not_verified_oracle(tmp_path)
     assert trial["correctness_origin"] == "submitter_claim"
     assert trial["recommendation_verified"] is False
     assert trial["best_verified_record_id"] is None
+    assert trial["best_config"] is None and trial["best_latency_ms"] is None
+    assert trial["fastest_observed_success"]["correctness_verified"] is False
     for record in records:
         correctness = record["metadata"]["correctness"]
         assert correctness["correctness_origin"] == "submitter_claim"
@@ -255,7 +257,8 @@ def test_declared_correctness_is_archived_as_claim_not_verified_oracle(tmp_path)
         assert correctness.get("oracle_eligible", False) is False
 
 
-def test_missing_cuda_is_deferred_and_keeps_static_and_algorithm_evidence(tmp_path):
+def test_missing_cuda_is_deferred_and_keeps_static_and_algorithm_evidence(tmp_path, monkeypatch):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     plugin = tmp_path / "gpu_assets.py"
     _write_plugin(plugin, runtime="cuda")
     spec = _spec(tmp_path, plugin, hardware="h200-sxm")

@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "name": "quickstart-cpu",
+  "operator": "gemm@1.0.0",
+  "dtype": "float32",
+  "kernels": [{"asset": "python/gemm@1.0.0"}],
+  "algorithms": ["random@1.0.0", "grid@1.0.0"],
+  "shapes": [{"M": 3, "N": 5, "K": 7}],
+  "warmup": 1,
+  "repetitions": 5,
+  "seed": 17,
+  "budget": {"max_evaluations": 2, "max_wall_time_s": 15},
+  "validation": {"max_configs": 1, "max_cases": 0, "max_wall_time_s": 15, "trust_claims": false}
+}

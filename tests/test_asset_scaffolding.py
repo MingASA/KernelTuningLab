@@ -55,7 +55,8 @@ def test_python_algorithm_scaffold_generates_executable_run(tmp_path):
     assert json.loads((folder / "run" / "run_summary.json").read_text())["status"] == "passed"
 
 
-def test_cuda_scaffold_defers_cleanly_without_optional_gpu_dependencies(tmp_path):
+def test_cuda_scaffold_defers_cleanly_without_optional_gpu_dependencies(tmp_path, monkeypatch):
+    monkeypatch.setenv("CUDA_VISIBLE_DEVICES", "")
     folder = tmp_path / "cuda-kernel"
     made = _cli("scaffold", "kernel", "--runtime", "cuda", "--output", folder)
     assert made.returncode == 0, made.stdout + made.stderr

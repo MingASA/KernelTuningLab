@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="540" viewBox="0 0 1100 540" role="img" aria-labelledby="title desc">
+<title id="title">Source TopK oracle coverage</title>
+<desc id="desc">Post-hoc target best within source TopK; not a zero-observation selector</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="24.00" y="30.00" font-size="20" fill="#0f172a" text-anchor="start" >Source TopK oracle coverage</text>
+<text x="24.00" y="54.00" font-size="12" fill="#64748b" text-anchor="start" >Post-hoc target best within source TopK; not a zero-observation selector</text>
+<line x1="100" x2="810" y1="440.0" y2="440.0" stroke="#e2e8f0"/>
+<text x="88.00" y="444.00" font-size="12" fill="#334155" text-anchor="end" >0</text>
+<line x1="100" x2="810" y1="371.0" y2="371.0" stroke="#e2e8f0"/>
+<text x="88.00" y="375.00" font-size="12" fill="#334155" text-anchor="end" >5.54</text>
+<line x1="100" x2="810" y1="302.0" y2="302.0" stroke="#e2e8f0"/>
+<text x="88.00" y="306.00" font-size="12" fill="#334155" text-anchor="end" >11.1</text>
+<line x1="100" x2="810" y1="233.0" y2="233.0" stroke="#e2e8f0"/>
+<text x="88.00" y="237.00" font-size="12" fill="#334155" text-anchor="end" >16.6</text>
+<line x1="100" x2="810" y1="164.0" y2="164.0" stroke="#e2e8f0"/>
+<text x="88.00" y="168.00" font-size="12" fill="#334155" text-anchor="end" >22.1</text>
+<line x1="100" x2="810" y1="94.99999999999994" y2="94.99999999999994" stroke="#e2e8f0"/>
+<text x="88.00" y="99.00" font-size="12" fill="#334155" text-anchor="end" >27.7</text>
+<text x="100.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >1</text>
+<text x="201.43" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >2</text>
+<text x="404.29" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >4</text>
+<text x="810.00" y="465.00" font-size="12" fill="#334155" text-anchor="middle" >8</text>
+<line x1="100" x2="810" y1="440" y2="440" stroke="#94a3b8"/>
+<text x="455.00" y="505.00" font-size="14" fill="#334155" text-anchor="middle" >Source TopK</text>
+<text x="25.00" y="267.50" font-size="13" fill="#334155" text-anchor="middle" transform="rotate(-90 25 267.5)">Target finite-set regret (%)</text>
+<polyline points="100.00,385.25 201.43,391.13 404.29,436.97 810.00,440.00" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+<circle cx="100.00" cy="385.25" r="3" fill="#2563eb"><title>4090 to 5060ti: 1, 4.393</title></circle>
+<circle cx="201.43" cy="391.13" r="3" fill="#2563eb"><title>4090 to 5060ti: 2, 3.921</title></circle>
+<circle cx="404.29" cy="436.97" r="3" fill="#2563eb"><title>4090 to 5060ti: 4, 0.2432</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#2563eb"><title>4090 to 5060ti: 8, 0</title></circle>
+<g><title>4090 to 5060ti</title><line x1="840" x2="858" y1="95" y2="95" stroke="#2563eb" stroke-width="3"/>
+<text x="865.00" y="99.00" font-size="11" fill="#334155" text-anchor="start" >4090 to 5060ti</text>
+</g>
+<polyline points="100.00,331.98 201.43,411.84 404.29,428.13 810.00,440.00" fill="none" stroke="#d97706" stroke-width="2.5"/>
+<circle cx="100.00" cy="331.98" r="3" fill="#d97706"><title>4090 to H800: 1, 8.666</title></circle>
+<circle cx="201.43" cy="411.84" r="3" fill="#d97706"><title>4090 to H800: 2, 2.259</title></circle>
+<circle cx="404.29" cy="428.13" r="3" fill="#d97706"><title>4090 to H800: 4, 0.9525</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#d97706"><title>4090 to H800: 8, 0</title></circle>
+<g><title>4090 to H800</title><line x1="840" x2="858" y1="117" y2="117" stroke="#d97706" stroke-width="3"/>
+<text x="865.00" y="121.00" font-size="11" fill="#334155" text-anchor="start" >4090 to H800</text>
+</g>
+<polyline points="100.00,227.47 201.43,227.47 404.29,365.07 810.00,415.51" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="100.00" cy="227.47" r="3" fill="#059669"><title>5060ti to 4090: 1, 17.05</title></circle>
+<circle cx="201.43" cy="227.47" r="3" fill="#059669"><title>5060ti to 4090: 2, 17.05</title></circle>
+<circle cx="404.29" cy="365.07" r="3" fill="#059669"><title>5060ti to 4090: 4, 6.012</title></circle>
+<circle cx="810.00" cy="415.51" r="3" fill="#059669"><title>5060ti to 4090: 8, 1.965</title></circle>
+<g><title>5060ti to 4090</title><line x1="840" x2="858" y1="139" y2="139" stroke="#059669" stroke-width="3"/>
+<text x="865.00" y="143.00" font-size="11" fill="#334155" text-anchor="start" >5060ti to 4090</text>
+</g>
+<polyline points="100.00,120.56 201.43,229.27 404.29,294.09 810.00,418.82" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+<circle cx="100.00" cy="120.56" r="3" fill="#dc2626"><title>5060ti to H800: 1, 25.63</title></circle>
+<circle cx="201.43" cy="229.27" r="3" fill="#dc2626"><title>5060ti to H800: 2, 16.91</title></circle>
+<circle cx="404.29" cy="294.09" r="3" fill="#dc2626"><title>5060ti to H800: 4, 11.71</title></circle>
+<circle cx="810.00" cy="418.82" r="3" fill="#dc2626"><title>5060ti to H800: 8, 1.699</title></circle>
+<g><title>5060ti to H800</title><line x1="840" x2="858" y1="161" y2="161" stroke="#dc2626" stroke-width="3"/>
+<text x="865.00" y="165.00" font-size="11" fill="#334155" text-anchor="start" >5060ti to H800</text>
+</g>
+<polyline points="100.00,173.19 201.43,283.11 404.29,440.00 810.00,440.00" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+<circle cx="100.00" cy="173.19" r="3" fill="#7c3aed"><title>H800 to 4090: 1, 21.41</title></circle>
+<circle cx="201.43" cy="283.11" r="3" fill="#7c3aed"><title>H800 to 4090: 2, 12.59</title></circle>
+<circle cx="404.29" cy="440.00" r="3" fill="#7c3aed"><title>H800 to 4090: 4, 0</title></circle>
+<circle cx="810.00" cy="440.00" r="3" fill="#7c3aed"><title>H800 to 4090: 8, 0</title></circle>
+<g><title>H800 to 4090</title><line x1="840" x2="858" y1="183" y2="183" stroke="#7c3aed" stroke-width="3"/>
+<text x="865.00" y="187.00" font-size="11" fill="#334155" text-anchor="start" >H800 to 4090</text>
+</g>
+<polyline points="100.00,191.59 201.43,310.45 404.29,439.46 810.00,439.69" fill="none" stroke="#0891b2" stroke-width="2.5"/>
+<circle cx="100.00" cy="191.59" r="3" fill="#0891b2"><title>H800 to 5060ti: 1, 19.93</title></circle>
+<circle cx="201.43" cy="310.45" r="3" fill="#0891b2"><title>H800 to 5060ti: 2, 10.39</title></circle>
+<circle cx="404.29" cy="439.46" r="3" fill="#0891b2"><title>H800 to 5060ti: 4, 0.04322</title></circle>
+<circle cx="810.00" cy="439.69" r="3" fill="#0891b2"><title>H800 to 5060ti: 8, 0.02484</title></circle>
+<g><title>H800 to 5060ti</title><line x1="840" x2="858" y1="205" y2="205" stroke="#0891b2" stroke-width="3"/>
+<text x="865.00" y="209.00" font-size="11" fill="#334155" text-anchor="start" >H800 to 5060ti</text>
+</g>
+</g></svg>

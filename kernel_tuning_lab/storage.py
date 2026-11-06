@@ -126,6 +126,11 @@ class ExperimentStore:
     def records(self, **filters: str) -> list[MeasurementRecord]:
         return list(self.iter_records(**filters))
 
+    def get_record(self, record_id: str) -> MeasurementRecord | None:
+        """Fetch an exact observation without scanning a shared history."""
+        row = self.connection.execute("SELECT payload FROM measurements WHERE id=?", (record_id,)).fetchone()
+        return MeasurementRecord.from_dict(json.loads(row[0])) if row else None
+
     def iter_records(self, **filters: str) -> Iterator[MeasurementRecord]:
         allowed = {"hardware_id", "operator_id", "shape_id", "config_id", "split", "provenance", "experiment_id", "status"}
         if filters.keys() - allowed:

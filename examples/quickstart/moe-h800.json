@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "name": "production-moe-short-search",
+  "plugins": ["kernel_tuning_lab.production.vllm_moe_compat", "kernel_tuning_lab.optimizers"],
+  "operator": "production/routed_moe_silu@1.0.0",
+  "parameters": {"route_distribution": "balanced"},
+  "dtype": "float16",
+  "kernels": [{"asset": "production/vllm085_moe_explicit@1.0.0"}],
+  "algorithms": ["random@1.0.0", {"asset": "smac_rf@1.0.0", "options": {"initial_design_size": 2}}],
+  "shapes": [{"M": 17, "H": 128, "I": 256, "E": 4, "TOP_K": 2}],
+  "seed": 20261105,
+  "warmup": 2,
+  "repetitions": 3,
+  "timing_mode": "cuda_graph",
+  "cuda_graph_batch_size": 16,
+  "workspace_memory_limit_bytes": 536870912,
+  "preflight_seconds": 45,
+  "budget": {"max_evaluations": 4, "max_wall_time_s": 90},
+  "validation": {"max_configs": 1, "max_cases": 0, "max_wall_time_s": 60, "trust_claims": false}
+}

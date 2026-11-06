@@ -1,0 +1,26 @@
+{
+  "kind": "invalid parameter spelling correction",
+  "created_utc": "2026-10-26T06:07:25.737091+00:00",
+  "original_sha256": "2ba6f8ebe54a06d18b30a4cf0b27bfff8b5a0a8d42e743004b8730d27d47b852",
+  "corrected_sha256": "9e45dce96f29b2f6dd6ca94da3c81eb6f56fb47879eac4c7ffeb1fa44fcbcf0c",
+  "change": {
+    "DEQUANT_BLOCK": [
+      512
+    ],
+    "DEQUANT_BLOCK_SIZE": [
+      512
+    ]
+  },
+  "reason": "SDK declares DEQUANT_BLOCK_SIZE. Initial pipeline jobs rejected at kernel_space preflight before any pipeline measurements. Fused 72 verified observations retained for cached resume.",
+  "unchanged": [
+    "Shapes",
+    "FP16",
+    "input seeds",
+    "12 GEMM config combinations",
+    "dequantization tile 512 intent",
+    "kernels",
+    "Graph512 protocol",
+    "tolerances"
+  ],
+  "evidence": "artifacts/research-phase2/w4/attempts plus group attempts; original source spec also in frozen commit 2f842c9"
+}

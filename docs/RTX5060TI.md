@@ -64,4 +64,8 @@ KT_PYTHON_BIN=.venv/bin/python bash scripts/run_gpu_smoke.sh H800 artifacts/h800
 
 The 5060 Ti result verifies the recorded device's code paths and numerical behavior. Hopper still needs its own compilation, resource and correctness checks; tuning results and compiled kernels are specific to architecture/environment. Use separate output directories so the observations and hardware-bound caches remain explicit. Deployment and upload are not automated by this script.
 
-The current development host has no CUDA, so this change is validated with CPU contract/Mock tests. No physical RTX 5060 Ti result has been fabricated. Run the above command on the user's actual 16GB machine to collect that evidence.
+The 2026-10-25 physical WSL validation passed all ten strict stages (80 records),
+and the repaired default proposal suite passed all sixteen dtype/operator jobs.
+The validated stack is Python 3.12.13, Torch 2.13.0+cu132 and Triton 3.7.1.
+See [5060TI_RESULTS.md](5060TI_RESULTS.md) for immutable first-failure evidence,
+resource-legality fixes, timing scopes and the limited sampling boundary.

@@ -37,16 +37,68 @@ def _save_jsonl(path: Path, records: Iterable[MeasurementRecord]) -> None:
 
 def _infer_space(records: Iterable[MeasurementRecord]) -> ConfigSpace:
     from .models import canonical_json
+    rows = tuple(records)
+    if not rows:
+        raise ValueError("no observations available to reconstruct a configuration space")
     domains: dict[str, dict[str, Any]] = defaultdict(dict)
     operators = set()
-    for record in records:
+    for record in rows:
         operators.add(record.operator.kind)
         for key, value in record.config.params.items():
             domains[key][canonical_json(value)] = value
-    if not domains:
-        raise ValueError("no configuration domains available in this dataset")
     if len(operators) != 1:
         raise ValueError("infer configuration spaces separately for each operator")
+    if any(set(record.config.params) != set(domains) for record in rows):
+        raise ValueError("mixed configuration parameter schemas; select a cohort or supply an explicit space with run_replay")
+    if any(record.metadata.get("protocol", {}).get("contract") == "asset_kernel_v1" for record in rows):
+        # SDK Python/fixed/conditional kernels do not have the v1 GEMM knobs.
+        # Offline analysis must never silently discard them using legacy CUDA
+        # constraints, nor require the optional GPU runtime to reconstruct C.
+        from .catalog import get_catalog
+        from .asset_space import build_effective_space
+        from .assets import SpaceContext
+        try:
+            kernel = get_catalog().resolve("kernel", rows[0].operator.implementation)
+        except ValueError:
+            kernel = None
+        inference_reason = "asset_unavailable"
+        if kernel is not None:
+            fingerprints = {r.environment.get("kernel_fingerprint") for r in rows}
+            if fingerprints != {kernel.fingerprint}:
+                # A different Python/compiler/source snapshot is not permission
+                # to impose today's legality on historical observations.
+                kernel = None
+                inference_reason = "asset_content_unmatched"
+        membership = defaultdict(set)
+        context_values = {}
+        for record in rows:
+            membership[record.case_id].add(record.config.id)
+            context_values.setdefault((record.hardware.id, record.operator.id, record.shape.id),
+                (record.environment, record.metadata.get("protocol", {}).get("workspace_memory_limit_bytes", 256 * 1024**2)))
+        if kernel is None:
+            def observed_only(config, hardware, operator, shape):
+                from .datasets import case_id
+                return None if config.id in membership[case_id(hardware, operator, shape)] else "unobserved config; original asset is unavailable"
+            constraints = (observed_only,)
+            identity = {"inference_scope": "observed_configs_only", "reason": inference_reason,
+                        "observed_config_ids": {k: sorted(v) for k, v in membership.items()}}
+        else:
+            spaces = {}
+            def asset_constraint(config, hardware, operator, shape):
+                key = (hardware.id, operator.id, shape.id)
+                if key not in spaces:
+                    environment, limit = context_values[key]
+                    context = SpaceContext(hardware, operator, shape, environment, limit)
+                    spaces[key] = build_effective_space(kernel, hardware, operator, shape, context=context)
+                result = spaces[key].validate(config, hardware, operator, shape)
+                return None if result.valid else "; ".join(result.reasons)
+            constraints = (asset_constraint,)
+            identity = {"inference_scope": "observed_domains_with_current_asset_constraints", "kernel_fingerprint": kernel.fingerprint}
+        return ConfigSpace({key: tuple(values.values()) for key, values in domains.items()}, constraints=constraints,
+                           name="inferred_asset_cohort", identity=identity, allow_empty=True)
+    if not domains:
+        return ConfigSpace({}, name="observed_fixed_config", allow_empty=True,
+                           identity={"inference_scope": "observed_fixed_config"})
     constraints = ((gemm_constraint,) if operators <= {"gemm", "batched_gemm"} else
                    (reduction_constraint,) if operators <= {"softmax", "layernorm"} else ())
     return ConfigSpace({key: tuple(values.values()) for key, values in domains.items()},
@@ -71,12 +123,16 @@ def _compare_grouped(records, budgets, seeds, split="test", candidate_pool_size=
 
 def _l3_evaluate(records: Iterable[MeasurementRecord], space: ConfigSpace | None = None) -> tuple[list[dict], list[dict]]:
     from .l3 import PerformanceMatrix, ShapeDispatcher, bucket_baseline, greedy, greedy_local_swap, oracle
-    groups: dict[tuple[str, str, str], list[MeasurementRecord]] = defaultdict(list)
+    from .measurement_context import source_context
+    from .models import stable_id
+    groups: dict[tuple[str, str, str, str], list[MeasurementRecord]] = defaultdict(list)
     for record in records:
-        groups[record.hardware.id, record.operator.id, record.provenance].append(record)
+        context = source_context(record)
+        context["protocol"] = {key: value for key, value in context["protocol"].items() if key != "config_space"}
+        groups[record.hardware.id, record.operator.id, record.provenance, stable_id(context)].append(record)
     results, missing = [], []
     methods = {"oracle": oracle, "greedy": greedy, "greedy_local_swap": greedy_local_swap, "bucket": bucket_baseline}
-    for (hardware_id, operator_id, provenance), rows in sorted(groups.items()):
+    for (hardware_id, operator_id, provenance, context_id), rows in sorted(groups.items()):
         group_space = _infer_space(rows)
         shapes = tuple(sorted({r.shape.id: r.shape for r in rows}.values(), key=lambda s: tuple(sorted(s.dims.items()))))
         configs = tuple(sorted({r.config.id: r.config for r in rows}.values(), key=lambda c: c.id))
@@ -100,6 +156,7 @@ def _l3_evaluate(records: Iterable[MeasurementRecord], space: ConfigSpace | None
                     continue
                 payload = result.to_dict()
                 payload.update({"hardware_id": hardware_id, "hardware_name": rows[0].hardware.name,
+                                "source_context_id": context_id,
                                 "operator_id": operator_id, "matrix_coverage": matrix.coverage,
                                 "operator_name": rows[0].operator.name, "operator_kind": rows[0].operator.kind,
                                 "context": workload.name})
@@ -414,15 +471,85 @@ def command_assets(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="ktlab", description="Kernel Tuning Research Lab v0.1")
+    from . import __version__
+    parser = argparse.ArgumentParser(prog="ktlab", description="KernelTuningLab "+__version__)
     parser.add_argument("--plugin", action="append", default=[], metavar="MODULE_OR_PATH", help="explicitly load a trusted Python extension; repeatable")
     sub = parser.add_subparsers(dest="command", required=True)
+    web = sub.add_parser('web', help='open a localhost read-only experiment viewer')
+    web.add_argument('--root', action='append', required=True, help='experiment directory or parent; repeat to compare roots')
+    web.add_argument('--port', type=int, default=8765)
+    def view_experiments(args):
+        from .web import serve
+        return serve(args.root, args.port)
+    web.set_defaults(handler=view_experiments)
+    doctor = sub.add_parser('doctor', help='CPU-safe runtime profiles and optional read-only nvidia-smi inspection')
+    doctor.add_argument('--devices', action='store_true')
+    def diagnose(args):
+        from .portable import doctor
+        return doctor(devices=args.devices)
+    doctor.set_defaults(handler=diagnose)
+    archive = sub.add_parser('archive', help='verify or restore preserved content archives; never executes an experiment')
+    archive.add_argument('archive_action', choices=('verify', 'restore'))
+    archive.add_argument('--vault', required=True)
+    archive.add_argument('--source', help='source name recorded in the vault catalog')
+    archive.add_argument('--prefix', default='')
+    archive.add_argument('--output')
+    def archived_data(args):
+        from .portable import verify_vault, restore_vault
+        if args.archive_action == 'verify':return verify_vault(args.vault)
+        if not args.source or not args.output:raise ValueError('archive restore requires --source and --output')
+        return restore_vault(args.vault, args.source, args.output, prefix=args.prefix)
+    archive.set_defaults(handler=archived_data)
+    ai_program=sub.add_parser('ai-program',help='review/check/evaluate/freeze a generated SDK Searcher; trusted code, no sandbox')
+    ai_actions=ai_program.add_subparsers(dest='program_action',required=True)
+    for action in ('submit','review','check','development','reuse','freeze','test','feedback','show'):
+        command=ai_actions.add_parser(action);command.add_argument('--artifact',required=True)
+        if action=='submit':
+            command.add_argument('--response',required=True);command.add_argument('--program',required=True)
+            command.add_argument('--algorithm-ref',required=True);command.add_argument('--provenance',required=True)
+            command.add_argument('--edited-program');command.add_argument('--parent')
+        if action=='review':command.add_argument('--reviewed-by',required=True)
+        if action in ('check','development','test'):command.add_argument('--spec',required=True)
+        if action=='reuse':
+            command.add_argument('--source',required=True);command.add_argument('--spec',required=True)
+            command.add_argument('--stage',choices=('check','development'),required=True)
+    def program_workflow(args):
+        from . import program_artifacts as programs
+        action=args.program_action
+        if action=='submit':return programs.submit(args.artifact,response=args.response,program=args.program,
+            algorithm_ref=args.algorithm_ref,provenance=json.loads(Path(args.provenance).read_text()),edited_program=args.edited_program,parent=args.parent)
+        if action=='review':return programs.review(args.artifact,args.reviewed_by)
+        if action=='reuse':return programs.reuse_evaluation(args.artifact,args.source,args.spec,stage=args.stage)
+        if action in ('check','development','test'):return programs.evaluate(args.artifact,args.spec,stage=action)
+        return getattr(programs,'verify' if action=='show' else action)(args.artifact)
+    ai_program.set_defaults(handler=program_workflow)
     for name, description in (("run", "accept and search registered Kernel/algorithm assets"),
                               ("check", "automatically accept registered assets without research search")):
         asset_run = sub.add_parser(name, help=description)
         asset_run.add_argument("--spec", required=True, help="schema_version=2 asset experiment JSON")
         asset_run.add_argument("--output", default="artifacts/assets")
         asset_run.set_defaults(handler=command_asset_experiment)
+    research = sub.add_parser("research", help="search and compare multiple asset cases, dtypes, seeds and budgets; write reports")
+    research.add_argument("--spec", help="kind=research matrix experiment JSON")
+    research.add_argument("--output", default="artifacts/research")
+    research.add_argument("--quiet", action="store_true", help="suppress progress on stderr; JSON result remains on stdout")
+    research_mode = research.add_mutually_exclusive_group()
+    research_mode.add_argument("--write-only", action="store_true", help="validate/expand specs and budgets without importing plugins or CUDA")
+    research_mode.add_argument("--report-only", action="store_true", help="regenerate current attempt reports without importing plugins or CUDA")
+    def execute_research(args):
+        from .research import run_research
+        def progress(event):
+            if event['event']=='plan':
+                text=f"Research: {event['jobs']} jobs, {event['trials']} trials, up to {event['max_observations']} observations + {event['max_validation_evaluations']} acceptance attempts"
+            else:
+                text=f"[{event['index']}/{event['jobs']}] {event['case']}: {event['status']}"
+                if 'kernel' in event:
+                    text+=f" | {event['kernel']} | {event['algorithm']} | {event['dtype']} | seed={event['seed']}"
+                if 'wall_time_s' in event:text+=f" ({event['wall_time_s']:.2f}s)"
+            print(text,file=sys.stderr,flush=True)
+        return run_research(args.spec, args.output, write_only=args.write_only,
+                            report_only=args.report_only, plugins=tuple(args.plugin), progress=None if args.quiet else progress)
+    research.set_defaults(handler=execute_research)
     assets = sub.add_parser("assets", help="discover registered versioned operators, Kernels and algorithms")
     assets.add_argument("assets_action", choices=("list", "show"))
     assets.add_argument("--kind", choices=("operator", "kernel", "algorithm"))
@@ -563,7 +690,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         from .plugins import load_plugin
-        if args.command not in {"run", "check"}:
+        if args.command not in {"run", "check", "research"}:
             for plugin in args.plugin:
                 load_plugin(plugin)
         result = args.handler(args)
@@ -571,4 +698,4 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"error": type(exc).__name__, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
-    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite"} else 0
+    return result.get("exit_code", 0) if args.command in {"run", "check", "proposal-suite", "research", "ai-program"} else 0

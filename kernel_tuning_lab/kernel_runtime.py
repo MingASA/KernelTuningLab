@@ -23,7 +23,7 @@ from typing import Any, Callable
 
 from .backends.base import BackendUnavailableError
 from .claims import CorrectnessClaim, claim_matches
-from .models import HardwareSpec, KernelConfig, OperatorSpec, RecordStatus, ShapeSpec
+from .models import HardwareSpec, KernelConfig, OperatorSpec, RecordStatus, ShapeSpec,canonical_json
 from .space import ValidationResult
 
 
@@ -54,6 +54,7 @@ class ExecutionContext:
     workspace_memory_limit_bytes: int = 256 * 1024**2
     workspace_bytes: int = 0
     metadata: dict[str, Any] = field(default_factory=dict)
+    prepared_inputs: dict[str, Any] = field(default_factory=dict)
     _workspace_allocation_open: bool = field(default=True, repr=False)
 
     def _allocate(self, shape, dtype, fill):
@@ -63,6 +64,9 @@ class ExecutionContext:
             if self.torch is None:
                 raise BackendUnavailableError("CUDA context has no loaded PyTorch runtime")
             torch_dtype = getattr(self.torch, dtype) if isinstance(dtype, str) else dtype
+            from .inference_resources import COORDINATOR
+            width=self.torch.empty((),device='cpu',dtype=torch_dtype).element_size()
+            COORDINATOR.check_known_allocation(self.hardware,math.prod(shape)*width,self.workspace_bytes)
             value = self.torch.empty(shape, dtype=torch_dtype, device=f"cuda:{self.device}")
             if fill is not None:
                 value.fill_(fill)
@@ -105,6 +109,19 @@ class ExecutionContext:
         self.outputs[name] = value
         return value
 
+    def register_prepared_input(self,name,value):
+        """Declare config-dependent packed/read-only buffers before capture.
+
+        Mutable reset/reduction workspaces must not be registered here. These
+        values receive the same full integrity and alias checks as task inputs.
+        """
+        if not self._workspace_allocation_open:
+            raise ValueError('prepared inputs must be registered during build/setup')
+        if not isinstance(name,str) or not name or name in self.prepared_inputs:
+            raise ValueError('prepared input names must be nonempty and unique')
+        self.prepared_inputs[name]=value
+        return value
+
     def record_compiled_kernel(self, name: str, compiled) -> None:
         """Archive actual compiler resources and reject known launch-limit violations."""
         if not isinstance(name, str) or not name:
@@ -115,6 +132,18 @@ class ExecutionContext:
         warps = getattr(metadata, "num_warps", None)
         self.metadata.setdefault("execution_resources", {})[name] = {
             "shared_memory_bytes": shared, "registers_per_thread": registers, "num_warps": warps}
+        # Real compiled specializations are separate from config dictionaries.
+        # Keep only artifact hashes/sizes, never assume one config = one binary.
+        resources = self.metadata["execution_resources"][name]
+        compiled_hash = getattr(compiled, "hash", None)
+        resources["compiler_cache_identity"] = compiled_hash if isinstance(compiled_hash, str) else None
+        artifacts = {}
+        for kind, payload in getattr(compiled, "asm", {}).items():
+            if kind not in {"cubin", "ptx", "sass"} or not isinstance(payload, (str, bytes)):
+                continue
+            blob = payload.encode("utf-8") if isinstance(payload, str) else payload
+            artifacts[kind] = {"sha256": hashlib.sha256(blob).hexdigest(), "bytes": len(blob)}
+        resources["artifacts"] = artifacts
         if shared is not None and self.hardware.smem_per_block and shared > self.hardware.smem_per_block:
             raise RuntimeError(f"{name} compiled shared memory {shared} exceeds {self.hardware.smem_per_block} bytes")
         if warps is not None and warps * self.hardware.warp_size > self.hardware.max_threads_per_block:
@@ -169,6 +198,7 @@ class CompiledAsset:
     build_time_ms: float
     setup_time_ms: float
     correctness_details: dict[str, Any] = field(default_factory=dict)
+    cuda_graph: Any = None
 
     @property
     def context(self) -> ExecutionContext:
@@ -301,7 +331,12 @@ def _input_fingerprints(ctx: ExecutionContext) -> dict[str, str]:
 
     if any(not isinstance(name, str) or not name for name in ctx.inputs):
         raise ValueError("input names must be nonempty strings")
-    return {name: fingerprint(value) for name, value in ctx.inputs.items()}
+    result={name: fingerprint(value) for name, value in ctx.inputs.items()}
+    for name,value in ctx.prepared_inputs.items():
+        key='prepared::'+name
+        if key in result:raise ValueError('task/prepared input name collision')
+        result[key]=fingerprint(value)
+    return result
 
 
 class AssetKernelAdapter:
@@ -311,7 +346,8 @@ class AssetKernelAdapter:
 
     def __init__(self, kernel, operator_definition, *, accept_claims: bool = True,
                  force_correctness: bool = False, device: int = 0,
-                 workspace_memory_limit_bytes: int = 256 * 1024**2):
+                 workspace_memory_limit_bytes: int = 256 * 1024**2,
+                 timing_mode: str = "full_flow", cuda_graph_batch_size: int = 128):
         self.kernel, self.operator_definition = kernel, operator_definition
         self.name = kernel.ref
         self.accept_claims, self.force_correctness = accept_claims, force_correctness
@@ -323,7 +359,16 @@ class AssetKernelAdapter:
             raise ValueError("workspace_memory_limit_bytes must be positive")
         if kernel.runtime not in {"python", "cuda"}:
             raise ValueError(f"unsupported Kernel runtime {kernel.runtime!r}")
+        if timing_mode not in {"full_flow", "cuda_graph"}:
+            raise ValueError("timing_mode must be full_flow or cuda_graph")
+        if timing_mode == "cuda_graph" and kernel.runtime != "cuda":
+            raise ValueError("cuda_graph timing requires a CUDA Kernel")
+        if type(cuda_graph_batch_size) is not int or not 1 <= cuda_graph_batch_size <= 4096:
+            raise ValueError("cuda_graph_batch_size must be an integer in [1, 4096]")
+        self.timing_mode, self.cuda_graph_batch_size = timing_mode, cuda_graph_batch_size
         self.measurement_mode = "cpu_full_flow_perf_counter" if kernel.runtime == "python" else "cuda_synchronized_full_flow_perf_counter"
+        if timing_mode == "cuda_graph":
+            self.measurement_mode = "cuda_graph_events_full_flow_amortized"
         self._torch = None
         self._triton = None
         self._hardware = None
@@ -387,6 +432,14 @@ class AssetKernelAdapter:
                   "kernel_ref": self.kernel.ref, "kernel_fingerprint": self.kernel.fingerprint,
                   "operator_ref": self.operator_definition.ref, "operator_fingerprint": self.operator_definition.fingerprint,
                   "runtime_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+        from .inference_resources import COORDINATOR
+        result['inference_resource_context']=COORDINATOR.resource_identity()
+        if self.kernel.execution_identity is not None:
+            # Resolve installed source/binary/cache-policy identity BEFORE
+            # Runner's cache lookup, not only in post-build annotations.
+            identity=self.kernel.execution_identity()
+            canonical_json(identity)
+            result['native_execution_identity']=identity
         if self.kernel.runtime == "cuda":
             torch = self._load_cuda()
             if not self._driver_probed:
@@ -399,7 +452,9 @@ class AssetKernelAdapter:
                         self._driver_version = next(iter(versions))
                 except (OSError, subprocess.TimeoutExpired):
                     pass
+            from .torch_context import torch_execution_context
             result.update({"torch": torch.__version__, "cuda_runtime": torch.version.cuda, "device_index": self.device,
+                           "torch_execution_context": torch_execution_context(torch),
                            "nvidia_driver": self._driver_version,
                            "gpu": actual.name, "torch_compiled_arches": list(torch.cuda.get_arch_list())})
             if self._triton is not None:
@@ -407,14 +462,20 @@ class AssetKernelAdapter:
         return result
 
     def protocol_metadata(self) -> dict[str, Any]:
+        from .inference_resources import COORDINATOR
         return {"contract": "asset_kernel_v1", "kernel_ref": self.kernel.ref,
+                'inference_resource_context':COORDINATOR.resource_identity(),
                 "kernel_fingerprint": self.kernel.fingerprint, "operator_ref": self.operator_definition.ref,
                 "operator_fingerprint": self.operator_definition.fingerprint,
                 "measurement_scope": "initialize followed by all ordered execution steps",
                 "timing": self.measurement_mode, "excluded_from_timing": ["input_generation", "reference", "build", "one_time_setup", "workspace_allocation"],
                 "input_contract": {"mutation": "forbidden", "integrity": "full_logical_sha256_at_execution_boundaries",
                                    "output_input_aliasing": "forbidden", "checks_excluded_from_timing": True},
-                "output_poisoning": {"before_each_invocation": True, "timed": False,
+                "cuda_graph": ({"calls_per_replay": self.cuda_graph_batch_size, "host_steps_replayed": False,
+                                "scope": "all captured GPU initialize and ordered steps; reused buffers; hot cache",
+                                "setup_excluded": True} if self.timing_mode == "cuda_graph" else None),
+                "output_poisoning": {"before_each_invocation": self.timing_mode != "cuda_graph",
+                                     "before_each_graph_replay": self.timing_mode == "cuda_graph", "timed": False,
                                      "floating": "nan", "boolean_integer": "elementwise_reference_distinct_sentinel"},
                 "post_measurement_check": "final output and input integrity, without another invocation",
                 "claim_policy": {"accept_claims": self.accept_claims, "force_correctness": self.force_correctness,
@@ -524,8 +585,31 @@ class AssetKernelAdapter:
             plan.setup()
         self._synchronize()
         setup_ms = (time.perf_counter() - setup_started) * 1000
+        # Bind only newly declared prepared buffers. Never overwrite the
+        # original input hashes or hide a mutation during native packing.
+        fingerprints=_input_fingerprints(prepared.context)
+        for name in prepared.context.prepared_inputs:
+            key='prepared::'+name
+            prepared.input_fingerprints[key]=fingerprints[key]
         prepared.context._workspace_allocation_open = False
-        return CompiledAsset(prepared, plan, build_ms, setup_ms)
+        compiled = CompiledAsset(prepared, plan, build_ms, setup_ms)
+        if self.timing_mode == "cuda_graph":
+            torch = self._load_cuda()
+            graph_started = time.perf_counter()
+            # Warm lazy launch machinery on a side stream before capture.
+            stream = torch.cuda.Stream(device=self.device)
+            stream.wait_stream(torch.cuda.current_stream(self.device))
+            with torch.cuda.stream(stream):
+                self._invoke(compiled)
+            stream.synchronize()
+            graph = torch.cuda.CUDAGraph()
+            with torch.cuda.graph(graph, stream=stream):
+                for _ in range(self.cuda_graph_batch_size):
+                    self._invoke(compiled)
+            self._synchronize()
+            compiled.cuda_graph = graph
+            prepared.context.metadata["cuda_graph_setup_time_ms"] = (time.perf_counter() - graph_started) * 1000
+        return compiled
 
     def _synchronize(self):
         if self.kernel.runtime == "cuda":
@@ -617,7 +701,7 @@ class AssetKernelAdapter:
             elif isinstance(value, (bytearray, memoryview)):
                 yield ("python", id(value))
 
-        inputs = {identity for value in ctx.inputs.values() for identity in identities(value)}
+        inputs = {identity for value in (*ctx.inputs.values(),*ctx.prepared_inputs.values()) for identity in identities(value)}
         return [name for name, value in ctx.outputs.items() if any(identity in inputs for identity in identities(value))]
 
     def _input_integrity(self, compiled: CompiledAsset):
@@ -777,8 +861,10 @@ class AssetKernelAdapter:
         execution = {"steps": [step.name for step in compiled.plan.steps], "initialize_each_invocation": compiled.plan.initialize is not None,
                      "setup_once": compiled.plan.setup is not None, "setup_time_ms": compiled.setup_time_ms,
                      "build_time_ms": compiled.build_time_ms, "workspace_bytes": ctx.workspace_bytes,
+                     "cuda_graph_setup_time_ms": ctx.metadata.get("cuda_graph_setup_time_ms"),
                      "workspace_allocations": ctx.metadata.get("workspace_allocations", []),
-                     "compiled_resources": ctx.metadata.get("execution_resources", {})}
+                     "compiled_resources": ctx.metadata.get("execution_resources", {}),
+                     "annotations": deepcopy(ctx.metadata.get('experiment_annotations', {}))}
         origin = "platform_structure" if claim is not None else "platform_reference"
         input_ok, integrity = self._input_integrity(compiled)
         aliases = self._output_input_aliases(ctx)
@@ -860,6 +946,21 @@ class AssetKernelAdapter:
 
     def measure(self, compiled: CompiledAsset, repetitions: int) -> tuple[float, ...]:
         samples = []
+        if self.timing_mode == "cuda_graph":
+            torch = self._load_cuda()
+            compiled.cuda_graph.replay()
+            self._synchronize()
+            for _ in range(repetitions):
+                if not self._output_input_aliases(compiled.context):
+                    self._poison_outputs(compiled.context, compiled.prepared.reference)
+                self._synchronize()
+                start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
+                start.record()
+                compiled.cuda_graph.replay()
+                end.record()
+                end.synchronize()
+                samples.append(float(start.elapsed_time(end)) / self.cuda_graph_batch_size)
+            return tuple(samples)
         for _ in range(repetitions):
             if not self._output_input_aliases(compiled.context):
                 self._poison_outputs(compiled.context, compiled.prepared.reference)

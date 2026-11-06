@@ -1,0 +1,535 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "space-production-w4-resource-pilot-v1",
+  "algorithms": [
+    "grid@1.0.0"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 1,
+      "max_wall_time_s": 60
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 45,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "triton-resource-1",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              32
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton-resource-2",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              32
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              2
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton-resource-3",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              64
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              3
+            ],
+            "GROUP_M": [
+              4
+            ],
+            "SPLIT_K": [
+              4
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton-resource-4",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              128
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              8
+            ],
+            "num_stages": [
+              3
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton-resource-5",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              128
+            ],
+            "BLOCK_N": [
+              128
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              8
+            ],
+            "num_stages": [
+              4
+            ],
+            "GROUP_M": [
+              8
+            ],
+            "SPLIT_K": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton-resource-6",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-1",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              32
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-2",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              32
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              2
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              2
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-3",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              64
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              3
+            ],
+            "GROUP_M": [
+              4
+            ],
+            "SPLIT_K": [
+              4
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-4",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              128
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              8
+            ],
+            "num_stages": [
+              3
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-5",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              128
+            ],
+            "BLOCK_N": [
+              128
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              8
+            ],
+            "num_stages": [
+              4
+            ],
+            "GROUP_M": [
+              8
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    },
+    {
+      "name": "triton_pipeline-resource-6",
+      "operator": "w4a16_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton_pipeline/w4a16_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              64
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              8
+            ],
+            "DEQUANT_BLOCK_SIZE": [
+              512
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 256,
+          "K": 512
+        }
+      ]
+    }
+  ]
+}

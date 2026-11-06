@@ -1,0 +1,130 @@
+{
+  "kind": "train-only fixed configuration prior",
+  "created_utc": "2026-10-26T05:04:32.877397+00:00",
+  "git_commit": "3d7e9e5a216a860c84401fabdcbe73b63b34c373",
+  "freeze_source_sha256": "c4d5b4a4713c42489947f4e1033ae1caff698b9f7ee785cb26126c3516ab3156",
+  "heldout_not_started": true,
+  "training_shapes_role": "all 10 historically explored phase1 geometries; newly measured C48 labels",
+  "score": "mean of train-Shape relative losses, pooled input runs; no test labels",
+  "training_data": {
+    "records": 960,
+    "unique_records": 960,
+    "record_ids_sha256": "b4732177636de0e343e3ca20ac6f9c554fd8c5721c58a451909b2501c1ccdcb4",
+    "source_context_ids": [
+      "0787c1a7667287f873fe64f5",
+      "10e0cc6282e6cd763cfa13da",
+      "250d8b508cbfab230b75131e",
+      "2ae1f098336f8eec483780f9",
+      "3b3e0680298c8703f82b0b0f",
+      "6164da7d6ecfa6a59325d86b",
+      "80ae5f47af5b86da7c5d9267",
+      "b43c7b1f8a56e10a87a04935",
+      "b854b575d79886ec07fc7129",
+      "d707882020ba0b453a8f4bb8"
+    ],
+    "provenance_counts": {
+      "measured": 960
+    },
+    "unique_source_wall_s": 1631.0327697003377,
+    "source_cost_coverage": 1.0,
+    "cost_scope": "historical acquisition; excluded from target observations and target wall time"
+  },
+  "ranking": [
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "b28d2a2487f560c2bd4367c3",
+      "train_mean_relative_loss": 0.2608172762494271
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "BLOCK_K": 32,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "e478fa9acb8a4f33c220a105",
+      "train_mean_relative_loss": 0.26516151932843574
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "39a2563d8645155de4ca40ff",
+      "train_mean_relative_loss": 0.2975020224600372
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "2da22f5b26592ddacdf9201f",
+      "train_mean_relative_loss": 0.32487150527110936
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 128,
+        "BLOCK_K": 32,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "bff8c7b583f9f82921f68f54",
+      "train_mean_relative_loss": 0.33572046821568335
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "BLOCK_K": 32,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "f1db7dc834d88e291ef409a7",
+      "train_mean_relative_loss": 0.3489117370024787
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "3a2bfd5aeee33f460927dd77",
+      "train_mean_relative_loss": 0.34897845551478623
+    },
+    {
+      "config": {
+        "BLOCK_M": 32,
+        "BLOCK_N": 64,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3,
+        "GROUP_M": 1
+      },
+      "config_id": "3e3d2ef0a4a645de4b227806",
+      "train_mean_relative_loss": 0.34991129214781125
+    }
+  ]
+}

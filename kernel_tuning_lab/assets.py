@@ -18,7 +18,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
-from .models import HardwareSpec, OperatorSpec, ShapeSpec, canonical_json, stable_id
+from .models import HardwareSpec, KernelConfig, OperatorSpec, ShapeSpec, canonical_json, stable_id
 
 
 _UNSET = object()
@@ -277,6 +277,9 @@ class SpaceDefinition:
     constraints: tuple[Callable, ...] = ()
     name: str = "custom"
     resolver: Callable | None = None
+    rules: tuple = ()
+    advisories: tuple[Callable, ...] = ()
+    candidates: tuple | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, str) or not self.name:
@@ -315,8 +318,21 @@ class SpaceDefinition:
             raise TypeError("space constraints must be callable")
         if self.resolver is not None and not callable(self.resolver):
             raise TypeError("space resolver must be callable")
+        if any(not callable(r) or not callable(getattr(r, 'check_partial', None)) or set(r.dependencies)-parameters.keys() for r in self.rules):
+            raise ValueError('structured rules require declared dependencies and explicit partial checks')
+        if any(not callable(callback) for callback in self.advisories):
+            raise TypeError('space advisories must be callable')
         object.__setattr__(self, "parameters", MappingProxyType(parameters))
         object.__setattr__(self, "constraints", tuple(self.constraints))
+        object.__setattr__(self, 'rules', tuple(self.rules))
+        object.__setattr__(self, 'advisories', tuple(self.advisories))
+        if self.candidates is not None:
+            candidates = tuple(deepcopy(c) if isinstance(c, KernelConfig) else KernelConfig(c) for c in self.candidates)
+            if len({c.id for c in candidates}) != len(candidates):
+                raise ValueError('native candidates must be distinct')
+            if any(set(c.params) != set(parameters) or any(canonical_json(c.get(k)) not in {canonical_json(v) for v in parameters[k].values} for k in parameters) for c in candidates):
+                raise ValueError('native candidates must lie in the declared parameter domains')
+            object.__setattr__(self, 'candidates', candidates)
 
     @property
     def domains(self) -> dict[str, tuple[Any, ...]]:
@@ -330,7 +346,10 @@ class SpaceDefinition:
         return {"name": self.name,
                 "parameters": {name: specification.to_dict() for name, specification in self.parameters.items()},
                 "constraints": [callable_identity(constraint) for constraint in self.constraints],
-                "resolver": callable_identity(self.resolver) if self.resolver else None}
+                "resolver": callable_identity(self.resolver) if self.resolver else None,
+                "rules": [r.to_dict() for r in self.rules],
+                "advisories": [callable_identity(c) for c in self.advisories],
+                "candidates": [dict(c.params) for c in self.candidates] if self.candidates is not None else None}
 
 
 @dataclass(frozen=True)
@@ -341,11 +360,12 @@ class SearchCapabilities:
     required_parameters: tuple[str, ...] = ()
     max_dimensions: int | None = None
     max_cardinality: int | None = None
+    min_cardinality: int = 1
 
     def __post_init__(self) -> None:
         if not self.parameter_kinds or set(self.parameter_kinds) - set(_PARAMETER_KINDS):
             raise ValueError("algorithm parameter_kinds must contain supported finite parameter kinds")
-        for value in (self.max_dimensions, self.max_cardinality):
+        for value in (self.max_dimensions, self.max_cardinality,self.min_cardinality):
             if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 1):
                 raise ValueError("algorithm dimension/cardinality limits must be positive integers")
         if not isinstance(self.supports_constraints, bool) or not isinstance(self.supports_conditional, bool):
@@ -372,6 +392,7 @@ class OperatorDefinition(_Asset):
     source_files: tuple[str, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)
     api_version: int = 1
+
     # factory(parameters: Mapping, requested_shapes: tuple[ShapeSpec, ...])
     #     -> tuple[ShapeSpec | Mapping[str, int], ...]
     validation_case_factory: Callable | None = None
@@ -441,6 +462,7 @@ class KernelDefinition(_Asset):
     claims: tuple[Any, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)
     api_version: int = 1
+    execution_identity: Callable | None = None
 
     def __post_init__(self) -> None:
         _check_asset_header(self)
@@ -448,6 +470,8 @@ class KernelDefinition(_Asset):
             raise ValueError("Kernel operator reference and runtime are required")
         if not callable(self.build) or (self.supports is not None and not callable(self.supports)):
             raise TypeError("Kernel build/supports entries must be callable")
+        if self.execution_identity is not None and not callable(self.execution_identity):
+            raise TypeError('execution_identity must be a CPU-safe no-argument callback')
         if not isinstance(self.space, SpaceDefinition):
             raise TypeError("Kernel space must be a SpaceDefinition")
         if isinstance(self.dtypes, str) or isinstance(self.architectures, str) or any(not isinstance(value, str) or not value for value in (*self.dtypes, *self.architectures)):
@@ -475,6 +499,7 @@ class KernelDefinition(_Asset):
                 "architectures": list(self.architectures), "parameter_map": dict(self.parameter_map),
                 "metadata": _jsonable(self.metadata),
                 "space": self.space.to_dict(), "build": callable_identity(self.build),
+                **({'execution_identity':callable_identity(self.execution_identity)} if self.execution_identity else {}),
                 "supports": callable_identity(self.supports) if self.supports else None,
                 "source_files": _source_manifest(self.source_files, (self.build, self.supports))}
 

@@ -14,7 +14,78 @@ The supervisor freezes the parsed experiment before worker launch, holds an excl
 
 Version/content/scope-bound submitter declarations can skip numerical comparisons, while output structure and finite values are still checked. Such observations remain `declared` with `correctness_verified=false`. Direct comparison records `verified` plus CPU/GPU evidence. Default verified reports, Replay and L3 exclude declared observations. Persisted matching correctness counterexamples revoke affected declarations and are restored from the journal before the next acceptance pass.
 
+## Multi-case online research
+
+Production assets additionally bind actual installed source/binary and selector-table identities before the measurement-cache lookup through the optional SDK execution-identity hook. Native candidate identity excludes its learned compilation availability; source expressibility, compiled subset, static feasibility and measured correctness are separate axes. Raw explicit requests, native pruning/canonicalization and actually executed configurations are recorded separately.
+
+Cooperative inference deployment (exclusive/no model, remote API, admitted separate device, same-card resident serial, explicit phase offload) is part of environment/protocol identity. A same-process producer lease blocks new work and synchronizes the actual producer context for the whole preparation/validation/warmup/measurement phase. Resident weights may remain. Memory counters, empty_cache, a caller-side sync or one utilization sample do not prove an external service quiet. Compare these contexts only when an experiment explicitly defines that comparison; context-limited OOM is not permanent architecture infeasibility.
+
+Generated full Searcher programs retain original text, edits, explicit review, development feedback, freeze identity and target exposure before execution. Development feedback excludes target labels. Provider inference, network/retry, candidate completion, optimizer proposal/feedback/shutdown and physical measurement costs remain separate. Protocol fixtures and offline Replay never become real API/model/GPU observations.
+
+`ktlab research` expands a strict `kind=research` configuration into original v2
+jobs, serially across algorithms, Kernels, dtypes, seeds and budgets. Each job
+keeps its own supervised preflight/acceptance/trials. A compatible shared v2
+journal is retained for each named operator/Kernel/dtype group; the existing
+cache key, not the group directory name, determines reuse. Repeating the command
+revalidates the current source/environment and replays suggestions using that
+cache. No previous completion flag bypasses validation.
+
+Online trial traces record exact revealed record IDs, cache-hit flags, failed
+observations, elapsed trial time, source costs and new physical costs. Source
+costs are not charged again for cache hits. Compilation is part of physical
+measurement wall time, not an additional additive cost. Unfinished attempts keep
+known elapsed time; unknown compile costs remain unknown. Preflight, validation
+and process-startup/job costs are separate from the candidate observation budget.
+
+Reports read only current-attempt trial IDs, including explicitly revealed cached
+records. They never scan an accumulated journal for an unobserved best. Curve and
+performance cohorts preserve hardware/operator/implementation/Shape/dtype,
+source/environment, measurement scope, repetitions/warmup, Graph batch size and
+space/protocol identities. Missing/failed selectors remain in requested-seed
+denominators; no 0 latency or global optimum is inferred. Algorithm source and
+options are also kept distinct. No relative performance is pooled across
+incompatible implementations or timing scopes. See [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md).
+
 ## Dataset and protocol identity
+
+L3's existing K constraint is a **config dictionary budget**. Selection serialization
+now labels `budget_kind=config_count` and `config_count`; `variant_count` remains
+a legacy alias. It does not constrain physical compiler specializations or binary
+bytes. Actual Triton compiler cache keys and cubin/PTX hashes/sizes, when available,
+are stored per compiled execution step. Shape/stride constexpr parameters can
+produce different binaries for the same config, and a multi-step plan may contain
+several compiled kernels. Unknown identities stay unknown. See
+[RESEARCH_PHASE1.md](RESEARCH_PHASE1.md) for retention-policy-specific counts.
+
+### Explicit v2 CUDA Graph timing
+
+V2 specifications accept `timing_mode="cuda_graph"` and `cuda_graph_batch_size=128`
+(1–4096). The default remains `full_flow`. Graph mode records
+`measurement_mode="cuda_graph_events_full_flow_amortized"`: each Event sample
+times one replay of a graph containing the declared number of complete
+`initialize → ordered steps` GPU sequences, then divides by that count. Capture,
+lazy-launch warmup and one untimed replay are excluded from latency, but charged
+to the physical evaluation's wall time; capture cost is recorded separately in
+the correctness execution metadata. Build/setup stay outside capture.
+
+This mode is opt-in for capture-compatible CUDA plans using stable, preallocated
+buffers. Host callbacks run during capture and are **not replayed**; host routing,
+Python work and dynamic allocation cannot be represented as GPU-only performance.
+An incompatible capture remains a compile failure. Output poisoning happens before
+each replay outside timing, rather than between its internal calls. Initial
+repeated-call correctness and final actual timed output/input integrity checks
+still apply. Hot buffers and cache reuse are explicit; this is not a cold-cache
+or end-to-end deployment measurement. Retain full-flow experiments separately.
+
+The graph mode, batch size, runtime/source fingerprints and correctness protocol
+participate in cache identity. L3 rejects mixed measurement modes, software/source
+contexts, warmup/repetition counts and correctness protocols. Shape-dependent
+configuration domains may differ; they do not change measurement scope.
+
+On the physical 5060 Ti WSL environment, even a single-launch Event may contain
+large CPU submission gaps. `scripts/check_gpu_timing.py` compares v1, v2 full flow,
+independent Events, v2 graphs and Triton graphs on identical GEMM inputs/configs.
+Never silently interpret Event or synchronized wall measurements as GPU-only cost.
 
 Every record stores a complete hardware spec, operator implementation/version/dtype/parameters, shape, config, seed, experiment ID and environment. GPU data includes Python/Torch/Triton/CUDA/driver versions, the actual device name and kernel source digest. A datasheet profile is a requested hardware identity; real execution probes the device and uses probed resource limits. Profiles alone are not execution evidence.
 
@@ -28,7 +99,7 @@ The following single-launch phase description applies to the original v1 adapter
 2. Prepare fixed seeded input tensors and the correctness reference. Preparation time is recorded separately in metadata.
 3. Call the adapter JIT compilation step. Record `compile_time_ms`, including compiler-cache lookup overhead if the compiler cache is warm. Save compilation exceptions as `compile_error`.
 4. Execute the compiled kernel and compare with the operator's baseline. Save tolerance, maximum error, correctness mode and `correctness_error` separately.
-5. Run configured warmup iterations, synchronize and collect individual runtime samples. CUDA Event samples use milliseconds. The built-in mode times one hot kernel launch per sample; host launch gaps may be included. Cache flushing, isolated clocks, CUDA Graph replay and cold-input benchmarking are future modes.
+5. Run configured warmup iterations, synchronize and collect individual runtime samples. CUDA Event samples use milliseconds. The built-in v1 mode times one hot kernel launch per sample; host launch gaps may be included. Cache flushing, isolated clocks and cold-input benchmarking remain future modes; explicit v2 CUDA Graph replay is specified above.
 6. Store raw samples plus P10/P50/P90 analysis, repetitions, warmup, mode, failure details and total observed `wall_time_s`. Slow correct configurations are successful measurements. NaN/infinite/nonpositive samples are persisted as runtime failures.
 
 GPU correctness references use FP32 Torch operations and cast to the output dtype; GEMM disables TF32 for the reference. Tolerances are adapter protocol parameters and part of cache identity. Mock uses a deterministic synthetic correctness flag and explicitly records that no GPU correctness calculation occurred.

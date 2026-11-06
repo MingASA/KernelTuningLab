@@ -1,0 +1,451 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "crossgpu-anchor-v1",
+  "plugins": [
+    "../research_phase1/cohort.py"
+  ],
+  "algorithms": [
+    {
+      "asset": "phase1/cohort@1.0.0",
+      "options": {
+        "configs": [
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 32,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 8,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 64,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 64,
+            "BLOCK_K": 64,
+            "num_warps": 8,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 64,
+            "BLOCK_N": 128,
+            "BLOCK_K": 64,
+            "num_warps": 8,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 128,
+            "BLOCK_N": 64,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 16,
+            "BLOCK_N": 128,
+            "BLOCK_K": 64,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 64,
+            "BLOCK_N": 64,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 2,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 8,
+            "num_stages": 3,
+            "GROUP_M": 1
+          },
+          {
+            "BLOCK_M": 64,
+            "BLOCK_N": 64,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 8
+          },
+          {
+            "BLOCK_M": 32,
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 3,
+            "GROUP_M": 8
+          }
+        ]
+      }
+    }
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7,
+    19
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 16,
+      "max_wall_time_s": 180
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 31,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 512,
+    "preflight_seconds": 45,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 4,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "decode-small",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 1,
+          "N": 2048,
+          "K": 2048
+        }
+      ]
+    },
+    {
+      "name": "decode-weight64m",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 4,
+          "N": 8192,
+          "K": 4096
+        }
+      ]
+    },
+    {
+      "name": "tile-edge33",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 33,
+          "N": 2048,
+          "K": 2048
+        }
+      ]
+    },
+    {
+      "name": "medium",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 512,
+          "N": 1024,
+          "K": 1024
+        }
+      ]
+    },
+    {
+      "name": "compute-large",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 1024,
+          "N": 2048,
+          "K": 2048
+        }
+      ]
+    },
+    {
+      "name": "tail",
+      "operator": "gemm@1.0.0",
+      "split": "test",
+      "kernels": [
+        {
+          "asset": "triton/t1_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16,
+              32,
+              64,
+              128
+            ],
+            "BLOCK_N": [
+              32,
+              64,
+              128
+            ],
+            "BLOCK_K": [
+              32,
+              64
+            ],
+            "num_warps": [
+              4,
+              8
+            ],
+            "num_stages": [
+              3,
+              2
+            ],
+            "GROUP_M": [
+              1,
+              8
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 63,
+          "N": 1031,
+          "K": 1025
+        }
+      ]
+    }
+  ]
+}

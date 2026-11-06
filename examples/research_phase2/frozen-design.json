@@ -1,0 +1,899 @@
+{
+  "schema_version": 1,
+  "primary_cohort": "C48; fixed stage3/GROUP1, not a superset of C64",
+  "space": {
+    "BLOCK_M": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "BLOCK_N": [
+      32,
+      64,
+      128
+    ],
+    "BLOCK_K": [
+      32,
+      64
+    ],
+    "num_warps": [
+      4,
+      8
+    ],
+    "num_stages": [
+      3
+    ],
+    "GROUP_M": [
+      1
+    ]
+  },
+  "configs": [
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 32,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 64,
+      "num_warps": 8,
+      "num_stages": 3,
+      "GROUP_M": 1
+    }
+  ],
+  "shapes": [
+    {
+      "name": "decode-l2",
+      "split": "train",
+      "shape": {
+        "M": 1,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "historically_explored",
+      "hypothesis": "8 MiB B within 32 MiB L2; very low arithmetic intensity",
+      "fp16_input_output_bytes": 8396800,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "small-tokens",
+      "split": "train",
+      "shape": {
+        "M": 16,
+        "N": 4096,
+        "K": 2048
+      },
+      "role": "historically_explored",
+      "hypothesis": "16 MiB B; more reuse with still sparse M tiles",
+      "fp16_input_output_bytes": 16973824,
+      "weight_bytes": 16777216
+    },
+    {
+      "name": "balanced-medium",
+      "split": "train",
+      "shape": {
+        "M": 512,
+        "N": 1024,
+        "K": 1024
+      },
+      "role": "historically_explored",
+      "hypothesis": "Tensor Core throughput and CTA occupancy",
+      "fp16_input_output_bytes": 4194304,
+      "weight_bytes": 2097152
+    },
+    {
+      "name": "tall",
+      "split": "train",
+      "shape": {
+        "M": 2048,
+        "N": 512,
+        "K": 1024
+      },
+      "role": "historically_explored",
+      "hypothesis": "many M tiles, grouped ordering and rectangular reuse",
+      "fp16_input_output_bytes": 7340032,
+      "weight_bytes": 1048576
+    },
+    {
+      "name": "decode-beyond-l2",
+      "split": "train",
+      "shape": {
+        "M": 1,
+        "N": 8192,
+        "K": 4096
+      },
+      "role": "historically_explored",
+      "hypothesis": "64 MiB B exceeds L2; memory-sensitive decode",
+      "fp16_input_output_bytes": 67133440,
+      "weight_bytes": 67108864
+    },
+    {
+      "name": "irregular",
+      "split": "train",
+      "shape": {
+        "M": 257,
+        "N": 769,
+        "K": 513
+      },
+      "role": "historically_explored",
+      "hypothesis": "tails in all axes, last partial program group",
+      "fp16_input_output_bytes": 1447942,
+      "weight_bytes": 788994
+    },
+    {
+      "name": "few-tokens-wide",
+      "split": "train",
+      "shape": {
+        "M": 8,
+        "N": 8192,
+        "K": 2048
+      },
+      "role": "historically_explored",
+      "hypothesis": "32 MiB B at L2 boundary, wide output and small M",
+      "fp16_input_output_bytes": 33718272,
+      "weight_bytes": 33554432
+    },
+    {
+      "name": "prefill",
+      "split": "train",
+      "shape": {
+        "M": 128,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "historically_explored",
+      "hypothesis": "transition from memory traffic to reuse",
+      "fp16_input_output_bytes": 9437184,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "compute-large",
+      "split": "train",
+      "shape": {
+        "M": 1024,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "historically_explored",
+      "hypothesis": "compute-heavy multi-wave workload",
+      "fp16_input_output_bytes": 16777216,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "wide-k-small",
+      "split": "train",
+      "shape": {
+        "M": 512,
+        "N": 4096,
+        "K": 512
+      },
+      "role": "historically_explored",
+      "hypothesis": "wide N / small K; loop overhead and group ordering",
+      "fp16_input_output_bytes": 8912896,
+      "weight_bytes": 4194304
+    },
+    {
+      "name": "low-2",
+      "split": "test",
+      "shape": {
+        "M": 2,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M2 between prior decode and token batches; 8 MiB weight",
+      "fp16_input_output_bytes": 8404992,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "low-4",
+      "split": "test",
+      "shape": {
+        "M": 4,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M4 low-M boundary, same 8 MiB B",
+      "fp16_input_output_bytes": 8421376,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "low-8",
+      "split": "validation",
+      "shape": {
+        "M": 8,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M8 with small working set; prior M8 used N8192",
+      "fp16_input_output_bytes": 8454144,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "low-16",
+      "split": "test",
+      "shape": {
+        "M": 16,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M16 exactly one smallest tile; prior M16 used N4096",
+      "fp16_input_output_bytes": 8519680,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "low-32",
+      "split": "test",
+      "shape": {
+        "M": 32,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M32 tile transition at same N/K",
+      "fp16_input_output_bytes": 8650752,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "low-64",
+      "split": "validation",
+      "shape": {
+        "M": 64,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "M64 two/four/single M tiles depending on candidate",
+      "fp16_input_output_bytes": 8912896,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "edge-31",
+      "split": "test",
+      "shape": {
+        "M": 31,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "Just below M32 tile boundary",
+      "fp16_input_output_bytes": 8642560,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "edge-33",
+      "split": "test",
+      "shape": {
+        "M": 33,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "Just above M32 tile boundary",
+      "fp16_input_output_bytes": 8658944,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "edge-65",
+      "split": "test",
+      "shape": {
+        "M": 65,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "Just above M64 tile boundary",
+      "fp16_input_output_bytes": 8921088,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "edge-129",
+      "split": "validation",
+      "shape": {
+        "M": 129,
+        "N": 2048,
+        "K": 2048
+      },
+      "role": "new_heldout",
+      "hypothesis": "Just above M128 tile boundary",
+      "fp16_input_output_bytes": 9445376,
+      "weight_bytes": 8388608
+    },
+    {
+      "name": "working-set-16m",
+      "split": "test",
+      "shape": {
+        "M": 4,
+        "N": 2048,
+        "K": 4096
+      },
+      "role": "new_heldout",
+      "hypothesis": "M4 / 16 MiB B below L2, greater K",
+      "fp16_input_output_bytes": 16826368,
+      "weight_bytes": 16777216
+    },
+    {
+      "name": "working-set-64m",
+      "split": "test",
+      "shape": {
+        "M": 4,
+        "N": 8192,
+        "K": 4096
+      },
+      "role": "new_heldout",
+      "hypothesis": "M4 / 64 MiB B beyond L2, paired with 16 MiB case",
+      "fp16_input_output_bytes": 67207168,
+      "weight_bytes": 67108864
+    },
+    {
+      "name": "new-tail",
+      "split": "test",
+      "shape": {
+        "M": 63,
+        "N": 1031,
+        "K": 1025
+      },
+      "role": "new_heldout",
+      "hypothesis": "All-axis tails and stride/alignment variation",
+      "fp16_input_output_bytes": 2372606,
+      "weight_bytes": 2113550
+    },
+    {
+      "name": "new-compute",
+      "split": "test",
+      "shape": {
+        "M": 768,
+        "N": 1536,
+        "K": 3072
+      },
+      "role": "new_heldout",
+      "hypothesis": "New large-M geometry, rectangular compute hypothesis",
+      "fp16_input_output_bytes": 16515072,
+      "weight_bytes": 9437184
+    }
+  ],
+  "seeds": [
+    7,
+    19
+  ],
+  "physical_observations": 2304,
+  "validation_allowance": 192,
+  "train_shapes": 10,
+  "validation_shapes": 3,
+  "test_shapes": 11,
+  "metrics": [
+    "per-Shape finite-set regret",
+    "within 5%/10%",
+    "hitting time",
+    "seed/Shape/run variation",
+    "parameter matched effects",
+    "Top overlap",
+    "compiler identities",
+    "source/new/cache/acceptance/job costs"
+  ],
+  "search_budgets": [
+    4,
+    8,
+    16,
+    32
+  ],
+  "search_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "prior_freeze": "train prefix only, before new validation/test acquisition; historical C64 labels stay historical",
+  "physical_replication": "2 input seeds for all cells; third seed for 6 predeclared Shapes in separate study",
+  "generic_configs": [
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 32,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 64,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    }
+  ],
+  "controls": [
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 2,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 16,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 2,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 32,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 2,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 64,
+      "BLOCK_N": 64,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 2,
+      "GROUP_M": 1
+    },
+    {
+      "BLOCK_M": 128,
+      "BLOCK_N": 128,
+      "BLOCK_K": 32,
+      "num_warps": 4,
+      "num_stages": 3,
+      "GROUP_M": 8
+    }
+  ],
+  "resource_bound": "largest primary A/B staging estimate 98304 B; exact compiled check remains authoritative",
+  "wall_budget": "pilot 10 min cap; primary 90 min per invocation, resume if needed after pilot; serial GPU only"
+}

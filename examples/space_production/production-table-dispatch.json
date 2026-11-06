@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "native-real-table-dispatch-fixed-fp32-v1",
+  "plugins": [
+    "kernel_tuning_lab.production.marlin",
+    "native_dispatch.py"
+  ],
+  "algorithms": [
+    {
+      "asset": "production/finite_dispatch@1.0.0",
+      "options": {
+        "table_artifact": "marlin-fixed-dispatch-table.json",
+        "table_sha256": "368b50b5920034938018c0a410e24641bb0bdedfc3f9e083c60fd58007b5fd8f"
+      }
+    }
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    31
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 1,
+      "max_wall_time_s": 120
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 60,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "finite-workload",
+      "operator": "w4a16_gemm@2.0.0",
+      "split": "validation",
+      "kernels": [
+        {
+          "asset": "production/marlin_explicit@1.0.0",
+          "space": {
+            "USE_FP32_REDUCE": [
+              true
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "K": 1024,
+          "M": 64,
+          "N": 2048
+        },
+        {
+          "K": 1024,
+          "M": 257,
+          "N": 512
+        },
+        {
+          "K": 2048,
+          "M": 1,
+          "N": 512
+        },
+        {
+          "K": 2048,
+          "M": 16,
+          "N": 512
+        },
+        {
+          "K": 2048,
+          "M": 32,
+          "N": 1024
+        },
+        {
+          "K": 2048,
+          "M": 128,
+          "N": 2048
+        }
+      ],
+      "validation": {
+        "max_configs": 6
+      }
+    }
+  ]
+}

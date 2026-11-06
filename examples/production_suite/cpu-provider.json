@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "shared-provider-cpu-contract",
+  "plugins": [
+    "kernel_tuning_lab.provider_search"
+  ],
+  "algorithms": [
+    {
+      "asset": "ai/standard_provider@1.0.0",
+      "options": {
+        "provider": {
+          "kind": "cpu_process",
+          "model_id": "protocol-fixture-not-LLM",
+          "command": [
+            "python",
+            "examples/production_suite/decision_fixture.py"
+          ]
+        }
+      }
+    }
+  ],
+  "dtypes": [
+    "float32"
+  ],
+  "seeds": [
+    17
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 3,
+      "max_wall_time_s": 20
+    }
+  ],
+  "defaults": {
+    "warmup": 0,
+    "repetitions": 3,
+    "validation": {
+      "max_configs": 2,
+      "max_cases": 0,
+      "max_wall_time_s": 10,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        "python/gemm@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 2,
+          "N": 3,
+          "K": 5
+        }
+      ]
+    }
+  ]
+}

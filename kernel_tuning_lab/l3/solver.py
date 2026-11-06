@@ -1,4 +1,4 @@
-"""Finite-variant selection with explicit observation and coverage semantics."""
+"""Finite config-budget selection, not compiled-binary or code-size budgeting."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ class OracleLimitError(ValueError):
 
 @dataclass(frozen=True)
 class SelectionResult:
+    """At most k distinct config dictionaries; compiled specializations are separate."""
     method: str
     k: int
     selected_indices: tuple[int, ...]
@@ -36,14 +37,21 @@ class SelectionResult:
         return self.configs
 
     @property
-    def variant_count(self) -> int:
+    def config_count(self) -> int:
         return len(self.selected_indices)
+
+    @property
+    def variant_count(self) -> int:
+        """Legacy alias for config_count; never a physical compiled-kernel count."""
+        return self.config_count
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "method": self.method, "k": self.k, "selected_indices": list(self.selected_indices),
             "configs": [dict(config.params) for config in self.configs],
-            "assignment_indices": list(self.assignment_indices), "variant_count": self.variant_count,
+            "assignment_indices": list(self.assignment_indices), "config_count": self.config_count,
+            "budget_kind": "config_count", "compiled_variant_count": None, "binary_size_bytes": None,
+            "variant_count": self.variant_count,
             "expected_latency_ms": self.expected_latency_ms,
             "conditional_latency_ms": self.conditional_latency_ms, "coverage": self.coverage,
             "relative_loss": self.relative_loss, "reference_latency_ms": self.reference_latency_ms,
@@ -109,6 +117,8 @@ def _result(
         "operator_id": matrix.metadata.get("operator_id"),
         "shape_ids": [shape.id for shape in matrix.workload.shapes],
         "candidate_config_ids": [config.id for config in matrix.configs],
+        "budget_kind": "config_count",
+        "compiled_variants": "unknown unless joined with actual compiler artifact identities",
         "mock_data": matrix.provenance == "mock",
     }
     details.update(metadata or {})

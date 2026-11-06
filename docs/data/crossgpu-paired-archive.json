@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "verified_local_paired_archive",
+  "archive": "cross-gpu-phase1-evidence-20261026-v2.tar.gz",
+  "bytes": 21071931,
+  "sha256": "8e1aa08e51cb081f900ff8236ca97fecab83bbb427892f0cd3bc2110adfd9f4f",
+  "measurement_commit": "6ecde2ed6c6778bec4c68be0c326a3320212f43c",
+  "analysis_commit": "54465fb8d1ef2e10d32b95715659768dbff209f9",
+  "delivery_commit": "d3e64618f3cf2198f98ab09d48fa0529d87f3268",
+  "source_bundle_sha256": "5d2d54968d7df8fe9d946f14ee8829ad4a8a1ca9269ac3c68293b8b4ad2c0083",
+  "inventory_files_verified": 4620,
+  "sqlite_databases_checked_and_closed": 78,
+  "primary_records": 576,
+  "replay_trajectories": 8160,
+  "replay_reveals": 30600,
+  "online_new_gpu_measurements": 54,
+  "noise_diagnostic_new_gpu_measurements": 12,
+  "previous_archives_sha256_unchanged": true,
+  "off_host_backup": "blocked_no_authorized_destination",
+  "privacy": "Local private evidence. Public Git contains sanitized matrices, figures, report and this attestation only.",
+  "restore_check": {
+    "status": "passed",
+    "inventory_files_checked": 4620,
+    "sqlite_databases_checked": 78,
+    "restored_primary_records": 576,
+    "replay_trials_checked": 8160,
+    "replay_reveals_checked": 30600,
+    "online_trajectories_checked": 18,
+    "compiler_cubin_artifacts_checked": 285,
+    "source_bundle_verified_and_checked_out": "d3e64618f3cf2198f98ab09d48fa0529d87f3268",
+    "python_site_packages_disabled": true,
+    "new_gpu_measurements": 0,
+    "archive_sha256_unchanged": true,
+    "temporary_restore_removed": true,
+    "off_host_backup": false
+  },
+  "restore_verifier_sha256": "74a0019b60dd233d7b024e32459aa96cdccd6b0d09d31a3098b8fe4edc477c5d",
+  "code_ci": {
+    "commit": "d3e64618f3cf2198f98ab09d48fa0529d87f3268",
+    "conclusion": "success",
+    "python": [
+      "3.10",
+      "3.12"
+    ],
+    "url": "https://github.com/MingASA/KernelTuningLab/actions/runs/40392699544"
+  },
+  "cpu_regression": {
+    "passed": 386,
+    "opt_in_skipped": 11,
+    "wall_s": 64.91,
+    "note": "Physical GPU evidence is separately recorded; CPU fixtures are not GPU results."
+  }
+}

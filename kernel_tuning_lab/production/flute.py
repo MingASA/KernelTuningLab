@@ -1,0 +1,197 @@
+"""Real FLUTE0.4.2 W3 qgemm, structured templates and packing dependencies."""
+from __future__ import annotations
+import ast
+from functools import lru_cache,partial
+import hashlib
+import importlib,importlib.metadata,importlib.util
+import json
+import math
+import os
+from pathlib import Path
+import time
+
+from ..sdk import KernelDefinition,ParameterSpec,SpaceDefinition,ExecutionPlan,ExecutionStep,UnsupportedPreparationError
+from . import native_sources as sources,suite_inputs,environment
+from .contracts import NativeCandidate,preparation_identity
+
+VERSION='0.4.2'
+
+
+@lru_cache(maxsize=1)
+def template_configs():
+    """Execute only the original codegen enumeration, before its file writes."""
+    path=sources.source('flute','flute/codegen_utils.py');tree=ast.parse(path.read_text())
+    function=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='codegen_raw')
+    body=[]
+    for n in function.body:
+        if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='names' for t in n.targets):break
+        body.append(n)
+    fn=ast.FunctionDef(name='_enumerate',args=function.args,body=[*body,ast.Return(ast.Name(id='configs',ctx=ast.Load()))],decorator_list=[])
+    ns={};exec(compile(ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[])),str(path),'exec'),ns)
+    return ns['_enumerate']()
+
+
+def candidates(bits=3,compiled_ids=None,*,accumulation_mode='kMixed'):
+    if accumulation_mode not in ('kMixed','kHigh'):raise ValueError('unknown FLUTE numerical build profile')
+    compiled=None if compiled_ids is None else set(compiled_ids)
+    return tuple(NativeCandidate(str(tid),{**c,'AccumulationMode':accumulation_mode},'FLUTE StreamK',packing_key='flute-int'+str(bits)+'-tileP'+str(c['TileP']),
+        preparation={'tile_P':c['TileP'],'native_template_id':tid,'bits':bits},
+        compiled=None if compiled is None else tid in compiled)
+        for (b,tid),c in template_configs().items() if b==bits)
+
+
+@lru_cache(maxsize=1)
+def host_rules():
+    ns={'math':math,'TEMPLATE_CONFIGS':template_configs()}
+    sources.host_functions('flute','flute/utils.py',{'get_template_config','get_template_ids','is_template_supported'},ns)
+    return ns
+
+
+def template_id(parameters,bits=3):
+    mode=parameters.get('AccumulationMode','kMixed')
+    match=[int(c.native_id) for c in candidates(bits,accumulation_mode=mode) if set(parameters)<=set(c.parameters)
+        and all(c.parameters[k]==v for k,v in parameters.items())]
+    if len(match)!=1:raise ValueError('structural parameters do not name one original FLUTE template')
+    return match[0]
+
+
+def hard_support(config,ctx,*,fixed_parameters=None):
+    n=ctx.shape.get('N');k=ctx.shape.get('K');m=ctx.shape.get('M');bits=ctx.operator.parameters['bits']
+    if bits!=3:return 'this production FLUTE cohort is explicitly uniform signed int3'
+    parameters={**(fixed_parameters or {}),**dict(config.params)}
+    tid=template_id(parameters,bits);tile_p=template_configs()[(bits,tid)]['TileP']
+    if n%16 or (n//16)%tile_p:return 'original int3 packing requires N/16 divisible by template TileP'
+    if tile_p!=32:return 'FLUTE0.4.2 upstream _pack_3bit supports TileP=32 only for logical uint3 inputs; compiled/prepacked TileP64 is a separate preparation contract'
+    if ctx.hardware.sm_count and not host_rules()['is_template_supported'](m,n,k,bits,tid,ctx.hardware.sm_count):
+        return 'original FLUTE0.4.2 is_template_supported predicate rejects this input/template/SM count'
+    return None
+
+
+def _support(h,o,s):
+    if o.parameters.get('bits')!=3:return 'W3 FLUTE uses bits=3 task semantics; W2/W4 are distinct supplementary cohorts'
+    try:
+        version=importlib.metadata.version('flute-kernel').split('+')[0]
+        if version!=VERSION:return 'FLUTE0.4.2 private build required'
+    except importlib.metadata.PackageNotFoundError:return 'optional FLUTE0.4.2 CUDA extension has not been built/installed'
+    return None
+
+
+@lru_cache(maxsize=1)
+def native_api():
+    spec=importlib.util.find_spec('flute')
+    if spec is None:raise RuntimeError('optional FLUTE0.4.2 package is unavailable')
+    root=Path(spec.origin).parent.parent
+    identity=sources.native_component(root,'flute',['flute/utils.py','flute/tune.py','flute/ops.py','flute/codegen_utils.py'])
+    module=importlib.import_module('flute');utils=importlib.import_module('flute.utils');tune=importlib.import_module('flute.tune')
+    ext=importlib.import_module('flute._C');binary=Path(ext.__file__)
+    identity['binary_sha256']=hashlib.sha256(binary.read_bytes()).hexdigest()
+    build_path=os.environ.get('KT_FLUTE_BUILD_MANIFEST');build=None
+    if build_path:
+        build=json.loads(Path(build_path).read_text())
+        if build['binary_sha256']!=identity['binary_sha256']:raise ValueError('FLUTE compiled-set manifest does not match the loaded binary')
+        identity['compiled_templates']=build['compiled_templates'];identity['compiled_architectures']=build['compiled_architectures']
+        if build.get('template_resources'):
+            facts=build['resource_facts']
+            header_sha=hashlib.sha256(sources.source('flute','flute/csrc/config.hpp').read_bytes()).hexdigest()
+            if (facts['config_header_sha256']!=header_sha or facts['cutlass_tensor_header_sha256']!=build['cutlass_tensor_header_sha256']):
+                raise ValueError('FLUTE resource facts do not match the original build headers')
+            identity['template_resources']=build['template_resources']
+    else:identity['compiled_templates']=None
+    identity['accumulation_mode']='kMixed' if build is None else build.get('accumulation_mode','kMixed')
+    if identity['accumulation_mode'] not in ('kMixed','kHigh'):raise ValueError('unknown compiled FLUTE accumulation profile')
+    return module,utils,tune,identity
+
+
+def workspace_bytes(sm_count):return sm_count*4*256*(4*64*8)+4*(sm_count*4)
+
+
+def resource_support_reason(required_bytes,optin_limit_bytes):
+    if required_bytes and optin_limit_bytes and required_bytes>optin_limit_bytes:
+        return f'original FLUTE template requires {required_bytes} dynamic shared bytes, device opt-in limit is {optin_limit_bytes}'
+    return None
+
+
+def build(ctx,*,mode,**parameters):
+    module,utils,tune,identity=native_api();torch=ctx.torch;bits=ctx.operator.parameters['bits'];group=ctx.operator.parameters['group_size']
+    m,n,k=(ctx.shape.get(x) for x in ('M','N','K'));sms=ctx.hardware.sm_count;start=time.perf_counter()
+    if not sms:raise ValueError('actual GPU SM count must be probed before FLUTE execution')
+    if mode=='native':
+        # Real upstream selector/tuner, not a copied nearest-config heuristic.
+        before=len(tune._TEMPLATES)
+        tid=tune._tune(M=m,N=n,K=k,num_bits=bits,group_size=group,num_sms=sms,
+            dtype=getattr(torch,ctx.operator.dtype),device=ctx.inputs['a'].device,num_seeds=3,legacy=False)
+        selection={'native_template_cache_hit':len(tune._TEMPLATES)==before,'native_internal_tuning_wall_ms':(time.perf_counter()-start)*1000}
+    else:tid=template_id(parameters,bits);selection={'native_internal_tuning_wall_ms':0.,'hidden_tuning_allowed':False}
+    numerical_mode=identity['accumulation_mode']
+    if mode=='explicit' and parameters.get('AccumulationMode','kMixed')!=numerical_mode:
+        raise ValueError('FLUTE numerical build profile changed after space resolution')
+    candidate=next(c for c in candidates(bits,accumulation_mode=numerical_mode) if int(c.native_id)==tid)
+    preparation_trace={'backend':'FLUTE','version':VERSION,'native_template_id':tid,
+        'requested_configuration':dict(parameters) if mode=='explicit' else {'selection':'native'},
+        'effective_configuration':dict(candidate.parameters),'native_selection':selection,
+        'logical_input_layout':'N,K integer codes, upstream uint3 packer','packer_support':'TileP=32 only'}
+    ctx.metadata.setdefault('experiment_annotations',{}).update(preparation_trace)
+    if candidate.parameters['TileP']!=32:
+        raise UnsupportedPreparationError('native FLUTE selected TileP='+str(candidate.parameters['TileP'])+
+            ' but its unchanged0.4.2 logical int3 packer supports TileP=32 only; selector was not rewritten',details=preparation_trace)
+    if identity.get('compiled_templates') is not None and tid not in identity['compiled_templates'].get(str(bits),[]):
+        raise RuntimeError('template is source-expressible but not in this fixed compiled subset')
+    if not utils.is_template_supported(m,n,k,bits,tid,sms):raise ValueError('actual upstream template support check failed')
+    required=identity.get('template_resources',{}).get(str(bits),{}).get(str(group),{}).get(str(tid),{}).get(ctx.operator.dtype)
+    if required is not None:
+        from triton.runtime import driver
+        limit=driver.active.utils.get_device_properties(ctx.device).get('max_shared_mem',0)
+        evidence={'required_bytes':required,'actual_optin_limit_bytes':limit,
+            'requirement_source':'CPU sizeof of original Config::kSmemSize','limit_source':'CUDA driver device properties via Triton'}
+        ctx.metadata['experiment_annotations']['shared_memory_requirement']=evidence
+        reason=resource_support_reason(required,limit)
+        if reason:raise UnsupportedPreparationError(reason,details={**preparation_trace,'shared_memory_requirement':evidence})
+    codes=ctx.inputs['codes'].T.contiguous()
+    pack_started=time.perf_counter();packed=utils.pack(codes,num_bits=bits,template_ids=[tid],num_sms=sms)
+    scales=ctx.inputs['scales'].contiguous();qmap=torch.arange(1<<bits,dtype=getattr(torch,ctx.operator.dtype),device=ctx.inputs['a'].device)-(1<<(bits-1))
+    qmap2=utils.make_qmap2_from_qmap(qmap)
+    for name,value in [('packed',packed),('qmap',qmap),('qmap2',qmap2),('scales',scales)]:ctx.register_prepared_input('flute_'+name,value)
+    scratch=ctx.allocate_workspace('flute_streamk',(workspace_bytes(sms),),'uint8',fill=0)
+    torch.cuda.synchronize();annotations=ctx.metadata.setdefault('experiment_annotations',{})
+    annotations.update(backend='FLUTE',version=VERSION,source_identity=identity,mode=mode,
+        requested_configuration=dict(parameters) if mode=='explicit' else {'selection':'native'},
+        effective_configuration=dict(candidate.parameters),actual_template_id=tid,
+        packing_key=preparation_identity('FLUTE0.4.2',annotations['logical_input_identity'],candidate,{'bits':bits,'tile_P':candidate.parameters['TileP']}),
+        packing_wall_ms=(time.perf_counter()-pack_started)*1000,packing_reuse_scope='only equal logical input and equal TileP; never arbitrary templates',
+        accumulation=('original kHigh: FP32 MMA and FP32 StreamK reduction, final output cast' if numerical_mode=='kHigh'
+            else 'original kMixed: FP32 MMA with FP16/BF16 StreamK reduction; reduction rounding/order can violate the platform contract'),
+        selection=selection,scope='native qgemm including required StreamK workspace/reduction and output copy; packing and initial workspace allocation outside timing')
+    def invoke():
+        result=module.qgemm(ctx.inputs['a'],packed,scales,qmap,qmap2,scratch,bits,group,tid,sms)
+        ctx.outputs['out'].copy_(result)
+    return ExecutionPlan((ExecutionStep('native_flute_qgemm_then_output_copy',invoke),))
+
+
+def register_assets(catalog):
+    op=suite_inputs.operator_definition();catalog.register(op)
+    src=sources.declaration_sources(__file__,suite_inputs.__file__)
+    compiled_profile=None
+    if os.environ.get('KT_FLUTE_BUILD_MANIFEST'):
+        compiled_profile=json.loads(Path(os.environ['KT_FLUTE_BUILD_MANIFEST']).read_text())
+        if compiled_profile.get('source_revision')!='9eb83a12d56949bbe7fe9c836ba97a67bd1e3761':raise ValueError('compiled FLUTE profile source mismatch')
+    numerical_mode='kMixed' if compiled_profile is None else compiled_profile.get('accumulation_mode','kMixed')
+    available=candidates(3,None if compiled_profile is None else compiled_profile['compiled_templates'].get('3',[]),accumulation_mode=numerical_mode)
+    rows=tuple(dict(c.parameters) for c in available if c.compiled is not False)
+    if not rows:raise ValueError('this compiled profile has no W3 templates; not a proof the upstream W3 space is empty')
+    all_domains={k:tuple(dict.fromkeys(c[k] for c in rows)) for k in rows[0]}
+    fixed={k:v[0] for k,v in all_domains.items() if len(v)==1}
+    domains={k:v for k,v in all_domains.items() if len(v)>1}
+    rows=tuple({k:c[k] for k in domains} for c in rows)
+    space=SpaceDefinition({k:ParameterSpec(v,kind='categorical' if isinstance(v[0],str) else 'integer') for k,v in domains.items()},
+        constraints=(partial(hard_support,fixed_parameters=fixed),),candidates=rows,name='FLUTE actual structured int3 template set')
+    metadata={'pin':sources.pin('flute'),'source_template_count':36,'available_profile_templates':len(rows),'accumulation_mode':numerical_mode,
+        'logical_packing_support':{'bits':3,'TileP':[32],'source':'unchanged original _pack_3bit guard; does not remove raw/prepacked CUDA templates'},
+        'compiled_profile':compiled_profile,'fixed_template_attributes':fixed,
+        'compiled_template_set':'unknown' if compiled_profile is None else compiled_profile['compiled_templates'],
+        'packing_dependency':'TileP + bits + logical weights','ID_semantics':'native template_id resolved from structural parameters, never a continuous coordinate'}
+    catalog.register(KernelDefinition('production/flute_w3_explicit','1.0.0',op.ref,partial(build,mode='explicit',**fixed),space,
+        runtime='cuda',supports=_support,source_files=src,metadata=metadata,execution_identity=partial(environment.installed_identity,'flute','flute')))
+    catalog.register(KernelDefinition('production/flute_w3_default','1.0.0',op.ref,partial(build,mode='native'),
+        SpaceDefinition({},name='native FLUTE template tuning/cache'),runtime='cuda',supports=_support,source_files=src,
+        metadata={**metadata,'cost':'original upstream internal tuning is paid separately, never hidden inside platform search observations'},
+        execution_identity=partial(environment.installed_identity,'flute','flute',native_default=True)))

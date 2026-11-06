@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "conditional-moe-feasibility-pilot-v1",
+  "algorithms": [
+    "grid@1.0.0"
+  ],
+  "dtypes": [
+    "float16"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 1,
+      "max_wall_time_s": 60
+    }
+  ],
+  "defaults": {
+    "hardware": null,
+    "warmup": 10,
+    "repetitions": 15,
+    "timing_mode": "cuda_graph",
+    "cuda_graph_batch_size": 128,
+    "preflight_seconds": 45,
+    "workspace_memory_limit_bytes": 268435456,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 60,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "grouped-split1",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/moe_grouped_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "SCHEDULE": [
+              "grouped"
+            ],
+            "PERSISTENT_CTA_MULT": [
+              1
+            ],
+            "REDUCE_BLOCK_SIZE": [
+              256
+            ],
+            "USE_TMA": [
+              false
+            ],
+            "MAP_BLOCK_SIZE": [
+              64
+            ],
+            "MAP_NUM_WARPS": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 128,
+          "K": 256,
+          "Groups": 8
+        }
+      ]
+    },
+    {
+      "name": "grouped-split2",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/moe_grouped_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              2
+            ],
+            "SCHEDULE": [
+              "grouped"
+            ],
+            "PERSISTENT_CTA_MULT": [
+              1
+            ],
+            "REDUCE_BLOCK_SIZE": [
+              512
+            ],
+            "USE_TMA": [
+              false
+            ],
+            "MAP_BLOCK_SIZE": [
+              64
+            ],
+            "MAP_NUM_WARPS": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 128,
+          "K": 256,
+          "Groups": 8
+        }
+      ]
+    },
+    {
+      "name": "persistent-split1",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/moe_grouped_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              1
+            ],
+            "SCHEDULE": [
+              "persistent"
+            ],
+            "PERSISTENT_CTA_MULT": [
+              2
+            ],
+            "REDUCE_BLOCK_SIZE": [
+              256
+            ],
+            "USE_TMA": [
+              false
+            ],
+            "MAP_BLOCK_SIZE": [
+              64
+            ],
+            "MAP_NUM_WARPS": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 128,
+          "K": 256,
+          "Groups": 8
+        }
+      ]
+    },
+    {
+      "name": "persistent-split2",
+      "operator": "moe_grouped_gemm@1.0.0",
+      "split": "train",
+      "kernels": [
+        {
+          "asset": "triton/moe_grouped_gemm@1.0.0",
+          "space": {
+            "BLOCK_M": [
+              16
+            ],
+            "BLOCK_N": [
+              64
+            ],
+            "BLOCK_K": [
+              32
+            ],
+            "num_warps": [
+              4
+            ],
+            "num_stages": [
+              1
+            ],
+            "GROUP_M": [
+              1
+            ],
+            "SPLIT_K": [
+              2
+            ],
+            "SCHEDULE": [
+              "persistent"
+            ],
+            "PERSISTENT_CTA_MULT": [
+              2
+            ],
+            "REDUCE_BLOCK_SIZE": [
+              512
+            ],
+            "USE_TMA": [
+              false
+            ],
+            "MAP_BLOCK_SIZE": [
+              64
+            ],
+            "MAP_NUM_WARPS": [
+              1
+            ]
+          }
+        }
+      ],
+      "shapes": [
+        {
+          "M": 64,
+          "N": 128,
+          "K": 256,
+          "Groups": 8
+        }
+      ]
+    }
+  ]
+}

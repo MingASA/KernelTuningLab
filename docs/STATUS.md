@@ -1,62 +1,26 @@
-# v0.1 delivery status
+# 稳定版本状态
 
-## Implemented
+稳定入口为main，基础设施版本v1.0.0。后续研究在独立分支开展；历史研究的冻结源码、数据和标签保留。
 
-- CPU-only core package, unified versioned models, explicit units and a per-operator config space.
-- SQLite measurement journal, normalized dimension tables, transactional bulk/JSONL import, atomic streaming export, read-only analysis and full-record deduplication.
-- Runner with separate preparation/JIT/runtime phases, correctness, raw samples, warmup, environment/source metadata, cache resume and failure logs.
-- Seeded Mock implementations for GEMM, batched GEMM, Softmax and LayerNorm.
-- Lazy Triton implementations for these four operators; named H200 SXM / H800 SXM / RTX 4090 / RTX 5060 Ti 16GB hardware profiles and actual device probing. Consumer Blackwell has an explicit native runtime check.
-- Ten-stage strict GPU correctness gate with per-run records, source hashes and device-specific summary; RTX 5060 Ti 16GB is the lightweight pre-Hopper entry point.
-- Random, Grid, Heuristic, Local, distance-surrogate and historical Transfer search; online tuning and offline reveal-only Replay. Large spaces use bounded candidate pools and index sampling rather than a full Cartesian table.
-- Case/shape/GPU holdouts, immutable Policy source snapshots, output legality checks, fallback and independent scoring without a paid model API.
-- L3 exact oracle, greedy, local swap, bucket selection, K-loss curves and finite validated dispatch.
-- Markdown/SVG and optional PNG reports: heatmaps, regret-budget, transfer, matched sensitivity, K-loss, failure and coverage statistics.
-- Kernel Tuner import and full pinned Benchmark Hub catalogue discovery, hash-verified downloads and whole-file normalization. Two complete caches totaling 15,492 upstream records were actually imported; a 24-record excerpt and MIT notice are bundled. Unknown correctness remains unknown.
-- CLI, portable experiment examples, runnable Mock Demo and core regressions.
-- Runnable scale exercise with 139,968 candidates, 24 budgeted online trials and a 128×64 synthetic L3 problem; million-candidate regression cases prohibit eager enumeration.
+| 能力 | 当前状态 | 证据/入口 |
+|---|---|---|
+| 核心CLI/SDK/CPU/SQLite/报告 | 可独立安装运行，无GPU依赖 | QUICKSTART.md、CPU CI |
+| GPU Runner、参考验证、编译/缓存/恢复 | 5060Ti、4090、H800定向验证 | VALIDATION.md、各GPU报告 |
+| 五类生产算子 | 固定profile下定向通过，边界明确 | PRODUCTION_STABILITY.md |
+| SMAC RF / KT DE | 原生引擎、预算/失败/恢复检查 | SPACE_PRODUCTION.md、可选优化器CI |
+| A/B/C三种AI接口 | 工程接口与既有本地模型证据分开 | PRODUCTION_SUITE.md |
+| 外部付费API / 额外推理卡 | 本轮未真实调用/实测 | 显式授权与相应验收后使用 |
+| L3配置集合与分派 | 实现、导出与定向真实分派证据 | L3.md |
+| Web | 本地只读、既有实验数据、无第二套数据库 | WEB.md |
+| 环境与数据恢复 | bootstrap / doctor / archive；私有资产库保全 | DEPLOYMENT.md |
+| 人工上手 | 提供独立练习，用户执行后再确认 | QUICKSTART.md |
 
-## Validation boundary
+## 使用边界
 
-The local host has no CUDA environment or GPU. Actual compilation, numerical behavior and performance of the four Triton operators on **H200, H800, RTX 4090 and RTX 5060 Ti 16GB remain to be verified on those physical machines**. CPU/Mock validation and source-backed specification profiles are not GPU validation. No CUDA packages are required or installed to run CPU paths.
+静态合法、编译成功、数值通过是不同状态。Flute原Mixed可能违反严格精度契约；生产新建profile使用独立High。模板资源、packing、ABI和未验证硬件限制见生产报告，不作整个后端的泛化禁用。
 
-The original presentation mentions previous RTX 4090/H200 measurements but supplies no raw measurement table in this repository. Those figures were read for project context and are not represented as newly reproduced results.
+核心和生产支持没有已知阻塞已验收路径的问题。新的GPU/版本需要新验收；历史性能不能自动成为新环境证据。共享模型权重、外部认证与资源许可由实际来源决定。
 
-## Explicitly unfinished
+## 历史材料
 
-- Concrete TileLang/CUTLASS backends; the plugin contract and factory registration exist.
-- Fused affine LayerNorm, strided/broadcast BMM, paged/training attention and automatic GPTQ/AWQ checkpoint layout import.
-- Clusters, warp specialization and arbitrary kernel code generation. Split-K and optional descriptor/TMA paths now exist in the proposal operators; physical validation is pending.
-- Nsight Systems/Compute orchestration, concurrent-device workers, thermal/clock control, CUDA Graph/cold-cache modes and GPU driver fault reset. V2 experiments have process isolation and hard phase deadlines, including compiler calls; direct v1 Runner calls retain admission-only limits.
-- Imputation or active acquisition for incomplete L3 matrices; unknown cells are preserved rather than predicted.
-- Generalization of finite L3 dispatcher to unseen shape ranges and deployment binary-size measurement.
-- Fully sandboxed generated policy execution. Current Python policies are trusted code with validated outputs.
-- Automated LLM policy generation/evolution, paid API integrations or claims that a learned algorithm beats expert libraries.
-- Remaining 25 original active Hub caches were catalogued but not downloaded/imported in this run. T4 export import, archived collections and specialized source adapters are not implemented.
-- Streaming parsing of arbitrarily large source gzip JSON caches; current public importer loads one source file in memory. SQLite JSONL exchange itself is streamed.
-- Physical operator/GPU test matrix, GPU fault isolation and detailed performance validation; CPU regressions cover core objectives, budgets, isolation, scale, source import, CLI and dispatch invariants.
-
-## Next research steps
-
-1. On each target GPU, run the same checked-in experiment specs with a small budget, verify tails and dtypes, archive complete environment/driver/compiler versions, and inspect raw distributions.
-2. Collect comparable full or dense-enough tables with the same implementation/version and protocol; isolate software-stack changes before attributing differences to hardware.
-3. Freeze algorithms on train/validation hardware and shapes, then report unseen-GPU/unseen-shape Replay outcomes with seeds, observed coverage, regret and measured search cost.
-4. Validate the added quantized GEMM, attention and MoE implementations on physical hardware, then evaluate L2/L3 against comparable verified expert-library baselines.
-5. Introduce learned hardware cost models and policy evolution only after preserving the existing split, evidence and budget contracts.
-
-## Automatic asset integration
-
-The public SDK now separates operator semantics, Kernel implementations and algorithms. Versioned files/modules/entry points, working scaffolds, Kernel-owned finite/conditional spaces, immutable algorithm views, executable static/synthetic/numerical acceptance, scoped correctness claims, complete execution plans and phase-deadline supervision are implemented. V2 configurations drive matching, validation, search and archival without new core registration or glue code. V1 research APIs remain available.
-
-CPU examples include independent GEMM implementations, a two-step workspace pipeline, an additional AXPY operator, conditional spaces, scoped assertions and deliberate failure cases. CPU runs record real CPU measurements; CUDA remains deferred on this host. Continuous domains, distributed/asynchronous execution and a Web UI are not part of this delivery. The proposal operator additions are listed below. See [EXTENDING.md](EXTENDING.md) and [AUTO_INTEGRATION_PLAN.md](AUTO_INTEGRATION_PLAN.md).
-
-The final automatic-integration regression suite passed **196 tests**. Installed-wheel workflows outside the repository and SDK-free `python3 -S` CPU workflows also passed. Evidence is in `artifacts/auto-integration-validation/summary.json`.
-
-## Proposal operator coverage
-
-All operator families explicitly named in the proposal are registered: W4/W3/W2A16 GEMM, standalone W4/W3/W2 dequantization, attention and MoE grouped GEMM. Each has independent references and real Python/Triton implementations; quantized GEMM also has timed multi-step variants. Production shapes, contextual spaces, workspace budgets, generated-case scopes, resource checks and public optimization references are documented in [PROPOSAL_OPERATORS.md](PROPOSAL_OPERATORS.md). Validation artifacts are under `artifacts/proposal-operators-validation/`. GPU compilation/numerics/performance remain unverified on this host.
-
-## Execution and evidence hardening
-
-Input integrity, output alias checks, timed-output reset and post-measurement correctness invalidate stale or corrupted results. Fixed kernels can receive multiple seeded checks within the validation budget. Replay preserves failed observations and costs, default Transfer excludes unverified labels and incompatible implementations, and candidate streams remain bounded. Output ownership, frozen configuration snapshots, retained attempt metadata, cancellation/worker-exit cleanup and retryable interrupted records strengthen recovery. SQLite rejects unsupported schemas before mutation and indexes dense case split checks. Contracts and remaining production limits are in [HARDENING.md](HARDENING.md); local regression evidence is in `artifacts/hardening-validation/`.
-
+历史阶段报告保留当时的分支、commit、未完成项和失败。安装与日常使用以当前README、QUICKSTART、DEPLOYMENT为准，不把旧计划自动当作当前队列。旧H800 LLM研究保持暂停，不恢复模型规模/算法大矩阵或路线A训练。

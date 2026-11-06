@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "study": "bounded-production-ai-followup-v1",
+  "baseline_commit": "d306b93",
+  "scope": "One frozen seed, finite production cohorts; exploratory comparisons, no general winner claim",
+  "dtype": "float16",
+  "train_seed": 23,
+  "test_seed": 41,
+  "train_observations": 8,
+  "test_observations": 16,
+  "trial_wall_s": 240,
+  "timing": {"mode":"cuda_graph","batch_size":64,"warmup":5,"repetitions":15},
+  "methods": ["random","smac_rf","kernel_tuner_de","B_full_static_grammar","C0","C1"],
+  "native_default": "separate expert baseline; internal autotune costs not an equal-observation optimizer",
+  "resource_context": {
+    "H800": "Qwen3-1.7B resident and cooperatively silent for ALL compared methods, one admitted GPU",
+    "4090": "exclusive without model; Random/SMAC/KT/C0/C1 only, no B deployment on this machine",
+    "comparison": "only same physical UUID, task, input seed, software, timing and residency context"
+  },
+  "model_policy": {
+    "B": "existing Qwen3-1.7B, greedy; full authoritative static grammar including every feasible configuration, never a sampled pool; exclude revealed points; max192 tokens and1 repair",
+    "C": "existing Qwen3.8-27B, greedy; full SDK Searcher program, at most2 bounded calls per version; C1 sees only C0's own development feedback",
+    "C_generation_max_output_tokens": 3072,
+    "human_program_edits": false,
+    "API_calls": 0,
+    "training": false
+  },
+  "cache_policy": "Existing Runner exact-context cache shared across methods within new case/split/seed only; per-method revealed histories remain separate; cache hits consume observations and never count as new physical measurements",
+  "failures": "Preserve every static, compile, numerical, model, executor and guard failure; no tolerance relaxation, heuristic substitution or target-informed prompt repair",
+  "freeze_policy": "Seal this protocol before generation; freeze C0/C1 source and B prompt/decoding before first test performance. No target feedback enters generation. Old experiments remain paused and their observed tests exposed.",
+  "cases": [
+    {"id":"gemlite-w4","machine":"4090","plugin":"kernel_tuning_lab.production.gemlite","operator":"production/uniform_lowbit_gemm@1.0.0","parameters":{"bits":4,"group_size":128},"kernel":"production/gemlite_gemm@1.0.0","native":"production/gemlite_default@1.0.0","train":{"M":192,"N":512,"K":512},"test":{"M":257,"N":768,"K":512},"accept":{"BLOCK_SIZE_M":16,"BLOCK_SIZE_N":64,"BLOCK_SIZE_K":64,"GROUP_SIZE_M":8,"A_load_order":0,"num_warps":4,"num_stages":2}},
+    {"id":"gemlite-w2-split","machine":"4090","plugin":"kernel_tuning_lab.production.gemlite","operator":"production/uniform_lowbit_gemm@1.0.0","parameters":{"bits":2,"group_size":128},"kernel":"production/gemlite_gemm_splitk@1.0.0","native":"production/gemlite_default@1.0.0","train":{"M":49,"N":512,"K":512},"test":{"M":97,"N":768,"K":768},"accept":{"BLOCK_SIZE_M":16,"BLOCK_SIZE_N":64,"BLOCK_SIZE_K":64,"SPLIT_K":2,"GROUP_SIZE_M":8,"A_load_order":0,"num_warps":4,"num_stages":2}},
+    {"id":"flute-w3","machine":"H800","plugin":"kernel_tuning_lab.production.flute","operator":"production/uniform_lowbit_gemm@1.0.0","parameters":{"bits":3,"group_size":128},"kernel":"production/flute_w3_explicit@1.0.0","native":"production/flute_w3_default@1.0.0","train":{"M":144,"N":2048,"K":2048},"test":{"M":193,"N":2048,"K":2048},"accept_native_template_id":4},
+    {"id":"flex-dense","machine":"H800","plugin":"kernel_tuning_lab.production.flex_attention","operator":"production/attention_prefill@1.0.0","parameters":{"mask":"dense"},"kernel":"production/flex_triton@1.0.0","native":"production/flex_auto@1.0.0","train":{"B":1,"H_Q":4,"H_KV":2,"D":64,"Q_LEN":257,"KV_LEN":257},"test":{"B":1,"H_Q":4,"H_KV":2,"D":64,"Q_LEN":385,"KV_LEN":385},"accept":{"BLOCK_M":32,"BLOCK_N":64,"num_warps":4,"num_stages":1}},
+    {"id":"flex-causal","machine":"H800","plugin":"kernel_tuning_lab.production.flex_attention","operator":"production/attention_prefill@1.0.0","parameters":{"mask":"causal"},"kernel":"production/flex_triton@1.0.0","native":"production/flex_auto@1.0.0","train":{"B":1,"H_Q":4,"H_KV":2,"D":64,"Q_LEN":257,"KV_LEN":257},"test":{"B":1,"H_Q":4,"H_KV":2,"D":64,"Q_LEN":385,"KV_LEN":385},"accept":{"BLOCK_M":32,"BLOCK_N":64,"num_warps":4,"num_stages":1}},
+    {"id":"paged-ragged","machine":"H800","plugin":"kernel_tuning_lab.production.sglang_decode","operator":"production/paged_decode@1.0.0","parameters":{"length_pattern":"ragged"},"kernel":"production/sglang_paged_explicit@1.0.0","native":"production/sglang_paged_native@1.0.0","train":{"B":4,"H_Q":8,"H_KV":2,"D":64,"MAX_SEQ":257,"PAGE_SIZE":16},"test":{"B":5,"H_Q":8,"H_KV":2,"D":64,"MAX_SEQ":385,"PAGE_SIZE":16},"accept":{"BLOCK_N":32,"num_warps":4,"num_stages":2,"MAX_KV_SPLITS":4}},
+    {"id":"moe-skewed","machine":"H800","plugin":"kernel_tuning_lab.production.vllm_moe_compat","operator":"production/routed_moe_silu@1.0.0","parameters":{"route_distribution":"skewed"},"kernel":"production/vllm085_moe_explicit@1.0.0","native":"production/vllm085_moe_native@1.0.0","train":{"M":97,"H":128,"I":256,"E":4,"TOP_K":2},"test":{"M":129,"H":128,"I":256,"E":4,"TOP_K":2},"accept":{"BLOCK_SIZE_M":16,"BLOCK_SIZE_N":64,"BLOCK_SIZE_K":32,"GROUP_SIZE_M":8,"num_warps":4,"num_stages":3}}
+  ]
+}

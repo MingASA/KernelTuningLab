@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "research",
+  "name": "native-optimizer-cpu-onboarding-v1",
+  "plugins": [
+    "kernel_tuning_lab.optimizers"
+  ],
+  "algorithms": [
+    "random@1.0.0",
+    {
+      "asset": "smac_rf@1.0.0",
+      "options": {
+        "initial_design_size": 2
+      }
+    },
+    {
+      "asset": "kernel_tuner_de@1.0.0",
+      "options": {
+        "population_size": 4
+      }
+    }
+  ],
+  "dtypes": [
+    "float32"
+  ],
+  "seeds": [
+    7
+  ],
+  "budgets": [
+    {
+      "max_evaluations": 8,
+      "max_wall_time_s": 30
+    }
+  ],
+  "defaults": {
+    "warmup": 0,
+    "repetitions": 3,
+    "validation": {
+      "max_configs": 1,
+      "max_cases": 0,
+      "max_wall_time_s": 20,
+      "trust_claims": false
+    }
+  },
+  "cases": [
+    {
+      "name": "cpu-gemm",
+      "operator": "gemm@1.0.0",
+      "kernels": [
+        "python/gemm@1.0.0"
+      ],
+      "shapes": [
+        {
+          "M": 2,
+          "N": 3,
+          "K": 5
+        }
+      ]
+    }
+  ]
+}
