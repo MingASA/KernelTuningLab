@@ -415,6 +415,12 @@ def test_workspace_snapshot_uses_existing_restore_and_rotates_access(tmp_path):
             submit(client, job)
             completed = wait_job(client, job['id'], {'completed'})
             original_results = client.get(f'/api/jobs/{job["id"]}/results').json()
+            stopped = subprocess.run([sys.executable, '-m', 'kernel_tuning_lab', 'worker', '--workspace', str(root), '--stop'],
+                                     capture_output=True, text=True, timeout=30)
+            assert stopped.returncode == 0 and json.loads(stopped.stdout)['status'] == 'stopped'
+            import fcntl
+            with (root / 'worker/lease').open('a+b') as lease:
+                fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
         finally:
             stop_worker(process)
         with pytest.raises(ValueError, match='stop this workspace'):

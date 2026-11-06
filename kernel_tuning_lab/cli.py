@@ -494,13 +494,23 @@ def build_parser() -> argparse.ArgumentParser:
         from .console.store import Store, read_json
         from .console.worker import work, alive
         if args.stop:
-            import signal
+            import fcntl, signal, time
             store = Store(args.workspace)
             identity = read_json(store.root / 'worker/identity.json', {})
             if alive(identity):
                 import os
                 os.kill(identity['pid'], signal.SIGTERM)
-            return {'status': 'stop_requested'}
+            deadline = time.monotonic() + 25
+            with (store.root / 'worker/lease').open('a+b') as lease:
+                while True:
+                    try:
+                        fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        return {'status': 'stopped'}
+                    except BlockingIOError:
+                        if time.monotonic() >= deadline:
+                            return {'status': 'stop_pending', 'exit_code': 2,
+                                    'reason': 'Worker lease is still held; keep the workspace intact and inspect its owned task'}
+                        time.sleep(.1)
         return {'exit_code': work(args.workspace)}
     worker.set_defaults(handler=work_queue)
     workspace = sub.add_parser('workspace', help='archive a stopped workbench using the existing content-archive format')
