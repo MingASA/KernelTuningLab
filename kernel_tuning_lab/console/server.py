@@ -39,6 +39,17 @@ async def request_object(request):
     return value
 
 
+def job_summary(job):
+    """Polling lists carry display fields; frozen identities remain in task details."""
+    fields = ('id', 'state', 'revision', 'name', 'created', 'updated', 'spec', 'environment',
+              'gpu', 'project', 'planned', 'error', 'resource_blocked')
+    result = {key: job[key] for key in fields if key in job}
+    native = job.get('last_result')
+    result['last_result'] = ({key: native[key] for key in ('status', 'observations', 'evaluations',
+        'cache_hits', 'physical_gpu_validated') if key in native} if native else None)
+    return result
+
+
 def file_inventory(store, key):
     root = store.directory(key)
     store.get(key)
@@ -334,7 +345,7 @@ def create_app(workspace, *, auto_worker=True):
 
     @app.get('/api/jobs')
     def jobs():
-        return {'jobs': store.jobs()}
+        return {'jobs': [job_summary(job) for job in store.jobs()]}
 
     @app.post('/api/jobs')
     async def create_job(request: Request):

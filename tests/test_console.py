@@ -202,6 +202,10 @@ def make(seed=0):
         assert first.status_code == second.status_code == 200
         done = wait_job(client, job['id'], {'completed', 'failed'})
         assert done['state'] == 'completed', done
+        listed = next(j for j in client.get('/api/jobs').json()['jobs'] if j['id'] == job['id'])
+        assert listed['planned'] == done['planned'] and listed['last_result']['status'] == 'passed'
+        assert 'precheck' not in listed and 'plan' not in listed
+        assert client.get('/api/jobs/' + job['id']).json()['precheck'] == done['precheck']
         assert done['last_result']['isolation']['mode'] in ('landlock', 'bubblewrap')
         events = client.get('/api/jobs/' + job['id'] + '/event-history').json()['events']
         observations = [e for e in events if e['kind'] == 'observation']
