@@ -1,5 +1,9 @@
 # 远端GPU机器速查
 
+Web v2 设备绑定：H800 的已装驱动拒绝 `nvidia-smi --query-gpu=minor_number`。首次受限 Worker 在连续空闲准入后、CUDA 测量前失败，原 receipt 保留。现在从驱动 `/proc/driver/nvidia/gpus/*/information` 按物理 UUID 精确查 `Device Minor`，再校验对应字符设备；不把显示序号或 CUDA ordinal 当作 minor。未知映射仍拒绝，未放宽资源门禁。
+
+Web v2 原生编译：该服务器 `/usr/bin/ld` 指向 `/etc/alternatives/ld`，后者指向系统 `ld.bfd`。最初文件白名单遗漏系统 alternatives 链接目录，宿主编译器存在，命名空间内却无法链接。加入该只读系统目录，不开放用户 HOME、SSH 或实验目录；先用不初始化 GPU 的 C 编译 canary 验证，再进行生产小预算验收。
+
 恢复实验前先读本页，再读本机私有机器手册与持久化状态（入口见 [AGENTS.md](../AGENTS.md)）。这里只保留可公开的机制和版本；服务器地址、账户、路径、UUID及他人资源信息不入Git。每个新故障先留首份日志，再写分类、已证实原因、无效尝试、有效恢复和下一步，不把猜测写成根因。
 
 ## 本轮已经复现

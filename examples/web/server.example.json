@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "environments": [
+    {
+      "id": "core",
+      "label": "Core · CPU",
+      "profile": "core",
+      "device": "cpu",
+      "python": "/absolute/path/to/core-env/bin/python",
+      "plugins": [],
+      "env": {},
+      "read_paths": []
+    },
+    {
+      "id": "moe-cu124",
+      "label": "MoE · CUDA 12.4 / SMAC",
+      "profile": "moe-cu124",
+      "device": "cuda",
+      "python": "/absolute/path/to/moe-env/bin/python",
+      "plugins": ["kernel_tuning_lab.production.vllm_moe_compat", "kernel_tuning_lab.optimizers"],
+      "env": {"KT_VLLM085_MOE_COMPONENTS": "/absolute/path/to/vllm085-components"},
+      "read_paths": ["/absolute/path/to/vllm085-components"],
+      "gpu_lock": "/absolute/path/to/shared-cooperative-gpu.lock",
+      "hardware_profile": "h800",
+      "expected_model": "H800",
+      "gpu_uuids": ["GPU-REPLACE-WITH-AN-AUTHORIZED-PHYSICAL-UUID"]
+    }
+  ],
+  "history_roots": [],
+  "max_jobs": 128,
+  "max_observations": 100000,
+  "max_wall_time_s": 86400,
+  "upload_bytes": 33554432,
+  "upload_expanded_bytes": 134217728,
+  "upload_files": 512,
+  "require_filesystem_restriction_for_uploads": true
+}

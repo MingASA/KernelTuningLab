@@ -475,6 +475,54 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="ktlab", description="KernelTuningLab "+__version__)
     parser.add_argument("--plugin", action="append", default=[], metavar="MODULE_OR_PATH", help="explicitly load a trusted Python extension; repeatable")
     sub = parser.add_subparsers(dest="command", required=True)
+    console = sub.add_parser('serve', help='start the loopback remote experiment workbench')
+    console.add_argument('--workspace', default='~/.local/share/ktlab-workbench')
+    console.add_argument('--port', type=int, default=8765)
+    console.add_argument('--config', help='administrator-owned environment registry JSON')
+    console.add_argument('--no-worker', action='store_true', help='manage ktlab worker separately')
+    console.add_argument('--password-file', help='owner-only file for initial password setup; never replaces an existing password')
+    def workbench(args):
+        try:
+            from .console.server import serve
+        except ImportError as exc:
+            raise ValueError('install the web extra: pip install "kernel-tuning-lab[web]"') from exc
+        return serve(args.workspace, args.port, config=args.config, auto_worker=not args.no_worker,
+                     password_file=args.password_file)
+    console.set_defaults(handler=workbench)
+    worker = sub.add_parser('worker', help='run the independent serial workbench Worker')
+    worker.add_argument('--workspace', required=True)
+    worker.add_argument('--stop', action='store_true', help='stop this workspace Worker and interrupt only its owned task')
+    def work_queue(args):
+        from .console.store import Store, read_json
+        from .console.worker import work, alive
+        if args.stop:
+            import fcntl, signal, time
+            store = Store(args.workspace)
+            identity = read_json(store.root / 'worker/identity.json', {})
+            if alive(identity):
+                import os
+                os.kill(identity['pid'], signal.SIGTERM)
+            deadline = time.monotonic() + 25
+            with (store.root / 'worker/lease').open('a+b') as lease:
+                while True:
+                    try:
+                        fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        return {'status': 'stopped'}
+                    except BlockingIOError:
+                        if time.monotonic() >= deadline:
+                            return {'status': 'stop_pending', 'exit_code': 2,
+                                    'reason': 'Worker lease is still held; keep the workspace intact and inspect its owned task'}
+                        time.sleep(.1)
+        return {'exit_code': work(args.workspace)}
+    worker.set_defaults(handler=work_queue)
+    workspace = sub.add_parser('workspace', help='archive a stopped workbench using the existing content-archive format')
+    workspace.add_argument('action', choices=['archive'])
+    workspace.add_argument('--workspace', required=True)
+    workspace.add_argument('--output', required=True, help='new private archive directory outside the workspace')
+    def archive_workspace(args):
+        from .console.archive import snapshot
+        return snapshot(args.workspace, args.output)
+    workspace.set_defaults(handler=archive_workspace)
     web = sub.add_parser('web', help='open a localhost read-only experiment viewer')
     web.add_argument('--root', action='append', required=True, help='experiment directory or parent; repeat to compare roots')
     web.add_argument('--port', type=int, default=8765)

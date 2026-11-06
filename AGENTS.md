@@ -2,7 +2,10 @@
 
 ## 当前入口
 
-main为稳定使用入口，v1.0.1基础设施交付后，科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
+当前用户任务为 Web v2 远端实验工作台，用户已明确授权将 feature/web-v2-workbench 合并并推送至 main；先读 artifacts/WEB_V2_CURRENT.json 及其 root 的 state.json、private/WORKPLAN.md、SESSION_NOTES.md。不自动恢复旧研究队列。
+本轮明确允许经可信版本确认的上传 Python 在独立受限 Worker 中运行；下文 v1 只读 Web 限制只适用于保留兼容的 ktlab web。新入口 ktlab serve 始终 loopback，SSH 隧道、会话、来源与请求保护；队列元数据与原 Runner 测量库分开。不得提供任意 Shell 接口。
+
+main为稳定使用入口，当前包版本为Web v2 / 1.1.0，历史v1.0.1标签保留；科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
 
 本机有私有状态时，优先读取artifacts/FINAL_RELEASE_CURRENT.json及其root的state.json、private/SESSION_NOTES.md、private/WORKPLAN.md；不存在时再读取PRODUCTION_STABILITY_CURRENT.json和PRODUCTION_SUITE_CURRENT.json。状态、原始receipt和记录优先于聊天推测。
 
@@ -28,7 +31,9 @@ main为稳定使用入口，v1.0.1基础设施交付后，科研工作在独立�
 ## 工程交付
 
 - Git作者/提交者：MingASA <mingasa7@gmail.com>。
+- 以后新提交、推送、PR 和发布使用 MingASA 身份，不添加 Codex 作者名或代署名；不重写历史提交。
 - 实验长任务状态、receipt、日志落盘，不能依赖会话PID记忆。新故障记录复现、分类、已证实原因、有效/无效处理和原始日志位置。
-- 本轮目标是恢复、发布、文档和本地只读Web；不新增Kernel、搜索算法或研究排名。小问题不补机械测试；数据完整性、访问边界和真实接口增加有意义的回归。
-- Web默认localhost、只读现有数据，不执行Python/Shell/GPU，不建立第二套实验数据库。
+- 本轮目标是远端Web工作台、真实创建/上传/执行链路和工程验收；不新增研究Kernel、搜索算法或排名。小问题不补机械测试；数据完整性、访问边界和真实接口增加有意义的回归。
+- `serve`只监听localhost，独立受限Worker复用原Runner；`web`保留只读兼容。上传静态解析不执行Python，精确版本可信确认后才允许Worker执行；无任意Shell接口，不建立第二套测量数据库。
+- 工作台使用用户设置的持久密码，只在私有工作区保存加盐哈希；重启、部署和迁移不得自动更改口令。更换密码需用户明确要求，不将实际密码或哈希提交Git。
 - 用户亲自上手需用户执行后确认；自动模拟不能标成用户已验收。

@@ -1,6 +1,8 @@
 # 稳定版本状态
 
-稳定入口为main，基础设施版本v1.0.1。后续研究在独立分支开展；历史研究的冻结源码、数据和标签保留。
+稳定使用入口为 main，包版本为 Web v2 / 1.1.0。交付合并与 CI 见 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3)。历史 v1.0.1 标签、开发分支及研究冻结源码和数据保留。
+
+Web v2 已完成真实 SSH 浏览器 CPU 15 项、H800 MoE Random/SMAC 小预算及取消/缓存恢复、工作区 4181 文件/6 SQLite 的新目录恢复。范围、失败修复、截图与结构化证据见 [交付记录](WEB_V2_DELIVERY.md) 和 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3)。人工上手待用户执行。
 
 | 能力 | 当前状态 | 证据/入口 |
 |---|---|---|
@@ -11,7 +13,7 @@
 | A/B/C三种AI接口 | 工程接口与既有本地模型证据分开 | PRODUCTION_SUITE.md |
 | 外部付费API / 额外推理卡 | 本轮未真实调用/实测 | 显式授权与相应验收后使用 |
 | L3配置集合与分派 | 实现、导出与定向真实分派证据 | L3.md |
-| Web | 本地只读、既有实验数据、无第二套数据库 | WEB.md |
+| Web v2 | 远端上传/预检/队列/独立Worker/SSE/选择下载；复用原Runner，保留只读web | WEB.md |
 | 环境与数据恢复 | bootstrap / doctor / archive；私有资产库保全 | DEPLOYMENT.md |
 | 人工上手 | 提供独立练习，用户执行后再确认 | QUICKSTART.md |
 
