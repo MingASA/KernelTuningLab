@@ -19,7 +19,7 @@ import uuid
 
 from ..gpu_admission import proc_identity, collect_owned, stop_owned, signal_owned
 from .isolation import clean_environment, apply_limits, protect_supervisor, restriction_capabilities, bubblewrap_command
-from .plans import freeze_plan, verify_plan
+from .plans import freeze_plan, verify_plan, source_snapshot
 from .store import Store, digest, read_json, write_json
 from .telemetry import harvest
 
@@ -51,6 +51,7 @@ def environment_identity():
             'distribution_metadata_sha256': metadata,
             'framework_version': kernel_tuning_lab.__version__,
             'framework_import_root': str(Path(kernel_tuning_lab.__file__).parent),
+            'installed_framework_version': importlib.metadata.version('kernel-tuning-lab'),
             'prefix': sys.prefix, 'base_prefix': sys.base_prefix, 'host_id': host_identity(),
             'kernel': platform.release(), 'architecture': platform.machine(),
             'driver_identity': hashlib.sha256(Path('/proc/driver/nvidia/version').read_bytes()).hexdigest()
@@ -275,11 +276,15 @@ def terminate(identity):
 
 def probe_environments(store):
     """Only explicitly registered, administrator-trusted providers are imported."""
-    platform = Path(__file__).parents[2]
+    # A service wheel may live under Python3.12/site-packages while the GPU
+    # environment is Python3.11. Never put the service's entire site-packages
+    # first in another interpreter. Forward only the content-checked SDK tree.
+    platform = store.root / 'worker' / ('probe-platform-' + uuid.uuid4().hex)
+    framework_sha = source_snapshot(platform)
     for env in store.config()['environments']:
         target = store.root / 'worker' / ('environment-' + env['id'] + '.json')
         cached = read_json(target, {})
-        if cached.get('configuration_sha256') == digest(env):
+        if cached.get('configuration_sha256') == digest(env) and cached.get('framework_sha256') == framework_sha:
             continue
         directory = store.root / 'worker' / ('probe-' + env['id'])
         directory.mkdir(exist_ok=True)
@@ -290,7 +295,8 @@ def probe_environments(store):
             value = json.loads(run.stdout) if run.returncode == 0 else {'status': 'unavailable', 'error': run.stderr[-3000:]}
         except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
             value = {'status': 'unavailable', 'error': str(exc)}
-        write_json(target, {**value, 'configuration_sha256': digest(env), 'at': time.time()})
+        write_json(target, {**value, 'configuration_sha256': digest(env),
+                            'framework_sha256': framework_sha, 'at': time.time()})
 
 
 def launch(store, job, operation):
