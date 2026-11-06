@@ -46,12 +46,16 @@ def environment_identity():
             versions[name] = None
     binary = Path(sys.executable).resolve()
     import kernel_tuning_lab
+    try:
+        installed_framework = importlib.metadata.version('kernel-tuning-lab')
+    except importlib.metadata.PackageNotFoundError:
+        installed_framework = None  # Frozen source is sufficient; never invent installed metadata.
     return {'python': sys.executable, 'python_realpath': str(binary), 'python_version': sys.version,
             'python_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(), 'packages': versions,
             'distribution_metadata_sha256': metadata,
             'framework_version': kernel_tuning_lab.__version__,
             'framework_import_root': str(Path(kernel_tuning_lab.__file__).parent),
-            'installed_framework_version': importlib.metadata.version('kernel-tuning-lab'),
+            'installed_framework_version': installed_framework,
             'prefix': sys.prefix, 'base_prefix': sys.base_prefix, 'host_id': host_identity(),
             'kernel': platform.release(), 'architecture': platform.machine(),
             'driver_identity': hashlib.sha256(Path('/proc/driver/nvidia/version').read_bytes()).hexdigest()
