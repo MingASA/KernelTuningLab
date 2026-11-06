@@ -1,43 +1,819 @@
-'use strict';
-const $ = id => document.getElementById(id);
-const state = {experiments:[], selected:new Set(), data:[], view:'overview', cohort:'', page:0};
-const colors=['#2563c7','#288879','#ad6e2f','#8957b4','#d35a68','#54748c'];
-const labels={passed:'通过',success:'成功',failed:'失败',not_executed:'未执行',available:'可读取',correctness_error:'数值失败',compile_error:'编译失败',runtime_error:'运行失败',invalid_config:'非法配置',correctness_unknown:'正确性未知'};
-function el(tag, text, cls){const n=document.createElement(tag);if(text!==undefined&&text!==null)n.textContent=String(text);if(cls)n.className=cls;return n;}
-function add(parent,...nodes){parent.append(...nodes.filter(n=>n!==null&&n!==undefined));return parent;}
-function fmt(n,digits=3){return typeof n==='number'&&Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:digits}):'—';}
-function js(value){return JSON.stringify(value,null,2);}
-function badge(value){return el('span',labels[value]||value||'未知','badge '+String(value||''));}
-function note(text){return el('p',text,'note');}
-function empty(text){return el('div',text,'empty');}
-function heading(text,tag='h2'){return el(tag,text);}
-function table(headers,rows){const wrap=el('div',null,'table-wrap'),t=el('table'),thead=el('thead'),hr=el('tr');headers.forEach(h=>hr.append(el('th',h)));thead.append(hr);t.append(thead);const tbody=el('tbody');rows.forEach(row=>{const tr=el('tr');row.forEach(v=>{const td=el('td',null,'numeric');if(v instanceof Node)td.append(v);else td.textContent=v===null||v===undefined?'—':String(v);tr.append(td);});tbody.append(tr);});t.append(tbody);wrap.append(t);return wrap;}
-function details(title,obj){const d=el('details');add(d,el('summary',title),el('pre',js(obj)));return d;}
-async function get(url){const r=await fetch(url);const d=await r.json();if(!r.ok)throw new Error(d.error||r.statusText);return d;}
-function notice(message){$('notice').hidden=!message;$('notice').textContent=message||'';}
-async function scan(){try{const d=await get('/api/experiments');state.experiments=d.experiments;state.selected=new Set([...state.selected].filter(id=>d.experiments.some(x=>x.id===id)));if(!state.selected.size&&d.experiments.length)state.selected.add(d.experiments[0].id);renderList();await load();}catch(e){notice(e.message);}}
-function renderList(){const q=$('experiment-filter').value.toLowerCase(),container=$('experiments');container.replaceChildren();let count=0;for(const ex of state.experiments){if(![ex.label,ex.experiment,ex.status].join(' ').toLowerCase().includes(q))continue;count++;const label=el('label',null,'experiment'),box=el('input');box.type='checkbox';box.value=ex.id;box.checked=state.selected.has(ex.id);box.setAttribute('aria-label',ex.label);box.addEventListener('change',()=>{box.checked?state.selected.add(ex.id):state.selected.delete(ex.id);load();});const text=el('span');add(text,el('strong',ex.experiment),el('small',ex.label),badge(ex.status));add(label,box,text);container.append(label);}$('scan-state').textContent=`${count} / ${state.experiments.length} 个实验`;}
-let loadNumber=0;
-async function load(){const ticket=++loadNumber;notice('');$('content').replaceChildren(empty('正在读取实验记录…'));const results=await Promise.allSettled([...state.selected].map(id=>get('/api/experiments/'+id)));if(ticket!==loadNumber)return;state.data=results.filter(r=>r.status==='fulfilled').map(r=>r.value);const errors=results.filter(r=>r.status==='rejected').map(r=>r.reason.message).concat(state.data.flatMap(d=>d.errors.map(e=>d.label+': '+e)));notice(errors.join('\n'));$('selection-label').textContent=state.data.length?state.data.map(d=>d.label).join(' · '):'选择一个实验开始查看';const report=$('download-report');report.hidden=state.data.length!==1||!state.data[0].report_available;if(!report.hidden)report.href='/api/experiments/'+state.data[0].id+'/report';state.page=0;render();}
-function allTrials(){return state.data.flatMap(d=>d.trials.map(t=>({...t,dataset:d})));}
-function allRecords(){return state.data.flatMap(d=>d.records.map(r=>({...r,dataset:d})));}
-function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));const c=$('content');c.replaceChildren();if(!state.data.length){c.append(empty('未选择可读取的实验。使用左侧目录列表选择，或刷新目录。'));return;}({overview,search:searchView,configs,cost,l3}[state.view])(c);}
-function overview(c){const trials=allTrials(),records=allRecords(),stats=el('div',null,'stats');const sum=k=>{const values=state.data.map(d=>d.summary[k]).filter(v=>typeof v==='number');return values.length===state.data.length?values.reduce((a,b)=>a+b,0):null;};for(const [label,v] of [['已选实验',state.data.length],['候选观测',sum('observations')],['新测量',sum('evaluations')],['缓存命中',sum('cache_hits')]]){const n=el('div',null,'stat');add(n,el('span',label),el('strong',fmt(v,0)));stats.append(n);}c.append(stats,heading('实验与验收'));c.append(table(['实验','状态','设备','实现 / 算子','dtype','Shape','验收'],state.data.map(d=>[d.label,badge(d.summary.status||(d.guard.eligible===false?'not_executed':'available')),[...new Set(d.records.map(r=>r.hardware))].join(', ')||'—',[...new Set(d.records.map(r=>r.implementation))].join(', ')||'—',[...new Set(d.records.map(r=>r.dtype))].join(', ')||'—',[...new Set(d.records.map(r=>JSON.stringify(r.shape)))].join(' / ')||'—',d.summary.acceptance_status||'—'])));
-if(trials.length){c.append(heading('搜索结果'),table(['实验 / 算法','预算','Seed','观测 / 新测 / 缓存','最优已验证延迟 ms','最优配置','停止原因'],trials.map(t=>[t.dataset.label+' · '+t.algorithm_ref,js(t.budget),t.seed,`${fmt(t.observations,0)} / ${fmt(t.physical_evaluations??t.evaluations,0)} / ${fmt(t.cache_hits,0)}`,fmt(t.best_verified_latency_ms,6),JSON.stringify(t.best_verified_config||{}),t.stop_reason||t.status])));}
-if(!records.length&&!trials.length)c.append(empty('没有测量记录。资源门禁、摘要或独立 L3 产物仍可查看。'));
-const types=[...new Set(records.map(r=>r.provenance+' · '+r.mode))];if(types.length)c.append(note('数据来源：'+types.join('；')));
-for(const d of state.data){if(Object.keys(d.guard||{}).length)c.append(details(d.label+' · 资源准入',d.guard));if(d.csv_trials.length)c.append(heading('研究汇总 CSV'),table(Object.keys(d.csv_trials[0]),d.csv_trials.map(r=>Object.values(r))));}}
-function cohortOptions(){const map=new Map(),used=new Set(allTrials().flatMap(t=>t.cohorts));for(const d of state.data)for(const [key,v] of Object.entries(d.cohorts))if(used.has(key))map.set(key,`${v.hardware} · ${v.implementation} · ${v.dtype} · ${JSON.stringify(v.shape)} · seed ${v.seed} · ${v.provenance} · ${key.slice(0,6)}`);for(const t of allTrials())if(!t.cohorts.length)map.set('unknown:'+t.dataset.id+':'+t.trial_id,`${t.dataset.label} · ${t.algorithm_ref} · 来源未绑定`);return map;}
-function cohortSelector(parent,onchange){const options=cohortOptions();if(!options.has(state.cohort))state.cohort=options.keys().next().value||'';const bar=el('div',null,'toolbar'),label=el('label','对比范围'),select=el('select');select.setAttribute('aria-label','对比范围');for(const [k,v] of options){const o=el('option',v);o.value=k;o.selected=k===state.cohort;select.append(o);}select.addEventListener('change',()=>{state.cohort=select.value;onchange();});add(bar,label,select);parent.append(bar);return options;}
-function chart(series,xLabel,yLabel,step=false){const good=series.filter(s=>s.points.length);if(!good.length)return empty('缺少可绘制的已验证数据。');const ns='http://www.w3.org/2000/svg';function svgEl(tag,attrs,text){const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs||{}))n.setAttribute(k,String(v));if(text!==undefined)n.textContent=text;return n;}const wrap=el('div',null,'chart'),svg=svgEl('svg',{viewBox:'0 0 950 330',role:'img','aria-label':`${yLabel} / ${xLabel}`}),left=83,right=915,top=20,bottom=265;
-const xs=good.flatMap(s=>s.points.map(p=>p[0])),ys=good.flatMap(s=>s.points.map(p=>p[1]));let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);if(xmin===xmax){xmin=0;xmax=xmax||1;}const pad=(ymax-ymin)*.12||Math.abs(ymax)*.08||.01;ymin=Math.max(0,ymin-pad);ymax+=pad;const x=v=>left+(v-xmin)/(xmax-xmin)*(right-left),y=v=>bottom-(v-ymin)/(ymax-ymin)*(bottom-top);
-for(let i=0;i<=4;i++){const yy=top+(bottom-top)*i/4,xx=left+(right-left)*i/4;svg.append(svgEl('line',{x1:left,y1:yy,x2:right,y2:yy,class:'grid'}),svgEl('text',{x:left-10,y:yy+4,'text-anchor':'end'},fmt(ymax-(ymax-ymin)*i/4,6)),svgEl('text',{x:xx,y:bottom+22,'text-anchor':'middle'},fmt(xmin+(xmax-xmin)*i/4,3)));}svg.append(svgEl('line',{x1:left,y1:bottom,x2:right,y2:bottom,class:'axis'}),svgEl('text',{x:(left+right)/2,y:318,'text-anchor':'middle'},xLabel),svgEl('text',{x:8,y:12},yLabel));
-const legend=el('div',null,'legend');good.forEach((s,i)=>{const color=colors[i%colors.length];let path='';s.points.forEach((p,j)=>{if(!j)path=`M ${x(p[0])} ${y(p[1])}`;else path+=(step?` H ${x(p[0])} V ${y(p[1])}`:` L ${x(p[0])} ${y(p[1])}`);const dot=svgEl('circle',{cx:x(p[0]),cy:y(p[1]),r:3,fill:color});dot.append(svgEl('title',{},`${s.name}: ${xLabel} ${fmt(p[0],6)}, ${yLabel} ${fmt(p[1],6)}`));svg.append(dot);});svg.append(svgEl('path',{d:path,stroke:color,fill:'none','stroke-width':2}));const item=el('span'),swatch=svgEl('svg',{viewBox:'0 0 22 10','aria-hidden':'true'});swatch.append(svgEl('line',{x1:0,y1:5,x2:22,y2:5,stroke:color,'stroke-width':3}));add(item,swatch,el('span',s.name));legend.append(item);});add(wrap,svg,legend);return wrap;}
-function searchView(c){cohortSelector(c,render);const bar=el('div',null,'toolbar'),axis=el('select');axis.setAttribute('aria-label','搜索横轴');for(const [v,t] of [['observation','观测次数'],['elapsed_wall_time_s','真实墙钟 s']]){const o=el('option',t);o.value=v;axis.append(o);}add(bar,el('label','横轴'),axis);c.append(bar);const plot=el('div'),body=el('div');c.append(plot,body);function draw(){const selected=allTrials().filter(t=>t.cohorts.length===1?t.cohorts[0]===state.cohort:'unknown:'+t.dataset.id+':'+t.trial_id===state.cohort);const series=selected.map(t=>{let best=Infinity;const points=[];for(const p of t.observation_trace){if(p.correctness_verified===true&&p.status==='success'&&typeof p.latency_ms==='number')best=Math.min(best,p.latency_ms);if(Number.isFinite(best)&&typeof p[axis.value]==='number')points.push([p[axis.value],best]);}return {name:t.algorithm_ref+' · '+t.dataset.label,points};});plot.replaceChildren(chart(series,axis.value==='observation'?'候选观测次数':'真实墙钟 s','Best-so-far ms',true));body.replaceChildren(note('对比范围按设备、实现、Shape、dtype、seed 和测量协议分组。缺失的墙钟不补估计值。'),table(['算法','观测','新测量','缓存','墙钟 s','已验证最优 ms','状态'],selected.map(t=>[t.algorithm_ref,fmt(t.observations,0),fmt(t.physical_evaluations??t.evaluations,0),fmt(t.cache_hits,0),fmt(t.wall_time_s),fmt(t.best_verified_latency_ms,6),badge(t.status)])));if(!selected.length)body.append(empty('没有该范围的单一来源搜索轨迹。请查看配置或选择其他范围。'));}axis.addEventListener('change',draw);draw();}
-function configs(c){const bar=el('div',null,'toolbar'),q=el('input'),status=el('select'),source=el('select');q.type='search';q.placeholder='参数、配置 ID、设备、失败原因';q.setAttribute('aria-label','筛选配置');status.setAttribute('aria-label','记录状态');source.setAttribute('aria-label','数据来源');for(const v of ['',...new Set(allRecords().map(r=>r.status))]){const o=el('option',v?labels[v]||v:'所有状态');o.value=v;status.append(o);}for(const v of ['',...new Set(allRecords().map(r=>r.provenance))]){const o=el('option',v||'所有数据来源');o.value=v;source.append(o);}add(bar,q,status,source);c.append(bar);const body=el('div');c.append(body);for(const t of allTrials())c.append(details(t.algorithm_ref+' · 候选访问与拒绝',{attempts:t.attempts??null,observations:t.observations??null,failed_attempts:t.failed_attempts??null,algorithm_contract_failures:t.algorithm_contract_failures??null,space_cardinality:t.space_cardinality??null,space:t.algorithm_diagnostics?.space??null,failures:t.failures??null}));function draw(){const query=q.value.toLowerCase(),rows=allRecords().filter(r=>(!status.value||r.status===status.value)&&(!source.value||r.provenance===source.value)&&JSON.stringify([r.params,r.config_id,r.id,r.hardware,r.implementation,r.shape,r.failure]).toLowerCase().includes(query));const start=state.page*100;body.replaceChildren(note(`${rows.length} 条原始记录 · 搜索观测与缓存复用见“搜索过程”`));const recordRows=rows.slice(start,start+100).map(r=>{const b=el('button',r.config_id.slice(0,10),'link-button');b.addEventListener('click',async()=>{try{$('record-json').textContent='加载中…';$('record-dialog').showModal();$('record-json').textContent=js(await get(`/api/experiments/${r.dataset.id}/records/${r.id}`));}catch(e){$('record-json').textContent=e.message;}});return [b,r.hardware,r.implementation,JSON.stringify(r.shape),JSON.stringify(r.params),badge(r.status),r.verified?badge('verified'):badge('correctness_unknown'),fmt(r.latency_ms,6),r.provenance,r.failure||'—'];});body.append(table(['配置 ID ↗','设备','实现','Shape','请求参数','状态','正确性','延迟 ms','来源','失败原因'],recordRows));const pages=el('div',null,'pagination'),prev=el('button','上一页'),next=el('button','下一页');prev.disabled=state.page===0;next.disabled=start+100>=rows.length;prev.addEventListener('click',()=>{state.page--;draw();});next.addEventListener('click',()=>{state.page++;draw();});add(pages,prev,el('span',`${rows.length?start+1:0}–${Math.min(start+100,rows.length)} / ${rows.length}`),next);body.append(pages);if(!rows.length)body.append(empty('没有匹配的测量记录。'));}for(const n of [q,status,source])n.addEventListener('input',()=>{state.page=0;draw();});draw();}
-function cost(c){const trials=allTrials();if(!trials.length){c.append(empty('没有逐试验成本。汇总 CSV 或旧记录不会被补成成本明细。'));return;}c.append(heading('搜索成本'),table(['实验 / 算法','空间构造 s','提议 ms','编译 ms','测量墙钟 s','搜索墙钟 s','缓存 / 观测'],trials.map(t=>[t.dataset.label+' · '+t.algorithm_ref,fmt(t.algorithm_diagnostics?.space?.wall_s,6),fmt(t.algorithm_costs_ms?.proposal_ms),fmt(t.physical_compile_time_ms),fmt(t.physical_measurement_wall_time_s),fmt(t.wall_time_s),`${fmt(t.cache_hits,0)} / ${fmt(t.observations,0)}`])),note('空间构造通常包含在提议耗时内；各阶段可能重叠。表中编译和测量只计本次实际执行，缓存保留来源成本。'));
-for(const t of trials)c.append(details(t.algorithm_ref+' · 算法、模型/API 与候选访问明细',{budget:t.budget,space_cardinality:t.space_cardinality,algorithm_costs_ms:t.algorithm_costs_ms??null,algorithm_diagnostics:t.algorithm_diagnostics??null,algorithm_runtime:t.algorithm_runtime??null,training_data:t.training_data??null,observation_trace:t.observation_trace}));c.append(note('未记录的模型/API 成本以缺失表示。该查看器不发起模型调用。'));}
-function l3(c){function flatten(obj){if(Array.isArray(obj))return obj.flatMap(flatten);if(obj&&typeof obj==='object'){if(typeof obj.k==='number'&&Array.isArray(obj.configs))return [obj];return flatten(obj.results||obj.groups||[]);}return [];}
-const results=state.data.flatMap(d=>flatten(d.l3).map(r=>({...r,dataset:d})));if(!results.length){c.append(empty('没有保存的 l3.json。可对已有数据库运行 ktlab l3 后打开输出目录。'));return;}
-function key(r){return JSON.stringify([r.dataset.id,r.metadata?.hardware_id||r.hardware_id,r.metadata?.operator_id||r.operator_id,r.metadata?.source_context_id||r.source_context_id,r.metadata?.shape_ids]);}const groups=new Map();results.forEach(r=>groups.set(key(r),r.dataset.label+' · '+(r.hardware_name||r.metadata?.hardware_id?.slice(0,8)||'设备见来源')+' · '+(r.source_context_id||r.metadata?.source_context_id||'单独产物')));const bar=el('div',null,'toolbar'),group=el('select');group.setAttribute('aria-label','L3 数据范围');for(const [k,v] of groups){const o=el('option',v);o.value=k;group.append(o);}add(bar,el('label','数据范围'),group);c.append(bar);const body=el('div');c.append(body);function draw(){const rows=results.filter(r=>key(r)===group.value),byMethod=new Map();for(const r of rows){if(!byMethod.has(r.method))byMethod.set(r.method,[]);if(typeof r.relative_loss==='number')byMethod.get(r.method).push([r.k,r.relative_loss*100]);}body.replaceChildren(chart([...byMethod].map(([name,points])=>({name,points:points.sort((a,b)=>a[0]-b[0])})),'配置数 K','相对损失 %'),table(['方法','K','覆盖率','损失 %','期望延迟 ms','二进制数','二进制大小 bytes'],rows.map(r=>[r.method,r.k,typeof r.coverage==='number'?fmt(r.coverage*100)+'%':'—',typeof r.relative_loss==='number'?fmt(r.relative_loss*100,4):'—',fmt(r.expected_latency_ms,6),r.compiled_variant_count??'—',r.binary_size_bytes??'—'])));for(const r of rows)body.append(details(`${r.method} · K=${r.k} · 配置、Shape 分派与部署身份`,{configs:r.configs,selected_indices:r.selected_indices,assignment_indices:r.assignment_indices,shape_ids:r.metadata?.shape_ids,dispatcher:r.dispatcher??null,metadata:r.metadata??null,source:r.dataset.l3.source??null}));body.append(note('K 表示配置数量。已保存的分派表与实际部署证据分别展示；没有部署记录时显示 null。'));}group.addEventListener('change',draw);draw();}
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{state.view=b.dataset.view;state.page=0;render();}));$('experiment-filter').addEventListener('input',renderList);$('refresh').addEventListener('click',scan);$('close-dialog').addEventListener('click',()=>$('record-dialog').close());scan();
+"use strict";
+const $ = (id) => document.getElementById(id);
+const state = {
+  experiments: [],
+  selected: new Set(),
+  data: [],
+  view: "overview",
+  cohort: "",
+  page: 0,
+};
+const colors = [
+  "#2563c7",
+  "#288879",
+  "#ad6e2f",
+  "#8957b4",
+  "#d35a68",
+  "#54748c",
+];
+const labels = {
+  passed: "通过",
+  success: "成功",
+  failed: "失败",
+  not_executed: "未执行",
+  available: "可读取",
+  correctness_error: "数值失败",
+  compile_error: "编译失败",
+  runtime_error: "运行失败",
+  invalid_config: "非法配置",
+  correctness_unknown: "正确性未知",
+};
+function el(tag, text, cls) {
+  const n = document.createElement(tag);
+  if (text !== undefined && text !== null) n.textContent = String(text);
+  if (cls) n.className = cls;
+  return n;
+}
+function add(parent, ...nodes) {
+  parent.append(...nodes.filter((n) => n !== null && n !== undefined));
+  return parent;
+}
+function fmt(n, digits = 3) {
+  return typeof n === "number" && Number.isFinite(n)
+    ? n.toLocaleString(undefined, { maximumFractionDigits: digits })
+    : "—";
+}
+function js(value) {
+  return JSON.stringify(value, null, 2);
+}
+function badge(value) {
+  return el(
+    "span",
+    labels[value] || value || "未知",
+    "badge " + String(value || ""),
+  );
+}
+function note(text) {
+  return el("p", text, "note");
+}
+function empty(text) {
+  return el("div", text, "empty");
+}
+function heading(text, tag = "h2") {
+  return el(tag, text);
+}
+function table(headers, rows) {
+  const wrap = el("div", null, "table-wrap"),
+    t = el("table"),
+    thead = el("thead"),
+    hr = el("tr");
+  headers.forEach((h) => hr.append(el("th", h)));
+  thead.append(hr);
+  t.append(thead);
+  const tbody = el("tbody");
+  rows.forEach((row) => {
+    const tr = el("tr");
+    row.forEach((v) => {
+      const td = el("td", null, "numeric");
+      if (v instanceof Node) td.append(v);
+      else td.textContent = v === null || v === undefined ? "—" : String(v);
+      tr.append(td);
+    });
+    tbody.append(tr);
+  });
+  t.append(tbody);
+  wrap.append(t);
+  return wrap;
+}
+function details(title, obj) {
+  const d = el("details");
+  add(d, el("summary", title), el("pre", js(obj)));
+  return d;
+}
+async function get(url) {
+  const r = await fetch(url);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || r.statusText);
+  return d;
+}
+function notice(message) {
+  $("notice").hidden = !message;
+  $("notice").textContent = message || "";
+}
+async function scan() {
+  try {
+    const d = await get("/api/experiments");
+    state.experiments = d.experiments;
+    state.selected = new Set(
+      [...state.selected].filter((id) =>
+        d.experiments.some((x) => x.id === id),
+      ),
+    );
+    if (!state.selected.size && d.experiments.length)
+      state.selected.add(d.experiments[0].id);
+    renderList();
+    await load();
+  } catch (e) {
+    notice(e.message);
+  }
+}
+function renderList() {
+  const q = $("experiment-filter").value.toLowerCase(),
+    container = $("experiments");
+  container.replaceChildren();
+  let count = 0;
+  for (const ex of state.experiments) {
+    if (
+      ![ex.label, ex.experiment, ex.status].join(" ").toLowerCase().includes(q)
+    )
+      continue;
+    count++;
+    const label = el("label", null, "experiment"),
+      box = el("input");
+    box.type = "checkbox";
+    box.value = ex.id;
+    box.checked = state.selected.has(ex.id);
+    box.setAttribute("aria-label", ex.label);
+    box.addEventListener("change", () => {
+      box.checked ? state.selected.add(ex.id) : state.selected.delete(ex.id);
+      load();
+    });
+    const text = el("span");
+    add(
+      text,
+      el("strong", ex.experiment),
+      el("small", ex.label),
+      badge(ex.status),
+    );
+    add(label, box, text);
+    container.append(label);
+  }
+  $("scan-state").textContent = `${count} / ${state.experiments.length} 个实验`;
+}
+let loadNumber = 0;
+async function load() {
+  const ticket = ++loadNumber;
+  notice("");
+  $("content").replaceChildren(empty("正在读取实验记录…"));
+  const results = await Promise.allSettled(
+    [...state.selected].map((id) => get("/api/experiments/" + id)),
+  );
+  if (ticket !== loadNumber) return;
+  state.data = results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => r.value);
+  const errors = results
+    .filter((r) => r.status === "rejected")
+    .map((r) => r.reason.message)
+    .concat(state.data.flatMap((d) => d.errors.map((e) => d.label + ": " + e)));
+  notice(errors.join("\n"));
+  $("selection-label").textContent = state.data.length
+    ? state.data.map((d) => d.label).join(" · ")
+    : "选择一个实验开始查看";
+  const report = $("download-report");
+  report.hidden = state.data.length !== 1 || !state.data[0].report_available;
+  if (!report.hidden)
+    report.href = "/api/experiments/" + state.data[0].id + "/report";
+  state.page = 0;
+  render();
+}
+function allTrials() {
+  return state.data.flatMap((d) => d.trials.map((t) => ({ ...t, dataset: d })));
+}
+function allRecords() {
+  return state.data.flatMap((d) =>
+    d.records.map((r) => ({ ...r, dataset: d })),
+  );
+}
+function render() {
+  document
+    .querySelectorAll("nav button")
+    .forEach((b) =>
+      b.classList.toggle("active", b.dataset.view === state.view),
+    );
+  const c = $("content");
+  c.replaceChildren();
+  if (!state.data.length) {
+    c.append(empty("未选择可读取的实验。使用左侧目录列表选择，或刷新目录。"));
+    return;
+  }
+  ({ overview, search: searchView, configs, cost, l3 })[state.view](c);
+}
+function overview(c) {
+  const trials = allTrials(),
+    records = allRecords(),
+    stats = el("div", null, "stats");
+  const sum = (k) => {
+    const values = state.data
+      .map((d) => d.summary[k])
+      .filter((v) => typeof v === "number");
+    return values.length === state.data.length
+      ? values.reduce((a, b) => a + b, 0)
+      : null;
+  };
+  for (const [label, v] of [
+    ["已选实验", state.data.length],
+    ["候选观测", sum("observations")],
+    ["新测量", sum("evaluations")],
+    ["缓存命中", sum("cache_hits")],
+  ]) {
+    const n = el("div", null, "stat");
+    add(n, el("span", label), el("strong", fmt(v, 0)));
+    stats.append(n);
+  }
+  c.append(stats, heading("实验与验收"));
+  c.append(
+    table(
+      ["实验", "状态", "设备", "实现 / 算子", "dtype", "Shape", "验收"],
+      state.data.map((d) => [
+        d.label,
+        badge(
+          d.summary.status ||
+            (d.guard.eligible === false ? "not_executed" : "available"),
+        ),
+        [...new Set(d.records.map((r) => r.hardware))].join(", ") || "—",
+        [...new Set(d.records.map((r) => r.implementation))].join(", ") || "—",
+        [...new Set(d.records.map((r) => r.dtype))].join(", ") || "—",
+        [...new Set(d.records.map((r) => JSON.stringify(r.shape)))].join(
+          " / ",
+        ) || "—",
+        d.summary.acceptance_status || "—",
+      ]),
+    ),
+  );
+  if (trials.length) {
+    c.append(
+      heading("搜索结果"),
+      table(
+        [
+          "实验 / 算法",
+          "预算",
+          "Seed",
+          "观测 / 新测 / 缓存",
+          "最优已验证延迟 ms",
+          "最优配置",
+          "停止原因",
+        ],
+        trials.map((t) => [
+          t.dataset.label + " · " + t.algorithm_ref,
+          js(t.budget),
+          t.seed,
+          `${fmt(t.observations, 0)} / ${fmt(t.physical_evaluations ?? t.evaluations, 0)} / ${fmt(t.cache_hits, 0)}`,
+          fmt(t.best_verified_latency_ms, 6),
+          JSON.stringify(t.best_verified_config || {}),
+          t.stop_reason || t.status,
+        ]),
+      ),
+    );
+  }
+  if (!records.length && !trials.length)
+    c.append(empty("没有测量记录。资源门禁、摘要或独立 L3 产物仍可查看。"));
+  const types = [...new Set(records.map((r) => r.provenance + " · " + r.mode))];
+  if (types.length) c.append(note("数据来源：" + types.join("；")));
+  for (const d of state.data) {
+    if (Object.keys(d.guard || {}).length)
+      c.append(details(d.label + " · 资源准入", d.guard));
+    if (d.csv_trials.length)
+      c.append(
+        heading("研究汇总 CSV"),
+        table(
+          Object.keys(d.csv_trials[0]),
+          d.csv_trials.map((r) => Object.values(r)),
+        ),
+      );
+  }
+}
+function cohortOptions() {
+  const map = new Map(),
+    used = new Set(allTrials().flatMap((t) => t.cohorts));
+  for (const d of state.data)
+    for (const [key, v] of Object.entries(d.cohorts))
+      if (used.has(key))
+        map.set(
+          key,
+          `${v.hardware} · ${v.implementation} · ${v.dtype} · ${JSON.stringify(v.shape)} · seed ${v.seed} · ${v.provenance} · ${key.slice(0, 6)}`,
+        );
+  for (const t of allTrials())
+    if (!t.cohorts.length)
+      map.set(
+        "unknown:" + t.dataset.id + ":" + t.trial_id,
+        `${t.dataset.label} · ${t.algorithm_ref} · 来源未绑定`,
+      );
+  return map;
+}
+function cohortSelector(parent, onchange) {
+  const options = cohortOptions();
+  if (!options.has(state.cohort))
+    state.cohort = options.keys().next().value || "";
+  const bar = el("div", null, "toolbar"),
+    label = el("label", "对比范围"),
+    select = el("select");
+  select.setAttribute("aria-label", "对比范围");
+  for (const [k, v] of options) {
+    const o = el("option", v);
+    o.value = k;
+    o.selected = k === state.cohort;
+    select.append(o);
+  }
+  select.addEventListener("change", () => {
+    state.cohort = select.value;
+    onchange();
+  });
+  add(bar, label, select);
+  parent.append(bar);
+  return options;
+}
+function chart(series, xLabel, yLabel, step = false) {
+  const good = series.filter((s) => s.points.length);
+  if (!good.length) return empty("缺少可绘制的已验证数据。");
+  const ns = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs, text) {
+    const n = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs || {}))
+      n.setAttribute(k, String(v));
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  const wrap = el("div", null, "chart"),
+    svg = svgEl("svg", {
+      viewBox: "0 0 950 330",
+      role: "img",
+      "aria-label": `${yLabel} / ${xLabel}`,
+    }),
+    left = 83,
+    right = 915,
+    top = 20,
+    bottom = 265;
+  const xs = good.flatMap((s) => s.points.map((p) => p[0])),
+    ys = good.flatMap((s) => s.points.map((p) => p[1]));
+  let xmin = Math.min(...xs),
+    xmax = Math.max(...xs),
+    ymin = Math.min(...ys),
+    ymax = Math.max(...ys);
+  if (xmin === xmax) {
+    xmin = 0;
+    xmax = xmax || 1;
+  }
+  const pad = (ymax - ymin) * 0.12 || Math.abs(ymax) * 0.08 || 0.01;
+  ymin = Math.max(0, ymin - pad);
+  ymax += pad;
+  const x = (v) => left + ((v - xmin) / (xmax - xmin)) * (right - left),
+    y = (v) => bottom - ((v - ymin) / (ymax - ymin)) * (bottom - top);
+  for (let i = 0; i <= 4; i++) {
+    const yy = top + ((bottom - top) * i) / 4,
+      xx = left + ((right - left) * i) / 4;
+    svg.append(
+      svgEl("line", { x1: left, y1: yy, x2: right, y2: yy, class: "grid" }),
+      svgEl(
+        "text",
+        { x: left - 10, y: yy + 4, "text-anchor": "end" },
+        fmt(ymax - ((ymax - ymin) * i) / 4, 6),
+      ),
+      svgEl(
+        "text",
+        { x: xx, y: bottom + 22, "text-anchor": "middle" },
+        fmt(xmin + ((xmax - xmin) * i) / 4, 3),
+      ),
+    );
+  }
+  svg.append(
+    svgEl("line", {
+      x1: left,
+      y1: bottom,
+      x2: right,
+      y2: bottom,
+      class: "axis",
+    }),
+    svgEl(
+      "text",
+      { x: (left + right) / 2, y: 318, "text-anchor": "middle" },
+      xLabel,
+    ),
+    svgEl("text", { x: 8, y: 12 }, yLabel),
+  );
+  const legend = el("div", null, "legend");
+  good.forEach((s, i) => {
+    const color = colors[i % colors.length];
+    let path = "";
+    s.points.forEach((p, j) => {
+      if (!j) path = `M ${x(p[0])} ${y(p[1])}`;
+      else
+        path += step
+          ? ` H ${x(p[0])} V ${y(p[1])}`
+          : ` L ${x(p[0])} ${y(p[1])}`;
+      const dot = svgEl("circle", {
+        cx: x(p[0]),
+        cy: y(p[1]),
+        r: 3,
+        fill: color,
+      });
+      dot.append(
+        svgEl(
+          "title",
+          {},
+          `${s.name}: ${xLabel} ${fmt(p[0], 6)}, ${yLabel} ${fmt(p[1], 6)}`,
+        ),
+      );
+      svg.append(dot);
+    });
+    svg.append(
+      svgEl("path", {
+        d: path,
+        stroke: color,
+        fill: "none",
+        "stroke-width": 2,
+      }),
+    );
+    const item = el("span"),
+      swatch = svgEl("svg", { viewBox: "0 0 22 10", "aria-hidden": "true" });
+    swatch.append(
+      svgEl("line", {
+        x1: 0,
+        y1: 5,
+        x2: 22,
+        y2: 5,
+        stroke: color,
+        "stroke-width": 3,
+      }),
+    );
+    add(item, swatch, el("span", s.name));
+    legend.append(item);
+  });
+  add(wrap, svg, legend);
+  return wrap;
+}
+function searchView(c) {
+  cohortSelector(c, render);
+  const bar = el("div", null, "toolbar"),
+    axis = el("select");
+  axis.setAttribute("aria-label", "搜索横轴");
+  for (const [v, t] of [
+    ["observation", "观测次数"],
+    ["elapsed_wall_time_s", "真实墙钟 s"],
+  ]) {
+    const o = el("option", t);
+    o.value = v;
+    axis.append(o);
+  }
+  add(bar, el("label", "横轴"), axis);
+  c.append(bar);
+  const plot = el("div"),
+    body = el("div");
+  c.append(plot, body);
+  function draw() {
+    const selected = allTrials().filter((t) =>
+      t.cohorts.length === 1
+        ? t.cohorts[0] === state.cohort
+        : "unknown:" + t.dataset.id + ":" + t.trial_id === state.cohort,
+    );
+    const series = selected.map((t) => {
+      let best = Infinity;
+      const points = [];
+      for (const p of t.observation_trace) {
+        if (
+          p.correctness_verified === true &&
+          p.status === "success" &&
+          typeof p.latency_ms === "number"
+        )
+          best = Math.min(best, p.latency_ms);
+        if (Number.isFinite(best) && typeof p[axis.value] === "number")
+          points.push([p[axis.value], best]);
+      }
+      return { name: t.algorithm_ref + " · " + t.dataset.label, points };
+    });
+    plot.replaceChildren(
+      chart(
+        series,
+        axis.value === "observation" ? "候选观测次数" : "真实墙钟 s",
+        "Best-so-far ms",
+        true,
+      ),
+    );
+    body.replaceChildren(
+      note(
+        "对比范围按设备、实现、Shape、dtype、seed 和测量协议分组。缺失的墙钟不补估计值。",
+      ),
+      table(
+        ["算法", "观测", "新测量", "缓存", "墙钟 s", "已验证最优 ms", "状态"],
+        selected.map((t) => [
+          t.algorithm_ref,
+          fmt(t.observations, 0),
+          fmt(t.physical_evaluations ?? t.evaluations, 0),
+          fmt(t.cache_hits, 0),
+          fmt(t.wall_time_s),
+          fmt(t.best_verified_latency_ms, 6),
+          badge(t.status),
+        ]),
+      ),
+    );
+    if (!selected.length)
+      body.append(
+        empty("没有该范围的单一来源搜索轨迹。请查看配置或选择其他范围。"),
+      );
+  }
+  axis.addEventListener("change", draw);
+  draw();
+}
+function configs(c) {
+  const bar = el("div", null, "toolbar"),
+    q = el("input"),
+    status = el("select"),
+    source = el("select");
+  q.type = "search";
+  q.placeholder = "参数、配置 ID、设备、失败原因";
+  q.setAttribute("aria-label", "筛选配置");
+  status.setAttribute("aria-label", "记录状态");
+  source.setAttribute("aria-label", "数据来源");
+  for (const v of ["", ...new Set(allRecords().map((r) => r.status))]) {
+    const o = el("option", v ? labels[v] || v : "所有状态");
+    o.value = v;
+    status.append(o);
+  }
+  for (const v of ["", ...new Set(allRecords().map((r) => r.provenance))]) {
+    const o = el("option", v || "所有数据来源");
+    o.value = v;
+    source.append(o);
+  }
+  add(bar, q, status, source);
+  c.append(bar);
+  const body = el("div");
+  c.append(body);
+  for (const t of allTrials())
+    c.append(
+      details(t.algorithm_ref + " · 候选访问与拒绝", {
+        attempts: t.attempts ?? null,
+        observations: t.observations ?? null,
+        failed_attempts: t.failed_attempts ?? null,
+        algorithm_contract_failures: t.algorithm_contract_failures ?? null,
+        space_cardinality: t.space_cardinality ?? null,
+        space: t.algorithm_diagnostics?.space ?? null,
+        failures: t.failures ?? null,
+      }),
+    );
+  function draw() {
+    const query = q.value.toLowerCase(),
+      rows = allRecords().filter(
+        (r) =>
+          (!status.value || r.status === status.value) &&
+          (!source.value || r.provenance === source.value) &&
+          JSON.stringify([
+            r.params,
+            r.config_id,
+            r.id,
+            r.hardware,
+            r.implementation,
+            r.shape,
+            r.failure,
+          ])
+            .toLowerCase()
+            .includes(query),
+      );
+    const start = state.page * 100;
+    body.replaceChildren(
+      note(`${rows.length} 条原始记录 · 搜索观测与缓存复用见“搜索过程”`),
+    );
+    const recordRows = rows.slice(start, start + 100).map((r) => {
+      const b = el("button", r.config_id.slice(0, 10), "link-button");
+      b.addEventListener("click", async () => {
+        try {
+          $("record-json").textContent = "加载中…";
+          $("record-dialog").showModal();
+          $("record-json").textContent = js(
+            await get(`/api/experiments/${r.dataset.id}/records/${r.id}`),
+          );
+        } catch (e) {
+          $("record-json").textContent = e.message;
+        }
+      });
+      return [
+        b,
+        r.hardware,
+        r.implementation,
+        JSON.stringify(r.shape),
+        JSON.stringify(r.params),
+        badge(r.status),
+        r.verified ? badge("verified") : badge("correctness_unknown"),
+        fmt(r.latency_ms, 6),
+        r.provenance,
+        r.failure || "—",
+      ];
+    });
+    body.append(
+      table(
+        [
+          "配置 ID ↗",
+          "设备",
+          "实现",
+          "Shape",
+          "请求参数",
+          "状态",
+          "正确性",
+          "延迟 ms",
+          "来源",
+          "失败原因",
+        ],
+        recordRows,
+      ),
+    );
+    const pages = el("div", null, "pagination"),
+      prev = el("button", "上一页"),
+      next = el("button", "下一页");
+    prev.disabled = state.page === 0;
+    next.disabled = start + 100 >= rows.length;
+    prev.addEventListener("click", () => {
+      state.page--;
+      draw();
+    });
+    next.addEventListener("click", () => {
+      state.page++;
+      draw();
+    });
+    add(
+      pages,
+      prev,
+      el(
+        "span",
+        `${rows.length ? start + 1 : 0}–${Math.min(start + 100, rows.length)} / ${rows.length}`,
+      ),
+      next,
+    );
+    body.append(pages);
+    if (!rows.length) body.append(empty("没有匹配的测量记录。"));
+  }
+  for (const n of [q, status, source])
+    n.addEventListener("input", () => {
+      state.page = 0;
+      draw();
+    });
+  draw();
+}
+function cost(c) {
+  const trials = allTrials();
+  if (!trials.length) {
+    c.append(empty("没有逐试验成本。汇总 CSV 或旧记录不会被补成成本明细。"));
+    return;
+  }
+  c.append(
+    heading("搜索成本"),
+    table(
+      [
+        "实验 / 算法",
+        "空间构造 s",
+        "提议 ms",
+        "编译 ms",
+        "测量墙钟 s",
+        "搜索墙钟 s",
+        "缓存 / 观测",
+      ],
+      trials.map((t) => [
+        t.dataset.label + " · " + t.algorithm_ref,
+        fmt(t.algorithm_diagnostics?.space?.wall_s, 6),
+        fmt(t.algorithm_costs_ms?.proposal_ms),
+        fmt(t.physical_compile_time_ms),
+        fmt(t.physical_measurement_wall_time_s),
+        fmt(t.wall_time_s),
+        `${fmt(t.cache_hits, 0)} / ${fmt(t.observations, 0)}`,
+      ]),
+    ),
+    note(
+      "空间构造通常包含在提议耗时内；各阶段可能重叠。表中编译和测量只计本次实际执行，缓存保留来源成本。",
+    ),
+  );
+  for (const t of trials)
+    c.append(
+      details(t.algorithm_ref + " · 算法、模型/API 与候选访问明细", {
+        budget: t.budget,
+        space_cardinality: t.space_cardinality,
+        algorithm_costs_ms: t.algorithm_costs_ms ?? null,
+        algorithm_diagnostics: t.algorithm_diagnostics ?? null,
+        algorithm_runtime: t.algorithm_runtime ?? null,
+        training_data: t.training_data ?? null,
+        observation_trace: t.observation_trace,
+      }),
+    );
+  c.append(note("未记录的模型/API 成本以缺失表示。该查看器不发起模型调用。"));
+}
+function l3(c) {
+  function flatten(obj) {
+    if (Array.isArray(obj)) return obj.flatMap(flatten);
+    if (obj && typeof obj === "object") {
+      if (typeof obj.k === "number" && Array.isArray(obj.configs)) return [obj];
+      return flatten(obj.results || obj.groups || []);
+    }
+    return [];
+  }
+  const results = state.data.flatMap((d) =>
+    flatten(d.l3).map((r) => ({ ...r, dataset: d })),
+  );
+  if (!results.length) {
+    c.append(
+      empty("没有保存的 l3.json。可对已有数据库运行 ktlab l3 后打开输出目录。"),
+    );
+    return;
+  }
+  function key(r) {
+    return JSON.stringify([
+      r.dataset.id,
+      r.metadata?.hardware_id || r.hardware_id,
+      r.metadata?.operator_id || r.operator_id,
+      r.metadata?.source_context_id || r.source_context_id,
+      r.metadata?.shape_ids,
+    ]);
+  }
+  const groups = new Map();
+  results.forEach((r) =>
+    groups.set(
+      key(r),
+      r.dataset.label +
+        " · " +
+        (r.hardware_name ||
+          r.metadata?.hardware_id?.slice(0, 8) ||
+          "设备见来源") +
+        " · " +
+        (r.source_context_id || r.metadata?.source_context_id || "单独产物"),
+    ),
+  );
+  const bar = el("div", null, "toolbar"),
+    group = el("select");
+  group.setAttribute("aria-label", "L3 数据范围");
+  for (const [k, v] of groups) {
+    const o = el("option", v);
+    o.value = k;
+    group.append(o);
+  }
+  add(bar, el("label", "数据范围"), group);
+  c.append(bar);
+  const body = el("div");
+  c.append(body);
+  function draw() {
+    const rows = results.filter((r) => key(r) === group.value),
+      byMethod = new Map();
+    for (const r of rows) {
+      if (!byMethod.has(r.method)) byMethod.set(r.method, []);
+      if (typeof r.relative_loss === "number")
+        byMethod.get(r.method).push([r.k, r.relative_loss * 100]);
+    }
+    body.replaceChildren(
+      chart(
+        [...byMethod].map(([name, points]) => ({
+          name,
+          points: points.sort((a, b) => a[0] - b[0]),
+        })),
+        "配置数 K",
+        "相对损失 %",
+      ),
+      table(
+        [
+          "方法",
+          "K",
+          "覆盖率",
+          "损失 %",
+          "期望延迟 ms",
+          "二进制数",
+          "二进制大小 bytes",
+        ],
+        rows.map((r) => [
+          r.method,
+          r.k,
+          typeof r.coverage === "number" ? fmt(r.coverage * 100) + "%" : "—",
+          typeof r.relative_loss === "number"
+            ? fmt(r.relative_loss * 100, 4)
+            : "—",
+          fmt(r.expected_latency_ms, 6),
+          r.compiled_variant_count ?? "—",
+          r.binary_size_bytes ?? "—",
+        ]),
+      ),
+    );
+    for (const r of rows)
+      body.append(
+        details(`${r.method} · K=${r.k} · 配置、Shape 分派与部署身份`, {
+          configs: r.configs,
+          selected_indices: r.selected_indices,
+          assignment_indices: r.assignment_indices,
+          shape_ids: r.metadata?.shape_ids,
+          dispatcher: r.dispatcher ?? null,
+          metadata: r.metadata ?? null,
+          source: r.dataset.l3.source ?? null,
+        }),
+      );
+    body.append(
+      note(
+        "K 表示配置数量。已保存的分派表与实际部署证据分别展示；没有部署记录时显示 null。",
+      ),
+    );
+  }
+  group.addEventListener("change", draw);
+  draw();
+}
+document.querySelectorAll("nav button").forEach((b) =>
+  b.addEventListener("click", () => {
+    state.view = b.dataset.view;
+    state.page = 0;
+    render();
+  }),
+);
+$("experiment-filter").addEventListener("input", renderList);
+$("refresh").addEventListener("click", scan);
+$("close-dialog").addEventListener("click", () => $("record-dialog").close());
+scan();
