@@ -471,9 +471,28 @@ def command_assets(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="ktlab", description="Kernel Tuning Research Lab v0.1")
+    from . import __version__
+    parser = argparse.ArgumentParser(prog="ktlab", description="KernelTuningLab "+__version__)
     parser.add_argument("--plugin", action="append", default=[], metavar="MODULE_OR_PATH", help="explicitly load a trusted Python extension; repeatable")
     sub = parser.add_subparsers(dest="command", required=True)
+    doctor = sub.add_parser('doctor', help='CPU-safe runtime profiles and optional read-only nvidia-smi inspection')
+    doctor.add_argument('--devices', action='store_true')
+    def diagnose(args):
+        from .portable import doctor
+        return doctor(devices=args.devices)
+    doctor.set_defaults(handler=diagnose)
+    archive = sub.add_parser('archive', help='verify or restore preserved content archives; never executes an experiment')
+    archive.add_argument('archive_action', choices=('verify', 'restore'))
+    archive.add_argument('--vault', required=True)
+    archive.add_argument('--source', help='source name recorded in the vault catalog')
+    archive.add_argument('--prefix', default='')
+    archive.add_argument('--output')
+    def archived_data(args):
+        from .portable import verify_vault, restore_vault
+        if args.archive_action == 'verify':return verify_vault(args.vault)
+        if not args.source or not args.output:raise ValueError('archive restore requires --source and --output')
+        return restore_vault(args.vault, args.source, args.output, prefix=args.prefix)
+    archive.set_defaults(handler=archived_data)
     ai_program=sub.add_parser('ai-program',help='review/check/evaluate/freeze a generated SDK Searcher; trusted code, no sandbox')
     ai_actions=ai_program.add_subparsers(dest='program_action',required=True)
     for action in ('submit','review','check','development','reuse','freeze','test','feedback','show'):
