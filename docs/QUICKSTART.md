@@ -1,6 +1,6 @@
 # 从安装到亲自运行实验
 
-稳定入口为 `main`；复现实验固定 `v1.0.0` 或准确 commit。平台由本地 CLI / SDK 驱动，远端只在需要 GPU 时执行命令。
+稳定入口为 `main`；复现实验固定 `v1.0.1` 或准确 commit。平台由本地 CLI / SDK 驱动，远端只在需要 GPU 时执行命令。
 
 ## 1. CPU 五分钟上手
 
@@ -87,7 +87,7 @@ ssh ktl-gpu
 mkdir -p ~/work/ktlab-v1
 git clone ~/ktlab-source.bundle ~/work/ktlab-v1/source
 cd ~/work/ktlab-v1/source
-git checkout v1.0.0
+git checkout v1.0.1
 ```
 
 能正常访问GitHub时直接clone main即可。SSH负责命令，Git/Bundle负责源码，rsync/scp负责数据和部署资产；不需要H800常驻平台服务。

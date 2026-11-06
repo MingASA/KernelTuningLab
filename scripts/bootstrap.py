@@ -121,7 +121,7 @@ def main(argv=None):
                'constraints_sha256': sha256(args.constraints) if args.constraints else None,
                'GPU_validation': 'not performed by bootstrap'}
     (target/'runtime.json').write_text(json.dumps(runtime, indent=2)+'\n')
-    activate = 'source '+shlex.quote(str(target/'bin/activate'))+'\n'
+    activate = 'unset PYTHONPATH PYTHONHOME\nexport PYTHONNOUSERSITE=1\nsource '+shlex.quote(str(target/'bin/activate'))+'\n'
     for key, value in overrides.items():activate += 'export '+key+'='+shlex.quote(value)+'\n'
     (target/'activate-ktlab.sh').write_text(activate)
     print(json.dumps({'status': 'installed_CPU_diagnosed', 'environment': str(target), 'activate': str(target/'activate-ktlab.sh'), 'GPU_validation': 'pending admitted target-runtime acceptance'}, indent=2))

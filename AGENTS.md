@@ -2,7 +2,7 @@
 
 ## 当前入口
 
-main为稳定使用入口，v1.0.0基础设施交付后，科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
+main为稳定使用入口，v1.0.1基础设施交付后，科研工作在独立分支开展。开始或恢复会话先读本页、docs/STATUS.md、docs/REMOTE_GPU_TROUBLESHOOTING.md。
 
 本机有私有状态时，优先读取artifacts/FINAL_RELEASE_CURRENT.json及其root的state.json、private/SESSION_NOTES.md、private/WORKPLAN.md；不存在时再读取PRODUCTION_STABILITY_CURRENT.json和PRODUCTION_SUITE_CURRENT.json。状态、原始receipt和记录优先于聊天推测。
 
