@@ -1573,14 +1573,18 @@ function traceData(events: Data[], native: Data): Trace[] {
     traces.set(t.trial_id || key, {
       key: t.trial_id || key,
       name: short(t.algorithm_ref),
-      context: JSON.stringify([
-        t.case_id || key,
-        t.kernel_fingerprint,
-        t.space_fingerprint,
-        t.seed,
-        t.warmup,
-        t.repetitions,
-      ]),
+      context:
+        [...new Set(value.rows.map((r) => r.cohort).filter(Boolean))]
+          .sort()
+          .join(",") ||
+        JSON.stringify([
+          t.case_id || key,
+          t.kernel_fingerprint,
+          t.space_fingerprint,
+          t.seed,
+          t.warmup,
+          t.repetitions,
+        ]),
       label: `${JSON.stringify(t.shape || {})} · seed ${t.seed ?? "—"}`,
       rows: value.rows,
     });

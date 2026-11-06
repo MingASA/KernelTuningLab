@@ -18,7 +18,7 @@ ENV_NAMES = {'LANG', 'LC_ALL', 'LD_LIBRARY_PATH', 'CUDA_HOME', 'CUDA_PATH', 'CXX
 
 SYSTEM_READ_PATHS = ('/usr', '/bin', '/sbin', '/lib', '/lib64', '/sys', '/etc/ld.so.cache', '/etc/ld.so.conf',
     '/etc/ld.so.conf.d', '/etc/passwd', '/etc/group', '/etc/nsswitch.conf', '/etc/localtime', '/etc/os-release',
-    '/etc/machine-id', '/etc/hosts', '/etc/resolv.conf', '/etc/ssl/certs', '/etc/fonts')
+    '/etc/machine-id', '/etc/hosts', '/etc/resolv.conf', '/etc/ssl/certs', '/etc/fonts', '/etc/alternatives')
 
 
 def clean_environment(directory, environment, *, cpu_only=False):

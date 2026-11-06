@@ -12,6 +12,8 @@ from .store import read_json
 def observation_configuration(trace, output, observation):
     """Resolve one native record by primary key, without scanning measurement history."""
     from ..storage import ExperimentStore
+    from ..models import stable_id
+    from ..measurement_context import source_context_id
     for parent in trace.parents:
         database = parent / 'measurements.sqlite'
         if database.is_file() and not database.is_symlink() and database.resolve().is_relative_to(output.resolve()):
@@ -20,6 +22,8 @@ def observation_configuration(trace, output, observation):
                     record = native.get_record(observation.get('record_id', ''))
                 if record is not None and record.config.id == observation.get('config_id'):
                     return {'config': dict(record.config.params), 'dtype': record.operator.dtype,
+                            'cohort': stable_id([record.hardware.id, record.operator.id, record.shape.id,
+                                                 record.operator.dtype, record.seed, source_context_id(record)]),
                             'implementation': record.operator.implementation,
                             'samples_count': len(record.runtime_samples_ms),
                             'dataset': hashlib.sha256(str(parent.resolve()).encode()).hexdigest()[:24]}

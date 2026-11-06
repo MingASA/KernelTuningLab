@@ -220,6 +220,9 @@ def make(seed=0):
         assert len({e['seq'] for e in replay}) == len(replay)
         results = client.get(f'/api/jobs/{job["id"]}/results').json()
         assert len(results['details'][0]['records']) >= len(observations)
+        cohorts = {r['id']: r['cohort'] for d in results['details'] for r in d['records']}
+        assert all(e['data']['observation']['cohort'] == cohorts[e['data']['observation']['record_id']]
+                   for e in observations)
         db = client.store.directory(job['id']) / 'output/measurements.sqlite'
         before = hashlib.sha256(db.read_bytes()).hexdigest()
         export = client.post(f'/api/jobs/{job["id"]}/exports', json={'files': ['output/report.md', 'output/measurements.sqlite']})
