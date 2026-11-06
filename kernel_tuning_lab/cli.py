@@ -480,12 +480,14 @@ def build_parser() -> argparse.ArgumentParser:
     console.add_argument('--port', type=int, default=8765)
     console.add_argument('--config', help='administrator-owned environment registry JSON')
     console.add_argument('--no-worker', action='store_true', help='manage ktlab worker separately')
+    console.add_argument('--password-file', help='owner-only file for initial password setup; never replaces an existing password')
     def workbench(args):
         try:
             from .console.server import serve
         except ImportError as exc:
             raise ValueError('install the web extra: pip install "kernel-tuning-lab[web]"') from exc
-        return serve(args.workspace, args.port, config=args.config, auto_worker=not args.no_worker)
+        return serve(args.workspace, args.port, config=args.config, auto_worker=not args.no_worker,
+                     password_file=args.password_file)
     console.set_defaults(handler=workbench)
     worker = sub.add_parser('worker', help='run the independent serial workbench Worker')
     worker.add_argument('--workspace', required=True)

@@ -14,7 +14,7 @@
  "$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"
 ```
 
-预期终端显示 loopback URL 和 access-token 的**文件位置**。通过正常 SSH 读取此文件，保管令牌。服务无 GPU 也能启动。
+首次启动在服务器终端设置工作区密码，预期随后显示 loopback URL。浏览器使用该密码登录；之后的重启和恢复都保留密码，不需要读取 token 文件。服务无 GPU 也能启动。
 
 ```bash
 # 本机新终端；ktl-gpu 替换为自己的 SSH 别名

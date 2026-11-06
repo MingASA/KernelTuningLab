@@ -114,13 +114,13 @@ bash scripts/serve_workbench.sh
 ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
 ```
 
-打开浏览器并使用远端 `access-token` 登录。`--config` 会替换该工作区环境登记，不能在有冻结任务时随意替换；通常直接编辑私有工作区 `server.json`，刷新环境、复制并重预检受影响的计划。不要将真实路径、UUID 或令牌提交 Git。
+首次交互启动设置密码，之后浏览器使用同一工作区密码登录。无人值守首次启动可加 `--password-file "$KTL_PASSWORD_FILE"`；后续启动无需此参数，已有密码不会被覆盖。`--config` 会替换该工作区环境登记，不能在有冻结任务时随意替换；通常直接编辑私有工作区 `server.json`，刷新环境、复制并重预检受影响的计划。不要将真实路径、UUID 或密码提交 Git。
 
 服务默认独立启动并监督串行 Worker。可分别部署 `ktlab serve --no-worker` 与 `ktlab worker --workspace …`；[deploy](../deploy/) 提供 `systemd --user` 模板。它们必须指向相同工作区。停止 API 不停止独立 Worker；完整停机须显式停止 Worker。
 
 上传 Python 需要来源与精确版本确认。Worker 优先使用经过 canary 的 Bubblewrap；否则使用可用 Landlock，缺少文件隔离时拒绝上传代码执行。内核/权限差异需在目标机器实测。原生二进制、编译器和 GPU 设备需在受限环境中重新验收。不要把普通 subprocess 或复制 venv 称作跨服务器隔离与恢复。
 
-工作区迁移：先停任务、API、Worker，用 `ktlab workspace archive` 生成现有格式的对象资产库，再 `archive verify / restore --source workspace`。移动恢复轮换令牌，重新登记环境；旧冻结绝对路径计划复制并重预检，历史结果保留。具体命令见 [WEB](WEB.md)。
+工作区迁移：先停任务、API、Worker，用 `ktlab workspace archive` 生成现有格式的对象资产库，再 `archive verify / restore --source workspace`。移动恢复轮换会话签名、保留密码，重新登记环境；旧冻结绝对路径计划复制并重预检，历史结果保留。具体命令见 [WEB](WEB.md)。
 
 ## 五、E盘资产库
 

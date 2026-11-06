@@ -25,6 +25,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from starlette.concurrency import run_in_threadpool
 
 from .isolation import clean_environment, landlock_abi, protect_supervisor, restriction_capabilities
+from .auth import PASSWORD_KEY, initialize_password, verify_password
 from .plans import plan_spec, templates
 from .projects import project, save_project, trust, verify_project
 from .store import ACTIVE, Store, beneath, digest, identifier, read_json, write_json
@@ -119,26 +120,24 @@ def export_files(store, key, selected):
 def create_app(workspace, *, auto_worker=True):
     protect_supervisor()
     store = Store(workspace)
+    password_hash = store.meta(PASSWORD_KEY)
+    if not password_hash:
+        raise ValueError('initialize a workspace password with ktlab serve --password-file FILE, or start it in a terminal')
     # Preserve administrator/scheduler context before sanitizing child environments.
     # A CPU-only probe's deliberate empty mask is never an excuse to override
     # an allocation inherited by the service itself.
     resource_context = {key: os.environ[key] for key in ('CUDA_VISIBLE_DEVICES', 'NVIDIA_VISIBLE_DEVICES',
         'SLURM_JOB_ID', 'SLURM_STEP_GPUS', 'PBS_JOBID', 'LSB_JOBID') if key in os.environ}
     write_json(store.root / 'worker/resource-context.json', resource_context)
-    token_file = store.root / 'access-token'
+    legacy_token = store.root / 'access-token'
+    if legacy_token.exists():
+        legacy_token.rename(store.root / ('access-token.retired-' + str(time.time_ns())))
     binding = digest([host_identity(), str(store.root)])
     if store.meta('authentication_binding') not in (None, binding):
-        if token_file.exists():
-            token_file.rename(store.root / ('access-token.previous-' + str(time.time_ns())))
         with store.connect() as db:
             db.execute('UPDATE metadata SET value=? WHERE key=?', (secrets.token_hex(32), 'session_secret'))
     with store.connect() as db:
         db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)', ('authentication_binding', binding))
-    if not token_file.exists():
-        descriptor = os.open(token_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, 'w') as stream:
-            stream.write(secrets.token_urlsafe(32) + '\n')
-    token = token_file.read_text().strip()
     secret = bytes.fromhex(store.meta('session_secret'))
     worker_process = None
     failures = []
@@ -182,7 +181,6 @@ def create_app(workspace, *, auto_worker=True):
     app = FastAPI(title='KernelTuningLab Workbench', docs_url=None, redoc_url=None,
                   openapi_url=None, lifespan=lifespan)
     app.state.store = store
-    app.state.token_file = token_file
     app.state.stopping = False
 
     def session(request):
@@ -261,8 +259,8 @@ def create_app(workspace, *, auto_worker=True):
     @app.post('/api/session')
     async def login(request: Request):
         body = await request_object(request)
-        if not isinstance(body, dict) or not isinstance(body.get('token'), str) or not hmac.compare_digest(body['token'], token):
-            return JSONResponse({'error': 'access token is invalid'}, status_code=401)
+        if not await run_in_threadpool(verify_password, body.get('password'), password_hash):
+            return JSONResponse({'error': '登录密码不正确'}, status_code=401)
         payload = str(int(time.time())) + ':' + secrets.token_hex(16)
         cookie = payload + '.' + hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
         response = JSONResponse({'authenticated': True, 'csrf': hmac.new(secret, ('csrf:' + payload).encode(), hashlib.sha256).hexdigest()})
@@ -538,9 +536,16 @@ def create_app(workspace, *, auto_worker=True):
     return app
 
 
-def serve(workspace, port=8765, *, config=None, auto_worker=True):
+def serve(workspace, port=8765, *, config=None, auto_worker=True, password_file=None):
     import uvicorn
     store = Store(workspace)
+    if password_file:
+        initialize_password(store, Path(password_file).expanduser().read_text().rstrip('\r\n'))
+    elif not store.meta(PASSWORD_KEY):
+        if not sys.stdin.isatty():
+            raise ValueError('first startup requires a terminal password prompt or --password-file FILE')
+        from getpass import getpass
+        initialize_password(store, getpass('Set workspace login password: '))
     if config:
         value = read_json(Path(config).expanduser().resolve())
         if not isinstance(value, dict):
@@ -548,7 +553,7 @@ def serve(workspace, port=8765, *, config=None, auto_worker=True):
         write_json(store.root / 'server.json', value)
     app = create_app(store.root, auto_worker=auto_worker)
     print(f'KernelTuningLab Workbench · http://127.0.0.1:{port}', flush=True)
-    print(f'Access token: {app.state.token_file} (owner-only file)', flush=True)
+    print('Password login enabled; the configured password persists across restarts and restores.', flush=True)
     server = uvicorn.Server(uvicorn.Config(app, host='127.0.0.1', port=port,
                             access_log=False, server_header=False, timeout_graceful_shutdown=5))
     original_exit = server.handle_exit

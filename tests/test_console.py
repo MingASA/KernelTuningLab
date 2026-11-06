@@ -25,6 +25,14 @@ from kernel_tuning_lab.console.projects import save_project, trust, verify_proje
 from kernel_tuning_lab.console.server import create_app
 from kernel_tuning_lab.console.store import Store, read_json, write_json
 from kernel_tuning_lab.console.worker import alive, host_identity, settle
+from kernel_tuning_lab.console.auth import PASSWORD_KEY, initialize_password
+
+TEST_PASSWORD = 'owned-test-password-42'
+
+
+def password_app(root, **kwargs):
+    initialize_password(Store(root), TEST_PASSWORD)
+    return create_app(root, **kwargs)
 
 
 def cpu_spec():
@@ -33,9 +41,9 @@ def cpu_spec():
 
 @pytest.fixture
 def client(tmp_path):
-    app = create_app(tmp_path / 'workspace', auto_worker=False)
+    app = password_app(tmp_path / 'workspace', auto_worker=False)
     with TestClient(app, base_url='http://127.0.0.1:18000', headers={'Origin': 'http://127.0.0.1:18000'}) as client:
-        response = client.post('/api/session', json={'token': app.state.token_file.read_text().strip()})
+        response = client.post('/api/session', json={'password': TEST_PASSWORD})
         assert response.status_code == 200
         client.headers['X-KTL-CSRF'] = response.json()['csrf']
         client.store = app.state.store
@@ -148,7 +156,7 @@ def test_duplicate_bomb_and_static_upload_do_not_execute_or_overwrite(tmp_path):
 
 
 def test_auth_origin_csrf_invalid_inputs_and_file_access(client, tmp_path):
-    with TestClient(create_app(tmp_path / 'anonymous', auto_worker=False), base_url='http://127.0.0.1:18000') as anonymous:
+    with TestClient(password_app(tmp_path / 'anonymous', auto_worker=False), base_url='http://127.0.0.1:18000') as anonymous:
         assert anonymous.get('/api/jobs').status_code == 401
         assert anonymous.post('/api/session', json={'token': 'wrong'}).status_code == 403
     assert client.get('/api/jobs', headers={'Host': 'attacker.example'}).status_code == 403
@@ -403,10 +411,10 @@ def test_workspace_snapshot_uses_existing_restore_and_rotates_access(tmp_path):
     from kernel_tuning_lab.console.archive import snapshot
     from kernel_tuning_lab.portable import restore_vault, verify_vault
     root = tmp_path / 'source'
-    app = create_app(root, auto_worker=False)
+    app = password_app(root, auto_worker=False)
     with TestClient(app, base_url='http://127.0.0.1:18000', headers={'Origin': 'http://127.0.0.1:18000'}) as client:
-        token = app.state.token_file.read_text().strip()
-        response = client.post('/api/session', json={'token': token})
+        password_hash = app.state.store.meta(PASSWORD_KEY)
+        response = client.post('/api/session', json={'password': TEST_PASSWORD})
         client.headers['X-KTL-CSRF'] = response.json()['csrf']
         client.store = app.state.store
         process = start_worker(client)
@@ -434,13 +442,37 @@ def test_workspace_snapshot_uses_existing_restore_and_rotates_access(tmp_path):
     assert restored['experiments_executed'] == 0 and restored['SQLite_checked'] >= 2
     assert output.stat().st_mode & 0o077 == 0
     restored_app = create_app(output, auto_worker=False)
-    assert restored_app.state.token_file.read_text().strip() != token
+    assert restored_app.state.store.meta(PASSWORD_KEY) == password_hash
     with TestClient(restored_app, base_url='http://127.0.0.1:18000', headers={'Origin': 'http://127.0.0.1:18000'}, cookies=old_cookies) as client:
         assert client.get('/api/jobs').status_code == 401
-        client.post('/api/session', json={'token': restored_app.state.token_file.read_text().strip()})
+        assert client.post('/api/session', json={'password': TEST_PASSWORD}).status_code == 200
         assert client.get(f'/api/jobs/{job["id"]}').json()['state'] == 'completed'
         restored_results = client.get(f'/api/jobs/{job["id"]}/results').json()
         assert [r['id'] for r in restored_results['details'][0]['records']] == [r['id'] for r in original_results['details'][0]['records']]
     public = tmp_path / 'public'; public.mkdir(); public.chmod(0o755)
     with pytest.raises(ValueError, match='owner-only'):
         restore_vault(vault, 'workspace', public)
+
+
+def test_password_is_persistent_and_legacy_tokens_cannot_log_in(tmp_path):
+    root = tmp_path / 'workspace'
+    store = Store(root)
+    legacy = root / 'access-token'
+    legacy.write_text('retired-test-token')
+    assert initialize_password(store, TEST_PASSWORD)
+    encoded = store.meta(PASSWORD_KEY)
+    assert TEST_PASSWORD not in encoded
+    assert not initialize_password(store, TEST_PASSWORD)
+    with pytest.raises(ValueError, match='not changed'):
+        initialize_password(store, 'another-test-password')
+    headers = {'Origin': 'http://127.0.0.1:18000'}
+    app = create_app(root, auto_worker=False)
+    with TestClient(app, base_url=headers['Origin'], headers=headers) as client:
+        assert client.post('/api/session', json={'token': 'retired-test-token'}).status_code == 401
+        assert client.post('/api/session', json={'password': 'incorrect'}).status_code == 401
+        assert client.post('/api/session', json={'password': TEST_PASSWORD}).status_code == 200
+    assert not legacy.exists() and list(root.glob('access-token.retired-*'))
+    restarted = create_app(root, auto_worker=False)
+    assert restarted.state.store.meta(PASSWORD_KEY) == encoded
+    with TestClient(restarted, base_url=headers['Origin'], headers=headers) as client:
+        assert client.post('/api/session', json={'password': TEST_PASSWORD}).status_code == 200

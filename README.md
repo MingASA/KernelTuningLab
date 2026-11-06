@@ -44,7 +44,7 @@ python3 -m venv "$HOME/.venvs/ktlab-web"
 "$HOME/.venvs/ktlab-web/bin/ktlab" serve --workspace "$HOME/ktlab-workbench"
 ```
 
-本机建立 SSH 隧道，再打开 `http://127.0.0.1:8765`，填写远端工作区 `access-token` 文件中的令牌：
+首次在服务器终端启动时设置工作区密码，之后重启与恢复沿用该密码。本机建立 SSH 隧道，再打开 `http://127.0.0.1:8765`，输入密码登录：
 
 ```bash
 ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu

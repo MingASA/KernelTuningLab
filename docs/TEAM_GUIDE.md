@@ -331,7 +331,7 @@ ktlab serve --workspace "$HOME/ktlab-workbench" --port 8765
 ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8765:127.0.0.1:8765 ktl-gpu
 ```
 
-浏览器打开 localhost:8765，用服务器工作区 access-token 登录。导航包括实验工作区、新建实验、任务队列、算子与算法、结果分析、设备与环境。
+浏览器打开 localhost:8765，用已设置的工作区密码登录；重启和归档恢复不会自动更改密码。导航包括实验工作区、新建实验、任务队列、算子与算法、结果分析、设备与环境。
 
 第一次使用选择 CPU 模板，核对 Shape、算法和预算，预检后提交。上传自定义算子或 Searcher 时，先查看静态清单、SHA、注册资产和依赖，再确认代码来源与精确版本可信；Worker 才会导入。平台不自动安装上传的 requirements，不提供任意 Shell。
 

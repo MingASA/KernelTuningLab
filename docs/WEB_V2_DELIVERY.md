@@ -2,6 +2,8 @@
 
 Web v2 的包版本为 **1.1.0**，交付分支为 `feature/web-v2-workbench`，审核入口为 [PR #3](https://github.com/MingASA/KernelTuningLab/pull/3)。既有 main/v1.0.1 与历史标签保留；本轮不自动合并 main。人工上手仍待用户执行。
 
+当前登录方式已按后续要求改为持久密码；重启和迁移保留密码，旧 token 不再用于登录。下文的令牌轮换是初版交付时的历史验收，不改写旧证据。
+
 ## 交付内容
 
 - `ktlab serve`：loopback API、会话与 CSRF、静态上传检查、可信版本确认、原生 schema 预检与任务管理。

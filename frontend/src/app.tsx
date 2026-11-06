@@ -236,7 +236,7 @@ const baseChart = {
 
 function App() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [token, setToken] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [online, setOnline] = useState(true);
   const [route, setRoute] = useState(location.hash.slice(1) || "workspace");
@@ -333,9 +333,9 @@ function App() {
   async function login(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const x = await api("/api/session", { token });
+      const x = await api("/api/session", { password });
       csrf = x.csrf;
-      setToken("");
+      setPassword("");
       setAuthenticated(true);
       setError("");
     } catch (e) {
@@ -354,14 +354,14 @@ function App() {
       <div className="login">
         <div className="brand-mark">K</div>
         <h1>连接实验工作台</h1>
-        <p>使用远端工作区的访问令牌登录。</p>
+        <p>使用工作区密码登录。</p>
         <form onSubmit={login}>
-          <Field label="访问令牌">
+          <Field label="登录密码">
             <input
               type="password"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              autoComplete="off"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               autoFocus
               required
             />
@@ -375,7 +375,7 @@ function App() {
             {error}
           </p>
         )}
-        <small>令牌位置：工作区 / access-token</small>
+        <small>通过 SSH 隧道连接远端工作台</small>
       </div>
     );
   const page = route.split("/")[0];

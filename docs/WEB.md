@@ -19,7 +19,9 @@ python3 -m venv "$HOME/.venvs/ktlab-web"
   --workspace "$HOME/ktlab-workbench" --port 8765
 ```
 
-从仓库根目录执行安装；离线安装使用核验过的 wheel 与匹配 Python 的依赖缓存。终端输出工作区令牌的文件位置。通过正常 SSH 登录读取该文件，把令牌填入浏览器登录页；不把令牌放进 URL、Git 或截图。
+从仓库根目录执行安装；离线安装使用核验过的 wheel 与匹配 Python 的依赖缓存。首次在服务器终端启动会提示设置工作区密码；后续启动直接沿用，重启和归档恢复不会自动更改。浏览器输入密码登录，不需要读取 token 文件。
+
+无人值守的首次配置可用 `ktlab serve --workspace "$KTL_WORKSPACE" --password-file "$KTL_PASSWORD_FILE"`，文件应私有保存。它只初始化密码；已有密码时必须一致，绝不静默覆盖。密码以加盐哈希保存在控制库中，不写入明文到源码或日志。
 
 在本机另开终端：
 
@@ -30,7 +32,7 @@ ssh -N -o ExitOnForwardFailure=yes \
 
 打开 <http://127.0.0.1:8765>。`ktl-gpu` 是用户自己的 SSH 别名。若本机端口占用，改转发左端为 `8877`，浏览器也用 `8877`；远端仍可用 `8765`。
 
-服务只绑定 `127.0.0.1`。随机令牌、HttpOnly / SameSite 会话、Host / Origin 检查和写请求 CSRF 共同保护提交接口；不能据此部署公网或多用户服务。
+服务只绑定 `127.0.0.1`。固定密码、HttpOnly / SameSite 会话、Host / Origin 检查和写请求 CSRF 共同保护提交接口；不能据此部署公网或多用户服务。
 
 ## 2. 创建第一个实验
 
@@ -150,7 +152,7 @@ ktlab serve --workspace "$KTL_RESTORED_WORKSPACE"
 
 `worker --stop` 等到租约释放才返回 `stopped`；25 秒仍未释放时返回非零 `stop_pending`，保留工作区并检查该任务。
 
-归档要求无活动任务、API 与 Worker 租约均已释放。恢复沿用现有对象 SHA / SQLite 校验，工作区为仅属主权限；移动后轮换令牌和会话。旧结果可查看，旧绝对路径计划不能直接恢复执行；重新登记环境、复制规格并预检。venv 和编译缓存不能当作跨架构安装包。
+归档要求无活动任务、API 与 Worker 租约均已释放。恢复沿用现有对象 SHA / SQLite 校验，工作区为仅属主权限；移动后只轮换会话签名，登录密码保持不变。旧结果可查看，旧绝对路径计划不能直接恢复执行；重新登记环境、复制规格并预检。venv 和编译缓存不能当作跨架构安装包。
 
 需要登录后长期运行时，可使用 [API](../deploy/ktlab-api.service.example) 与 [Worker](../deploy/ktlab-worker.service.example) 的 `systemd --user` 模板；两者使用同一工作区，API 加 `--no-worker`，不需要 sudo。已有部署 bootstrap 和资产恢复入口见 [DEPLOYMENT](DEPLOYMENT.md)。
 
@@ -159,7 +161,7 @@ ktlab serve --workspace "$KTL_RESTORED_WORKSPACE"
 | 现象 | 查看位置 / 操作 |
 |---|---|
 | 无法连接 | 远端服务日志、SSH 隧道与两端端口 |
-| 登录失败或过期 | 当前工作区 access-token；重新登录 |
+| 登录失败或过期 | 使用已设置的工作区密码重新登录；重启不会重置密码 |
 | 项目没有资产 | 文件预览的解析结果；核对 SDK 注册入口和相对插件路径 |
 | 预检失败 | 任务错误、预检日志、依赖与实际环境路径 |
 | 排队且资源忙 | 设备进程与准入 receipt；资源获准空闲后手动重试 |
